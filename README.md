@@ -9,9 +9,9 @@ NoFish analyzes weather, tide, and sun data to present the **next safe and more 
 
 ## Why this project exists
 
-I like taking my boat out on the coast for fishing, but I don't like waves or wind, and I've noticed that fishing isn't too good unless it's a high tide. 
+It's nice to take the boat out on the coast for fishing, but waves or wind isn't pleasant, and fishing isn't too good unless it's a high tide. 
 
-Too many times, I've spent time taking the boat out when I could have spent the time in a better way. 
+Too many times, we spend time taking the boat out when the time could be spent in a better way. 
 
 This app was created as a **real decision support tool**.
 
@@ -90,12 +90,11 @@ All hours with equal score ranges are grouped together.
 |----------------|------|
 | Frontend + API | Next.js (Vite) |
 | Map            | Leaflet.js |
-| Database       | Supabase (scoring model + caching spots) |
+| Database       | Supabase (scoring model + caching spots/weather on spots) |
 | Weather        | MET Locationforecast |
 | Waves          | Kystdata / BarentsWatch |
 | Tides          | Kartverket |
-| Sun            | SunCalc (npm) / Sunrise API |
-| DNS / Hosting  | one.com |
+| Sun            | SunCalc (npm) or Sunrise API |
 | Dev            | VS Code + GitHub Copilot |
 | Styling        | Tailwind CSS |
 | Linting        | ESLint |
@@ -103,11 +102,15 @@ All hours with equal score ranges are grouped together.
 ---
 
 ## High-level architecture
+
 Map click
+
 ↓
 Lat/Lon
+
 ↓
 API routes
+
 ├─ MET weather
 ├─ SunCalc
 ├─ Kartverket tides
@@ -129,35 +132,7 @@ The **timeslot + score engine** is the heart of the app and is written as a pure
 - UX first, APIs second
 - Small vertical slices that always work end-to-end
 - Professional repo hygiene from day one
-- Code should be understandable by GitHub Copilot
-
 ---
 
-## Environment variables
 
-Create `.env.local` from `.env.example`.
-
-Example:
-
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-MET_API_USER_AGENT=your@email.com
-
----
-
-## Development
-
-```bash
-npm install
-npm run dev
-Lint:
-npm run lint
-
-Future ideas
-- Personal boat profile (speed, lights, safety margin)
-- Historical “did I catch fish?” feedback loop
-- Better wave and current modeling
-- Shareable fishing spots
-- Why most hours are 0%
-
-Because going fishing in bad conditions is worse than not going at all.
+**Because going fishing in bad conditions is worse than not going at all**
