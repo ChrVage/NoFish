@@ -140,6 +140,7 @@ The **timeslot + score engine** is the heart of the app and is written as a pure
 Create `.env.local` from `.env.example`.
 
 Example:
+
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 MET_API_USER_AGENT=your@email.com
