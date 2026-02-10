@@ -3,25 +3,23 @@
 **NoFish** is a web application that helps you decide **when NOT to go fishing** on the Norwegian coast.
 
 Most hours have poor conditions due to wind, waves, tide timing, or darkness.  
-NoFish analyzes weather, tide, and sun data to present the **next safe and optimal fishing windows** — scored from **0% (don’t go)** to **100% (great conditions)**.
+NoFish analyzes weather, tide, and sun data to present the **next safe and more optimal fishing windows** — scored from **0% (don’t go)** to **100% (great conditions)**.
 
 ---
 
 ## Why this project exists
 
-This project has three goals:
+I like taking my boat out on the coast for fishing, but I don't like waves or wind, and I've noticed that fishing isn't too good unless it's a high tide. 
 
-1. Cover real needs with practical functionality
-2. Learn modern best-practice tools for web apps and APIs
-3. Create a professional public GitHub repository
+Too many times, I've spent time taking the boat out when I could have spent the time in a better way. 
 
-This is a **real decision support tool**, not a demo app.
+This app was created as a **real decision support tool**.
 
 ---
 
 ## The core idea
 
-Select a point on the map → fetch data from APIs → calculate a score for every hour → group hours with similar scores → present clear fishing windows.
+Select a point on the map → fetch data from APIs → calculate a score for every hour → group hours with similar scores for clarity → present clear fishing windows.
 
 ### Example output
 
@@ -36,9 +34,9 @@ Most hours will be **0%**. That is intentional.
 
 ---
 
-## Safety rules baked into the logic
+## Safety rules should be clear
 
-- Running time from port to fishing spot is **excluded**
+- Running time from fishing spot to port is **excluded**, use your own judgement
 - Boats without lights must be back **before end of civil twilight** (not nautical twilight)
 - The app is biased toward **not going fishing** unless conditions are clearly acceptable
 
@@ -48,22 +46,22 @@ Most hours will be **0%**. That is intentional.
 
 ### First page
 - Leaflet map
-- Shows previously clicked locations
-- Click a point on the coast
+- Shows previously clicked locations (if cookies are accepted)
+- Click on your fishing spot on the coast
 - Confirm the location with a name
 
-### Data phase 1
+### Data collection - phase 1
 - Wind
 - Tide times
 - Sunrise / sunset / civil twilight
 
-### Data phase n (future)
+### Future data collection
 - Wave height
 - Ocean current
 - Cloud cover
 
 ### Result page
-- Grouped hourly time slots
+- Hourly time slots, grouped by:
 - Fishing suitability score (0–100%)
 - Explanation of why the score is what it is
 
