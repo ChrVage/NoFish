@@ -155,15 +155,10 @@ Lint:
 npm run lint
 
 Future ideas
-
-Personal boat profile (speed, lights, safety margin)
-
-Historical “did I catch fish?” feedback loop
-
-Better wave and current modeling
-
-Shareable fishing spots
-
-Why most hours are 0%
+- Personal boat profile (speed, lights, safety margin)
+- Historical “did I catch fish?” feedback loop
+- Better wave and current modeling
+- Shareable fishing spots
+- Why most hours are 0%
 
 Because going fishing in bad conditions is worse than not going at all.
