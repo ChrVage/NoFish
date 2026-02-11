@@ -1,6 +1,6 @@
 # 🎣 NoFish
 
-**NoFish** is a web application that helps you decide **when NOT to go fishing** on the Norwegian coast.
+**NoFish** will be a web application that provides data for deciding **when NOT to go fishing** on the Norwegian coast.
 
 Most hours have poor conditions due to wind, waves, tide timing, or darkness.  
 NoFish analyzes weather, tide, and sun data to present the **next safe and more optimal fishing windows** — scored from **0% (don’t go)** to **100% (great conditions)**.
@@ -13,13 +13,13 @@ It's nice to take the boat out on the coast for fishing, but waves or wind isn't
 
 Too many times, we spend time taking the boat out when the time could be spent in a better way. 
 
-This app was created as a **real decision support tool**.
+This app is supposed to be a **decision support tool**.
 
 ---
 
 ## The core idea
 
-Select a point on the map → fetch data from APIs → calculate a score for every hour → group hours with similar scores for clarity → present clear fishing windows.
+Select a point on the map → fetch data from APIs → calculate a score for every hour a few days ahead → group hours with similar scores for clarity → present clear fishing windows.
 
 ### Example output
 
@@ -37,7 +37,7 @@ Most hours will be **0%**. That is intentional.
 ## Safety rules should be clear
 
 - Running time from fishing spot to port is **excluded**, use your own judgement
-- Boats without lights must be back **before end of civil twilight** (not nautical twilight)
+- Boats without lights should be back **before end of civil twilight** (not nautical twilight)
 - The app is biased toward **not going fishing** unless conditions are clearly acceptable
 
 ---
@@ -45,17 +45,15 @@ Most hours will be **0%**. That is intentional.
 ## UX flow
 
 ### First page
-- Leaflet map
+- Map
 - Shows previously clicked locations (if cookies are accepted)
 - Click on your fishing spot on the coast
-- Confirm the location with a name
+- The location should be confirmed with a name on the place and the municipality
 
-### Data collection - phase 1
+### Data collection - in prioritized order
 - Wind
 - Tide times
 - Sunrise / sunset / civil twilight
-
-### Future data collection
 - Wave height
 - Ocean current
 - Cloud cover
