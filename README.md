@@ -104,19 +104,29 @@ All hours with equal score ranges are grouped together.
 Map click
 
 ↓
+
 Lat/Lon
 
 ↓
+
 API routes
 
 ├─ MET weather
+
 ├─ SunCalc
+
 ├─ Kartverket tides
+
 ↓
+
 Timeslot + score engine (pure TypeScript)
+
 ↓
+
 Grouped time windows
+
 ↓
+
 UI presentation
 
 
