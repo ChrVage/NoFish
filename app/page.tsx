@@ -31,16 +31,21 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   const handleLocationSelect = async (lat: number, lng: number) => {
+    console.log('🗺️ Location clicked:', lat, lng);
     setIsAnalyzing(true);
     setError(null);
     setSelectedLocation(null);
 
     try {
       // Fetch geocoding and weather validation in parallel
+      console.log('📡 Fetching geocoding and weather data...');
       const [geocodingResult, weatherResult] = await Promise.all([
         reverseGeocode(lat, lng),
         validateWeatherLocation(lat, lng),
       ]);
+
+      console.log('📍 Geocoding result:', geocodingResult);
+      console.log('🌤️ Weather result:', weatherResult);
 
       setSelectedLocation({
         lat,
@@ -54,7 +59,7 @@ export default function Home() {
         setError('Weather data not available for this location. Try selecting a point on the coast.');
       }
     } catch (err) {
-      console.error('Location validation error:', err);
+      console.error('❌ Location validation error:', err);
       setError('Failed to validate location. Please try again.');
     } finally {
       setIsAnalyzing(false);
