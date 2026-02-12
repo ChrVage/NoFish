@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎣 NoFish
 
-## Getting Started
+**NoFish** is a web application that helps you decide **when NOT to go fishing** on the Norwegian coast by analyzing weather, tide, and sunlight conditions.
 
-First, run the development server:
+Most hours have poor fishing conditions due to wind, waves, wrong tide timing, or darkness. NoFish scores every hour from **0% (don't go)** to **100% (great conditions)** to help you find the best fishing windows.
 
+🌐 **Live App:** [no-fish.vercel.app](https://no-fish.vercel.app)
+
+---
+
+## Features
+
+- 🗺️ **Interactive Map** - Click anywhere on the Norwegian coast
+- 🌊 **Condition Analysis** - Weather, tides, waves, and sunlight
+- ⏰ **Hourly Scoring** - 0-100% fishing suitability rating
+- 🎯 **Safety-First** - Biased toward NOT going unless conditions are clearly good
+
+---
+
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **Map:** Leaflet.js
+- **APIs:** MET Weather, Kartverket Tides
+- **Deployment:** Vercel
+
+---
+
+## Development
+
+### Prerequisites
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Node.js 20+ and npm
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Install Dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Run Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Build for Production
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+app/          # Next.js App Router pages and layouts
+components/   # Reusable React components
+lib/          # Business logic and utilities
+  api/        # External API integrations
+  scoring/    # Fishing condition scoring logic
+  utils/      # Helper functions
+types/        # TypeScript type definitions
+public/       # Static assets
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Deployed automatically via Vercel:
+```bash
+vercel --prod
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## License
+
+See [LICENSE](LICENSE) file.
