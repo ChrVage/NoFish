@@ -1,7 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import Map from '@/components/Map';
+import dynamic from 'next/dynamic';
+
+// Import Map with SSR disabled (Leaflet requires browser window object)
+const Map = dynamic(() => import('@/components/Map'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full bg-ocean-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ocean-500 mx-auto mb-4"></div>
+        <p className="text-ocean-700">Loading map...</p>
+      </div>
+    </div>
+  ),
+});
 
 export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
