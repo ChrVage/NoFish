@@ -55,4 +55,18 @@
   .mapboxgl-ctrl-attrib {
     font-size: 10px;
   }
+
+  /* Custom Leaflet marker styles */
+  .custom-marker {
+    background: transparent;
+    border: none;
+  }
+
+  .leaflet-popup-content-wrapper {
+    border-radius: 8px;
+  }
+
+  .leaflet-popup-content {
+    margin: 8px;
+  }
 }
