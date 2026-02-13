@@ -3,7 +3,9 @@
 import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { reverseGeocode, type GeocodingResult } from '@/lib/api/geocoding';
-import { validateWeatherLocation, type WeatherValidationResult } from '@/lib/api/weather';
+import { validateWeatherLocation, getCombinedForecast, type WeatherValidationResult } from '@/lib/api/weather';
+import type { HourlyForecast } from '@/types/weather';
+import ForecastTable from '@/components/ForecastTable';
 
 function ResultsContent() {
   const searchParams = useSearchParams();
@@ -15,7 +17,9 @@ function ResultsContent() {
     geocoding: GeocodingResult | null;
     weather: WeatherValidationResult | null;
   } | null>(null);
+  const [forecastData, setForecastData] = useState<HourlyForecast[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFetchingForecast, setIsFetchingForecast] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -51,6 +55,20 @@ function ResultsContent() {
 
     fetchData();
   }, [lat, lng]);
+
+  const handleFetchForecast = async () => {
+    setIsFetchingForecast(true);
+    try {
+      console.log('📡 Fetching forecast data for:', lat, lng);
+      const forecasts = await getCombinedForecast(lat, lng);
+      setForecastData(forecasts);
+    } catch (err) {
+      console.error('❌ Error fetching forecast:', err);
+      setError('Failed to load forecast data. Please try again.');
+    } finally {
+      setIsFetchingForecast(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-ocean-50">
@@ -137,6 +155,16 @@ function ResultsContent() {
               </div>
             )}
 
+            {/* Forecast data */}
+            {forecastData && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-ocean-700 mb-4">
+                  Hourly Forecast
+                </h3>
+                <ForecastTable forecasts={forecastData} />
+              </div>
+            )}
+
             {/* Action buttons */}
             <div className="flex gap-4">
               <button
@@ -145,13 +173,13 @@ function ResultsContent() {
               >
                 Select different location
               </button>
-              {locationData?.weather?.available && (
+              {locationData?.weather?.available && !forecastData && (
                 <button
-                  className="flex-1 bg-ocean-500 hover:bg-ocean-700 text-white font-medium py-3 px-6 rounded-lg transition-colors"
-                  disabled
-                  title="Detailed forecast feature coming soon"
+                  onClick={handleFetchForecast}
+                  disabled={isFetchingForecast}
+                  className="flex-1 bg-ocean-500 hover:bg-ocean-700 text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  View detailed forecast
+                  {isFetchingForecast ? 'Loading forecast...' : 'View detailed forecast'}
                 </button>
               )}
             </div>
