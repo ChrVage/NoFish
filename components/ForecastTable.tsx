@@ -30,11 +30,12 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
     return `${value.toFixed(decimals)}${unit}`;
   };
 
-  const getWindDirection = (degrees: number | undefined) => {
+  const getDirectionLabel = (degrees: number | undefined, isToDirection: boolean = false) => {
     if (degrees === undefined) return '—';
     const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     const index = Math.round(degrees / 45) % 8;
-    return directions[index];
+    const direction = directions[index];
+    return isToDirection ? `to ${direction}` : direction;
   };
 
   return (
@@ -89,7 +90,7 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
                     <div>
                       <div>{formatValue(forecast.windSpeed, 1, ' m/s')}</div>
                       <div className="text-xs text-gray-500">
-                        {getWindDirection(forecast.windDirection)}
+                        {getDirectionLabel(forecast.windDirection)}
                       </div>
                     </div>
                   ) : (
@@ -110,7 +111,7 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
                     <div>
                       <div>{formatValue(forecast.waveHeight, 1, ' m')}</div>
                       <div className="text-xs text-gray-500">
-                        {getWindDirection(forecast.waveDirection)}
+                        {getDirectionLabel(forecast.waveDirection)}
                       </div>
                     </div>
                   ) : (
@@ -125,7 +126,7 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
                     <div>
                       <div>{formatValue(forecast.currentSpeed, 2, ' m/s')}</div>
                       <div className="text-xs text-gray-500">
-                        {getWindDirection(forecast.currentDirection)}
+                        {getDirectionLabel(forecast.currentDirection, true)}
                       </div>
                     </div>
                   ) : (
