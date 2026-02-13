@@ -31,7 +31,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   const handleLocationSelect = async (lat: number, lng: number) => {
-    console.log('🗺️ Location clicked:', lat, lng);
+    console.log('🗺️ Position confirmed:', lat, lng);
     setIsAnalyzing(true);
     setError(null);
     setSelectedLocation(null);
@@ -83,7 +83,7 @@ export default function Home() {
 
       {/* Main content */}
       <div className="flex-1 relative">
-        <Map onLocationSelect={handleLocationSelect} />
+        <Map onPositionConfirm={handleLocationSelect} />
 
         {/* Loading/Results panel */}
         {(selectedLocation || isAnalyzing) && (
