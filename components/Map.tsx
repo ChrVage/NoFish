@@ -130,12 +130,12 @@ export default function Map({ onPositionConfirm }: MapProps) {
       const confirmButton = popupContent.querySelector('#confirm-location');
       if (confirmButton) {
         confirmButton.addEventListener('click', () => {
-          // Remove temporary marker
-          map.removeLayer(tempMarker);
-          
-          // Add confirmed marker
+          // Add confirmed marker first
           const confirmedMarker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
           setSelectedMarker(confirmedMarker);
+
+          // Then remove temporary marker
+          map.removeLayer(tempMarker);
 
           // Close popup
           map.closePopup();
@@ -159,7 +159,7 @@ export default function Map({ onPositionConfirm }: MapProps) {
         mapRef.current = null;
       }
     };
-  }, [router, selectedMarker]);
+  }, [router]);
 
   return (
     <div className="relative w-full h-full">

@@ -99,7 +99,7 @@ export default function ResultsPage() {
                 </p>
               )}
               <p className="text-sm text-gray-500">
-                {lat.toFixed(4)}°N, {lng.toFixed(4)}°E
+                {Math.abs(lat).toFixed(4)}°{lat >= 0 ? 'N' : 'S'}, {Math.abs(lng).toFixed(4)}°{lng >= 0 ? 'E' : 'W'}
               </p>
             </div>
 
@@ -148,10 +148,8 @@ export default function ResultsPage() {
               {locationData?.weather?.available && (
                 <button
                   className="flex-1 bg-ocean-500 hover:bg-ocean-700 text-white font-medium py-3 px-6 rounded-lg transition-colors"
-                  onClick={() => {
-                    // TODO: Navigate to detailed forecast or show detailed analysis
-                    alert('Detailed fishing forecast coming soon!');
-                  }}
+                  disabled
+                  title="Detailed forecast feature coming soon"
                 >
                   View detailed forecast
                 </button>
