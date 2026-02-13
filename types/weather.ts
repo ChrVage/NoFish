@@ -96,7 +96,12 @@ export interface OceanForecastTimeseries {
   };
 }
 
-// Combined hourly forecast for display
+/**
+ * Combined hourly forecast representing merged weather and ocean data.
+ * This interface combines data from both Locationforecast 2.0 (weather)
+ * and Oceanforecast 2.0 (ocean conditions) for a single hour.
+ * Used for display in the forecast table.
+ */
 export interface HourlyForecast {
   time: string;
   temperature?: number;
@@ -113,3 +118,10 @@ export interface HourlyForecast {
   currentDirection?: number;
   symbolCode?: string;
 }
+
+/**
+ * Combined hourly forecast representing merged weather and ocean data.
+ * This interface combines data from both Locationforecast 2.0 (weather)
+ * and Oceanforecast 2.0 (ocean conditions) for a single hour.
+ * Used for display in the forecast table.
+ */

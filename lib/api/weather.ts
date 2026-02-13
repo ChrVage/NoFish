@@ -6,6 +6,7 @@
 import type {
   LocationForecastResponse,
   OceanForecastResponse,
+  OceanForecastTimeseries,
   HourlyForecast,
 } from '@/types/weather';
 
@@ -148,7 +149,7 @@ export function combineForecasts(
   const hourlyForecasts: HourlyForecast[] = [];
 
   // Create a map of ocean data by time for quick lookup
-  const oceanDataMap = new Map<string, OceanForecastResponse['properties']['timeseries'][0]>();
+  const oceanDataMap = new Map<string, OceanForecastTimeseries>();
   if (oceanForecast) {
     oceanForecast.properties.timeseries.forEach((entry) => {
       oceanDataMap.set(entry.time, entry);
