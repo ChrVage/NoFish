@@ -1,17 +1,19 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 interface MapProps {
-  onLocationSelect?: (lat: number, lng: number) => void;
+  onPositionConfirm?: (lat: number, lng: number) => void;
 }
 
-export default function Map({ onLocationSelect }: MapProps) {
+export default function Map({ onPositionConfirm }: MapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [selectedMarker, setSelectedMarker] = useState<L.Marker | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -48,25 +50,105 @@ export default function Map({ onLocationSelect }: MapProps) {
       // Remove previous marker if exists
       if (selectedMarker) {
         map.removeLayer(selectedMarker);
+        setSelectedMarker(null);
       }
 
-      // Add new marker
-      const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
-      setSelectedMarker(marker);
+      // Add temporary marker at clicked position
+      const tempMarker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
 
-      // Notify parent component
-      if (onLocationSelect) {
-        onLocationSelect(lat, lng);
-      }
-
-      // Show popup with coordinates
-      marker.bindPopup(`
-        <div class="text-sm">
-          <strong class="text-ocean-700">Fishing spot selected</strong><br/>
-          <span class="text-gray-600">Lat: ${lat.toFixed(4)}</span><br/>
-          <span class="text-gray-600">Lng: ${lng.toFixed(4)}</span>
+      // Create popup with confirm button
+      const popupContent = document.createElement('div');
+      popupContent.className = 'text-sm';
+      popupContent.innerHTML = `
+        <div class="min-w-[200px]">
+          <strong class="text-ocean-700 block mb-2" id="location-name">Loading...</strong>
+          <div class="text-gray-600 text-xs mb-3">
+            <span>Lat: ${lat.toFixed(4)}</span><br/>
+            <span>Lng: ${lng.toFixed(4)}</span>
+          </div>
+          <button id="confirm-location" class="w-full bg-ocean-500 hover:bg-ocean-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            Analyze conditions
+          </button>
         </div>
-      `).openPopup();
+      `;
+
+      // Bind popup and open it
+      tempMarker.bindPopup(popupContent, {
+        closeButton: true,
+        autoClose: false,
+        closeOnClick: false,
+      }).openPopup();
+
+      // Fetch location name from geocoding API and update popup
+      (async () => {
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?` +
+              `format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1`,
+            {
+              headers: {
+                'User-Agent': 'NoFish/1.0 (fishing conditions app)',
+              },
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            const address = data.address || {};
+            const name =
+              address.village ||
+              address.town ||
+              address.city ||
+              address.hamlet ||
+              address.locality ||
+              'Unknown location';
+            
+            // Update popup name
+            const nameElement = popupContent.querySelector('#location-name');
+            if (nameElement) {
+              nameElement.textContent = name;
+            }
+          } else {
+            const nameElement = popupContent.querySelector('#location-name');
+            if (nameElement) {
+              nameElement.textContent = 'Unknown location';
+            }
+          }
+        } catch (error) {
+          console.error('Geocoding error:', error);
+          const nameElement = popupContent.querySelector('#location-name');
+          if (nameElement) {
+            nameElement.textContent = 'Unknown location';
+          }
+        }
+      })();
+
+      // Add event listener to confirm button
+      const confirmButton = popupContent.querySelector('#confirm-location');
+      if (confirmButton) {
+        confirmButton.addEventListener('click', () => {
+          // Add confirmed marker first
+          const confirmedMarker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+          setSelectedMarker(confirmedMarker);
+
+          // Then remove temporary marker
+          map.removeLayer(tempMarker);
+
+          // Close popup
+          map.closePopup();
+
+          // Navigate to results page with coordinates
+          router.push(`/results?lat=${lat}&lng=${lng}`);
+        });
+      }
+
+      // Clean up when popup closes
+      tempMarker.on('popupclose', () => {
+        map.removeLayer(tempMarker);
+      });
     });
 
     mapRef.current = map;
@@ -77,12 +159,7 @@ export default function Map({ onLocationSelect }: MapProps) {
         mapRef.current = null;
       }
     };
-  }, []);
-
-  // Update marker when selectedMarker changes
-  useEffect(() => {
-    if (!mapRef.current || !selectedMarker || !onLocationSelect) return;
-  }, [selectedMarker, onLocationSelect]);
+  }, [router]);
 
   return (
     <div className="relative w-full h-full">
