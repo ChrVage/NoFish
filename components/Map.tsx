@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -12,6 +13,7 @@ export default function Map({ onPositionConfirm }: MapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [selectedMarker, setSelectedMarker] = useState<L.Marker | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -135,13 +137,11 @@ export default function Map({ onPositionConfirm }: MapProps) {
           const confirmedMarker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
           setSelectedMarker(confirmedMarker);
 
-          // Notify parent component
-          if (onPositionConfirm) {
-            onPositionConfirm(lat, lng);
-          }
-
           // Close popup
           map.closePopup();
+
+          // Navigate to results page with coordinates
+          router.push(`/results?lat=${lat}&lng=${lng}`);
         });
       }
 
@@ -159,7 +159,7 @@ export default function Map({ onPositionConfirm }: MapProps) {
         mapRef.current = null;
       }
     };
-  }, [onPositionConfirm, selectedMarker]);
+  }, [router, selectedMarker]);
 
   return (
     <div className="relative w-full h-full">
