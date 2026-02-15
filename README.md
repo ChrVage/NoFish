@@ -1,8 +1,8 @@
 # 🎣 NoFish
 
-**NoFish** is a web application that helps you decide **when NOT to go fishing** on the Norwegian coast by analyzing weather, tide, and sunlight conditions.
+**NoFish** is a web application that helps you analyze **fishing conditions** on the Norwegian coast by displaying weather, ocean, and tide data.
 
-Most hours have poor fishing conditions due to wind, waves, wrong tide timing, or darkness. NoFish scores every hour from **0% (don't go)** to **100% (great conditions)** to help you find the best fishing windows.
+The app provides detailed hourly forecasts to help you plan your fishing trips with comprehensive environmental data including wind, waves, water temperature, currents, and tides.
 
 🌐 **Live App:** [no-fish.vercel.app](https://no-fish.vercel.app)
 
@@ -10,21 +10,42 @@ Most hours have poor fishing conditions due to wind, waves, wrong tide timing, o
 
 ## Features
 
-- 🗺️ **Interactive Map** - Click anywhere on the Norwegian coast
-- 🌊 **Condition Analysis** - Weather, tides, waves, and sunlight
-- ⏰ **Hourly Scoring** - 0-100% fishing suitability rating
-- 🎯 **Safety-First** - Biased toward NOT going unless conditions are clearly good
+- 🗺️ **Interactive Map** - Click anywhere on the Norwegian coast to select a location
+- 🌊 **Weather Data** - Air temperature, wind speed/direction, precipitation, cloud cover, and pressure
+- 🌊 **Ocean Data** - Wave height/direction, sea temperature, and current speed/direction
+- 🌙 **Tide Data** - Simulated tide heights (sample data due to API CORS restrictions)
+- ⏰ **Hourly Forecast** - Detailed 7-day forecast with data displayed in Norwegian timezone
+- 📍 **Location Info** - Automatic reverse geocoding to show municipality and county names
 
 ---
 
 ## Tech Stack
 
-- **Framework:** Next.js 16 (App Router)
+- **Framework:** Next.js 16.1.6 (App Router, Turbopack)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS
-- **Map:** Leaflet.js
-- **APIs:** MET Weather, Kartverket Tides
+- **Map:** Leaflet.js with OpenStreetMap tiles
+- **APIs:** 
+  - MET Norway Locationforecast API (weather data)
+  - MET Norway Oceanforecast API (ocean data)
+  - Kartverket API (reverse geocoding)
+  - Simulated tide data (Kartverket Tide API has CORS restrictions)
 - **Deployment:** Vercel
+
+---
+
+## How It Works
+
+1. **Select a Location**: Click anywhere on the interactive map (focused on Norwegian coast)
+2. **Automatic Data Fetch**: The app fetches weather, ocean, and tide data for the selected coordinates
+3. **View Forecast**: See a detailed table with hourly forecasts for the next 7 days
+4. **Interpret Data**: Use the comprehensive data to plan your fishing trips
+
+### Forecast Data Includes:
+- **Weather**: Temperature, wind speed/direction, precipitation, cloud cover, pressure, humidity
+- **Ocean**: Wave height/direction, sea temperature, current speed/direction
+- **Tides**: Simulated tide height (in cm above chart datum)
+- **Time**: Displayed in Norwegian timezone (Europe/Oslo) as "ddd. HH:MM" (e.g., "Mon. 15:00")
 
 ---
 
@@ -81,10 +102,14 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 #### API Access
 The app uses these public APIs (no API keys required):
-- **MET Norway Weather API** - Free, no authentication
-- **Kartverket Tides API** - Free, no authentication
+- **MET Norway Locationforecast API** - Free, no authentication (weather data)
+- **MET Norway Oceanforecast API** - Free, no authentication (ocean/marine data)
+- **Kartverket Geocoding API** - Free, no authentication (location names)
+- **Kartverket Tide API** - Currently using simulated data due to CORS restrictions
 
-Both APIs are publicly accessible with rate limiting. Please be respectful with request frequency.
+**Note on Tide Data:** The Kartverket Tide API cannot be called directly from the browser due to CORS restrictions. The app currently generates realistic simulated tide data using a semi-diurnal tidal model. To use real tide data, you would need to implement a server-side proxy.
+
+All APIs are publicly accessible with rate limiting. Please be respectful with request frequency and include a proper User-Agent header.
 
 ---
 
@@ -106,12 +131,20 @@ npm start
 
 ```
 app/          # Next.js App Router pages and layouts
+  page.tsx          # Home page with interactive map
+  results/          # Results page showing forecast data
+  api/              # API routes (placeholders)
 components/   # Reusable React components
+  Map.tsx           # Leaflet map component
+  ForecastTable.tsx # Forecast data table
 lib/          # Business logic and utilities
   api/        # External API integrations
-  scoring/    # Fishing condition scoring logic
-  utils/      # Helper functions
+    weather.ts      # MET Norway weather and ocean forecasts
+    geocoding.ts    # Kartverket reverse geocoding
 types/        # TypeScript type definitions
+  weather.ts        # Weather, ocean, and tide data types
+  fishing.ts        # Fishing-related types
+  api.ts            # API response types
 public/       # Static assets
 ```
 
@@ -142,6 +175,16 @@ No environment variables are required for deployment.
 
 ---
 
-## License
+## Future Enhancements
 
-See [LICENSE](LICENSE) file.
+Potential features for future development:
+- **Fishing Condition Scoring** - 0-100% suitability rating based on combined conditions
+- **Real Tide Data** - Server-side proxy for Kartverket Tide API to bypass CORS
+- **Sunrise/Sunset Times** - Add daylight information for fishing planning
+- **Moon Phase** - Include lunar phase data for fishing predictions
+- **Favorite Locations** - Save and manage favorite fishing spots
+- **Historical Data** - Compare current conditions with historical patterns
+- **Mobile App** - Native mobile application for iOS and Android
+
+---
+

@@ -139,7 +139,53 @@ export async function getOceanForecast(
 }
 
 /**
- * Fetch Tide forec, ocean, and tide forecast data into hourly forecast
+ * Fetch Tide forecast data from Kartverket API
+ * @param lat Latitude
+ * @param lng Longitude
+ * @returns Tide forecast data or null if unavailable
+ */
+export async function getTideForecast(
+  lat: number,
+  lng: number
+): Promise<TideForecastResponse | null> {
+  try {
+    const fromTime = new Date();
+    const toTime = new Date(fromTime.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days ahead
+    
+    // Format dates as ISO strings for the API
+    const fromTimeStr = fromTime.toISOString();
+    const toTimeStr = toTime.toISOString();
+    
+    const response = await fetch(
+      `https://api.sehavniva.no/tideapi.php?` +
+        `lat=${lat.toFixed(4)}&lon=${lng.toFixed(4)}` +
+        `&fromtime=${fromTimeStr}&totime=${toTimeStr}` +
+        `&datatype=tab&refcode=cd&place=&file=&lang=en&interval=10&dst=0&tzone=&tide_request=locationdata`,
+      {
+        headers: {
+          'User-Agent': USER_AGENT,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.warn(`Kartverket Tide API returned ${response.status}`);
+      return generateSampleTideData(lat, lng, fromTime, toTime);
+    }
+
+    const text = await response.text();
+    return parseTideTabFormat(text, lat, lng);
+  } catch (error) {
+    console.warn('Tide API unavailable (CORS restriction), using sample data');
+    // Generate sample data as fallback
+    const fromTime = new Date();
+    const toTime = new Date(fromTime.getTime() + 7 * 24 * 60 * 60 * 1000);
+    return generateSampleTideData(lat, lng, fromTime, toTime);
+  }
+}
+
+/**
+ * Combine location, ocean, and tide forecast data into hourly forecast
  * @param locationForecast Location forecast data
  * @param oceanForecast Ocean forecast data (optional)
  * @param tideForecast Tide forecast data (optional)
@@ -214,15 +260,13 @@ export function combineForecasts(
 
     // Add tide data if available
     if (tideData) {
-      hourlyForecast.tideHeight = tideData.data.instant.details.sea_surface_height_above_chart_datum
-    return parseTideTabFormat(text, lat, lng);
-  } catch (error) {
-    console.error('Tide fetch error:', error);
-    // Generate sample data as fallback
-    const fromTime = new Date();
-    const toTime = new Date(fromTime.getTime() + 7 * 24 * 60 * 60 * 1000);
-    return generateSampleTideData(lat, lng, fromTime, toTime);
-  }
+      hourlyForecast.tideHeight = tideData.data.instant.details.sea_surface_height_above_chart_datum;
+    }
+
+    hourlyForecasts.push(hourlyForecast);
+  });
+
+  return hourlyForecasts;
 }
 
 /**
@@ -348,26 +392,7 @@ function generateSampleTideData(
 }
 
 /**
- * Combine location and ocean forecast data into hourly forecast
- * @param locationForecast Location forecast data
- * @param oceanForecast Ocean forecast data (optional)
- * @returns Array of hourly forecasts
- */
-export function combineForecasts(
-  locationForecast: LocationForecastResponse,
-  oceanForecast: OceanForecastResponse | null
-): HourlyForecast[] {
-  const hourlyForecasts: HourlyForecast[] = [];
-
-  // Create a map of ocean data by time for quick lookup
-  const oceanDataMap = new Map<string, OceanForecastTimeseries>();
-  if (oceanForecast) {
-    oceanForecast.properties.timeseries.forEach((entry) => {
-      oceanDataMap.set(entry.time, entry);
-    });
-  }
-
-  // Process location for, ocean, and tide forecast for a location
+ * Fetch combined weather, ocean, and tide forecast for a location
  * @param lat Latitude
  * @param lng Longitude
  * @returns Array of hourly forecasts
@@ -384,40 +409,7 @@ export async function getCombinedForecast(
       getTideForecast(lat, lng),
     ]);
 
-    return combineForecasts(locationForecast, oceanForecast, tide
-    // Add ocean data if available
-    if (oceanData) {
-      hourlyForecast.waveHeight = oceanData.data.instant.details.sea_surface_wave_height;
-      hourlyForecast.waveDirection = oceanData.data.instant.details.sea_surface_wave_from_direction;
-      hourlyForecast.seaTemperature = oceanData.data.instant.details.sea_water_temperature;
-      hourlyForecast.currentSpeed = oceanData.data.instant.details.sea_water_speed;
-      hourlyForecast.currentDirection = oceanData.data.instant.details.sea_water_to_direction;
-    }
-
-    hourlyForecasts.push(hourlyForecast);
-  });
-
-  return hourlyForecasts;
-}
-
-/**
- * Fetch combined weather and ocean forecast for a location
- * @param lat Latitude
- * @param lng Longitude
- * @returns Array of hourly forecasts
- */
-export async function getCombinedForecast(
-  lat: number,
-  lng: number
-): Promise<HourlyForecast[]> {
-  try {
-    // Fetch both forecasts in parallel
-    const [locationForecast, oceanForecast] = await Promise.all([
-      getLocationForecast(lat, lng),
-      getOceanForecast(lat, lng),
-    ]);
-
-    return combineForecasts(locationForecast, oceanForecast);
+    return combineForecasts(locationForecast, oceanForecast, tideForecast);
   } catch (error) {
     console.error('Combined forecast error:', error);
     throw error;

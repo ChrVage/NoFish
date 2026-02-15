@@ -26,8 +26,21 @@ const getWeatherSymbol = (symbolCode: string | undefined) => {
 };
 
 // Arrow component for direction visualization
-const DirectionArrow = ({ degrees, className = '' }: { degrees: number | undefined; className?: string }) => {
+// For "from" directions (wind, waves), adds 180° to point toward where it's going
+// For "to" directions (current), uses the value as-is
+const DirectionArrow = ({ 
+  degrees, 
+  isFromDirection = false,
+  className = '' 
+}: { 
+  degrees: number | undefined; 
+  isFromDirection?: boolean;
+  className?: string 
+}) => {
   if (degrees === undefined) return <span>—</span>;
+  
+  // If it's a "from" direction, add 180° to point toward where it's going
+  const displayDegrees = isFromDirection ? (degrees + 180) % 360 : degrees;
   
   return (
     <svg
@@ -35,7 +48,7 @@ const DirectionArrow = ({ degrees, className = '' }: { degrees: number | undefin
       height="24"
       viewBox="0 0 24 24"
       className={`inline-block ${className}`}
-      style={{ transform: `rotate(${degrees}deg)` }}
+      style={{ transform: `rotate(${displayDegrees}deg)` }}
     >
       <path
         d="M12 2 L16 10 L13 10 L13 22 L11 22 L11 10 L8 10 Z"
@@ -56,12 +69,21 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
 
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
+    // Format for Norway timezone (Europe/Oslo)
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      weekday: 'short',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false,
+      timeZone: 'Europe/Oslo'
     });
+    
+    const parts = formatter.formatToParts(date);
+    const weekday = parts.find(p => p.type === 'weekday')?.value || '';
+    const hour = parts.find(p => p.type === 'hour')?.value || '00';
+    const minute = parts.find(p => p.type === 'minute')?.value || '00';
+    
+    return `${weekday}. ${hour}:${minute}`;
   };
 
   const formatValue = (value: number | undefined, decimals: number = 1, unit: string = '') => {
@@ -142,9 +164,9 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
                   {formatValue(forecast.windSpeed, 1, ' m/s')}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700 text-center">
-                  <DirectionArrow degrees={forecast.windDirection} className="text-blue-600" />
+                  <DirectionArrow degrees={forecast.windDirection} isFromDirection={true} className="text-blue-600" />
                   <div className="text-xs text-gray-500">
-                    {getDirectionLabel(forecast.windDirection)}
+                    from {getDirectionLabel(forecast.windDirection)}
                   </div>
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700">
@@ -154,9 +176,9 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
                   {formatValue(forecast.waveHeight, 1, ' m')}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700 text-center">
-                  <DirectionArrow degrees={forecast.waveDirection} className="text-ocean-600" />
+                  <DirectionArrow degrees={forecast.waveDirection} isFromDirection={true} className="text-ocean-600" />
                   <div className="text-xs text-gray-500">
-                    {getDirectionLabel(forecast.waveDirection)}
+                    from {getDirectionLabel(forecast.waveDirection)}
                   </div>
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700">
