@@ -117,11 +117,36 @@ export interface HourlyForecast {
   currentSpeed?: number;
   currentDirection?: number;
   symbolCode?: string;
+  tideHeight?: number;
 }
 
-/**
- * Combined hourly forecast representing merged weather and ocean data.
- * This interface combines data from both Locationforecast 2.0 (weather)
- * and Oceanforecast 2.0 (ocean conditions) for a single hour.
- * Used for display in the forecast table.
- */
+// Kartverket Tide API types
+export interface TideForecastResponse {
+  type: string;
+  geometry: {
+    type: string;
+    coordinates: [number, number];
+  };
+  properties: {
+    meta: {
+      updated_at: string;
+      station_name: string;
+      station_code: string;
+      units: {
+        sea_surface_height_above_chart_datum: string;
+      };
+    };
+    timeseries: TideForecastTimeseries[];
+  };
+}
+
+export interface TideForecastTimeseries {
+  time: string;
+  data: {
+    instant: {
+      details: {
+        sea_surface_height_above_chart_datum: number;
+      };
+    };
+  };
+}
