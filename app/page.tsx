@@ -22,8 +22,10 @@ export default function Home() {
       <header className="bg-ocean-900 text-white px-6 py-4 shadow-lg z-10">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-3xl">🎣</span>
-            <h1 className="text-2xl font-bold">NoFish</h1>
+            <span className="text-lg">🎣</span>
+            <h1 className="text-base font-normal">
+              NoFish <span className="text-[10px] italic font-light">... because fishing in bad weather is worse than no fishing at all</span>
+            </h1>
           </div>
           <p className="text-ocean-50 text-sm hidden sm:block">
             When NOT to go fishing on the Norwegian coast
