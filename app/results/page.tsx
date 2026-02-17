@@ -2,10 +2,16 @@
 
 import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { reverseGeocode, type GeocodingResult } from '@/lib/api/geocoding';
-import { getCombinedForecast } from '@/lib/api/weather';
 import type { HourlyForecast } from '@/types/weather';
 import ForecastTable from '@/components/ForecastTable';
+
+interface LocationData {
+  name: string;
+  municipality: string;
+  county: string;
+  country: string;
+  displayName: string;
+}
 
 function ResultsContent() {
   const searchParams = useSearchParams();
@@ -13,8 +19,9 @@ function ResultsContent() {
   const lat = parseFloat(searchParams.get('lat') || '0');
   const lng = parseFloat(searchParams.get('lng') || '0');
 
-  const [locationData, setLocationData] = useState<GeocodingResult | null>(null);
+  const [locationData, setLocationData] = useState<LocationData | null>(null);
   const [forecastData, setForecastData] = useState<HourlyForecast[] | null>(null);
+  const [tideDataInfo, setTideDataInfo] = useState<{ source: 'real' | 'sample'; message?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,16 +35,43 @@ function ResultsContent() {
 
       try {
         console.log('📡 Fetching data for:', lat, lng);
-        const [geocodingResult, forecasts] = await Promise.all([
-          reverseGeocode(lat, lng),
-          getCombinedForecast(lat, lng),
+        
+        // Fetch from server-side API routes
+        const [geocodingResponse, weatherResponse] = await Promise.all([
+          fetch(`/api/geocoding?lat=${lat}&lon=${lng}`),
+          fetch(`/api/weather?lat=${lat}&lon=${lng}`),
         ]);
 
-        setLocationData(geocodingResult);
-        setForecastData(forecasts);
+        // Handle geocoding response
+        if (!geocodingResponse.ok) {
+          throw new Error('Failed to fetch location data');
+        }
+        const geocodingResult = await geocodingResponse.json();
+        if (geocodingResult.success && geocodingResult.data) {
+          setLocationData(geocodingResult.data);
+        }
+
+        // Handle weather response
+        if (!weatherResponse.ok) {
+          throw new Error('Failed to fetch weather data');
+        }
+        const weatherResult = await weatherResponse.json();
+        if (weatherResult.success && weatherResult.data) {
+          setForecastData(weatherResult.data);
+          
+          // Set tide data info
+          if (weatherResult.metadata) {
+            setTideDataInfo({
+              source: weatherResult.metadata.tideDataSource || 'sample',
+              message: weatherResult.metadata.tideDataMessage,
+            });
+          }
+        } else {
+          throw new Error(weatherResult.error || 'Failed to load forecast data');
+        }
       } catch (err) {
         console.error('❌ Error fetching location data:', err);
-        setError('Failed to load forecast data. Please try again.');
+        setError(err instanceof Error ? err.message : 'Failed to load forecast data. Please try again.');
       } finally {
         setIsLoading(false);
       }
@@ -95,6 +129,21 @@ function ResultsContent() {
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
+
+            {/* Tide data info message */}
+            {tideDataInfo && tideDataInfo.source === 'sample' && (
+              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <span className="text-yellow-600 text-lg">ℹ️</span>
+                  <div>
+                    <p className="text-sm font-medium text-yellow-900">Using Simulated Tide Data</p>
+                    <p className="text-xs text-yellow-700 mt-1">
+                      {tideDataInfo.message || 'Real tide data temporarily unavailable'}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 

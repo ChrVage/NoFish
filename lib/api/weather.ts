@@ -156,27 +156,34 @@ export async function getTideForecast(
     const fromTimeStr = fromTime.toISOString();
     const toTimeStr = toTime.toISOString();
     
-    const response = await fetch(
-      `https://api.sehavniva.no/tideapi.php?` +
+    const url = `https://api.sehavniva.no/tideapi.php?` +
         `lat=${lat.toFixed(4)}&lon=${lng.toFixed(4)}` +
         `&fromtime=${fromTimeStr}&totime=${toTimeStr}` +
-        `&datatype=tab&refcode=cd&place=&file=&lang=en&interval=10&dst=0&tzone=&tide_request=locationdata`,
-      {
-        headers: {
-          'User-Agent': USER_AGENT,
-        },
-      }
-    );
+        `&datatype=tab&refcode=cd&place=&file=&lang=en&interval=10&dst=0&tzone=&tide_request=locationdata`;
+    
+    console.log('🌊 Fetching tide data from:', url);
+    
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': USER_AGENT,
+      },
+    });
+
+    console.log('🌊 Tide API response status:', response.status);
 
     if (!response.ok) {
-      console.warn(`Kartverket Tide API returned ${response.status}`);
+      console.warn(`❌ Kartverket Tide API returned ${response.status}`);
       return generateSampleTideData(lat, lng, fromTime, toTime);
     }
 
     const text = await response.text();
-    return parseTideTabFormat(text, lat, lng);
+    console.log('🌊 Tide API response (first 200 chars):', text.substring(0, 200));
+    
+    const parsed = parseTideTabFormat(text, lat, lng);
+    console.log('✅ Successfully parsed tide data:', parsed.properties.timeseries.length, 'entries');
+    return parsed;
   } catch (error) {
-    console.warn('Tide API unavailable (CORS restriction), using sample data');
+    console.error('❌ Tide API error:', error);
     // Generate sample data as fallback
     const fromTime = new Date();
     const toTime = new Date(fromTime.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -395,12 +402,18 @@ function generateSampleTideData(
  * Fetch combined weather, ocean, and tide forecast for a location
  * @param lat Latitude
  * @param lng Longitude
- * @returns Array of hourly forecasts
+ * @returns Array of hourly forecasts with metadata
  */
 export async function getCombinedForecast(
   lat: number,
   lng: number
-): Promise<HourlyForecast[]> {
+): Promise<{
+  forecasts: HourlyForecast[];
+  metadata: {
+    tideDataSource: 'real' | 'sample';
+    tideDataMessage?: string;
+  };
+}> {
   try {
     // Fetch all forecasts in parallel
     const [locationForecast, oceanForecast, tideForecast] = await Promise.all([
@@ -409,7 +422,19 @@ export async function getCombinedForecast(
       getTideForecast(lat, lng),
     ]);
 
-    return combineForecasts(locationForecast, oceanForecast, tideForecast);
+    // Check if tide data is sample or real
+    const tideDataSource = tideForecast?.properties.meta.station_code === 'SAMPLE' ? 'sample' : 'real';
+    const tideDataMessage = tideDataSource === 'sample' 
+      ? 'Using simulated tide data (Kartverket API unavailable)'
+      : undefined;
+
+    return {
+      forecasts: combineForecasts(locationForecast, oceanForecast, tideForecast),
+      metadata: {
+        tideDataSource,
+        tideDataMessage,
+      },
+    };
   } catch (error) {
     console.error('Combined forecast error:', error);
     throw error;

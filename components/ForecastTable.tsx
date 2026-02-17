@@ -112,34 +112,34 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
                 Weather
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                Air Temp
+                Tide
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-blue-900/20 border-l-2 border-blue-400/30">
                 Wind
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">
+              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider bg-blue-900/20 border-r-2 border-blue-400/30">
                 Wind Dir
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-ocean-800/30 border-l-2 border-ocean-400/30">
+                Wave Height
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider bg-ocean-800/30 border-r-2 border-ocean-400/30">
+                Wave Dir
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
                 Precip.
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                Wave Height
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">
-                Wave Dir
+                Air Temp
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
                 Sea Temp
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-teal-900/20 border-l-2 border-teal-400/30">
                 Current
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">
+              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider bg-teal-900/20 border-r-2 border-teal-400/30">
                 Current Dir
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                Tide
               </th>
             </tr>
           </thead>
@@ -158,43 +158,43 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700">
-                  {formatValue(forecast.temperature, 1, '°C')}
+                  {formatValue(forecast.tideHeight, 0, ' cm')}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
+                <td className="px-4 py-3 text-sm text-gray-700 bg-blue-50/50 border-l-2 border-blue-200">
                   {formatValue(forecast.windSpeed, 1, ' m/s')}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700 text-center">
+                <td className="px-4 py-3 text-sm text-gray-700 text-center bg-blue-50/50 border-r-2 border-blue-200">
                   <DirectionArrow degrees={forecast.windDirection} isFromDirection={true} className="text-blue-600" />
                   <div className="text-xs text-gray-500">
                     from {getDirectionLabel(forecast.windDirection)}
                   </div>
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
-                  {formatValue(forecast.precipitation, 1, ' mm')}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
+                <td className="px-4 py-3 text-sm text-gray-700 bg-ocean-50/50 border-l-2 border-ocean-200">
                   {formatValue(forecast.waveHeight, 1, ' m')}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700 text-center">
+                <td className="px-4 py-3 text-sm text-gray-700 text-center bg-ocean-50/50 border-r-2 border-ocean-200">
                   <DirectionArrow degrees={forecast.waveDirection} isFromDirection={true} className="text-ocean-600" />
                   <div className="text-xs text-gray-500">
                     from {getDirectionLabel(forecast.waveDirection)}
                   </div>
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700">
-                  {formatValue(forecast.seaTemperature, 1, '°C')}
+                  {formatValue(forecast.precipitation, 1, ' mm')}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700">
+                  {formatValue(forecast.temperature, 1, '°C')}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700">
+                  {formatValue(forecast.seaTemperature, 1, '°C')}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700 bg-teal-50/50 border-l-2 border-teal-200">
                   {formatValue(forecast.currentSpeed, 2, ' m/s')}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700 text-center">
+                <td className="px-4 py-3 text-sm text-gray-700 text-center bg-teal-50/50 border-r-2 border-teal-200">
                   <DirectionArrow degrees={forecast.currentDirection} className="text-teal-600" />
                   <div className="text-xs text-gray-500">
                     {getDirectionLabel(forecast.currentDirection, true)}
                   </div>
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
-                  {formatValue(forecast.tideHeight, 0, ' cm')}
                 </td>
               </tr>
             ))}

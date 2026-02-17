@@ -92,34 +92,40 @@ export default function Map({ onPositionConfirm }: MapProps) {
               headers: {
                 'User-Agent': 'NoFish/1.0 (fishing conditions app)',
               },
+              mode: 'cors',
             }
           );
 
           if (response.ok) {
             const data = await response.json();
+            console.log('Geocoding response:', data);
             const address = data.address || {};
             const name =
               address.village ||
               address.town ||
               address.city ||
               address.hamlet ||
+              address.municipality ||
+              address.county ||
+              address.state ||
               address.locality ||
               'Unknown location';
             
             // Update popup name
-            const nameElement = popupContent.querySelector('#location-name');
+            const nameElement = document.getElementById('location-name');
             if (nameElement) {
               nameElement.textContent = name;
             }
           } else {
-            const nameElement = popupContent.querySelector('#location-name');
+            console.error('Geocoding failed with status:', response.status);
+            const nameElement = document.getElementById('location-name');
             if (nameElement) {
               nameElement.textContent = 'Unknown location';
             }
           }
         } catch (error) {
           console.error('Geocoding error:', error);
-          const nameElement = popupContent.querySelector('#location-name');
+          const nameElement = document.getElementById('location-name');
           if (nameElement) {
             nameElement.textContent = 'Unknown location';
           }
