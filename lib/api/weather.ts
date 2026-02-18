@@ -150,16 +150,16 @@ export async function getTideForecast(
 ): Promise<TideForecastResponse | null> {
   try {
     const fromTime = new Date();
-    const toTime = new Date(fromTime.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days ahead
+    const toTime = new Date(fromTime.getTime() + 10 * 24 * 60 * 60 * 1000); // 10 days ahead
     
     // Format dates as ISO strings for the API
     const fromTimeStr = fromTime.toISOString();
     const toTimeStr = toTime.toISOString();
     
-    const url = `https://api.sehavniva.no/tideapi.php?` +
+    const url = `https://vannstand.kartverket.no/tideapi.php?` +
         `lat=${lat.toFixed(4)}&lon=${lng.toFixed(4)}` +
         `&fromtime=${fromTimeStr}&totime=${toTimeStr}` +
-        `&datatype=tab&refcode=cd&place=&file=&lang=en&interval=10&dst=0&tzone=&tide_request=locationdata`;
+        `&datatype=all&refcode=cd&place=&file=&lang=en&interval=60&dst=0&tzone=&tide_request=locationdata`;
     
     console.log('🌊 Fetching tide data from:', url);
     
@@ -186,7 +186,7 @@ export async function getTideForecast(
     console.error('❌ Tide API error:', error);
     // Generate sample data as fallback
     const fromTime = new Date();
-    const toTime = new Date(fromTime.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const toTime = new Date(fromTime.getTime() + 10 * 24 * 60 * 60 * 1000);
     return generateSampleTideData(lat, lng, fromTime, toTime);
   }
 }
