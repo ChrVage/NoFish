@@ -14,7 +14,7 @@ The app provides detailed hourly forecasts to help you plan your fishing trips w
 - 🌊 **Weather Data** - Air temperature, wind speed/direction, precipitation, cloud cover, and pressure
 - 🌊 **Ocean Data** - Wave height/direction, sea temperature, and current speed/direction
 - 🌙 **Tide Data** - Simulated tide heights (sample data due to API CORS restrictions)
-- ⏰ **Hourly Forecast** - Detailed 7-day forecast with data displayed in Norwegian timezone
+- ⏰ **Hourly Forecast** - Detailed 10-day forecast with data displayed in Norwegian timezone
 - 📍 **Location Info** - Automatic reverse geocoding to show municipality and county names
 
 ---
@@ -38,7 +38,7 @@ The app provides detailed hourly forecasts to help you plan your fishing trips w
 
 1. **Select a Location**: Click anywhere on the interactive map (focused on Norwegian coast)
 2. **Automatic Data Fetch**: The app fetches weather, ocean, and tide data for the selected coordinates
-3. **View Forecast**: See a detailed table with hourly forecasts for the next 7 days
+3. **View Forecast**: See a detailed table with hourly forecasts for the next 10 days
 4. **Interpret Data**: Use the comprehensive data to plan your fishing trips
 
 ### Forecast Data Includes:
