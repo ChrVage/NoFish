@@ -108,9 +108,6 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider sticky left-0 bg-ocean-700 z-10">
                 Time
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">
-                Weather
-              </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
                 Tide
               </th>
@@ -126,13 +123,16 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
               <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider bg-ocean-800/30 border-r-2 border-ocean-400/30">
                 Wave Dir
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider bg-amber-900/20 border-l-2 border-amber-400/30">
+                Weather
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-amber-900/20">
                 Precip.
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-amber-900/20">
                 Air Temp
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-amber-900/20 border-r-2 border-amber-400/30">
                 Sea Temp
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-teal-900/20 border-l-2 border-teal-400/30">
@@ -151,11 +151,6 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
               >
                 <td className="px-4 py-3 text-sm font-medium text-gray-900 sticky left-0 z-10 bg-inherit">
                   {formatTime(forecast.time)}
-                </td>
-                <td className="px-4 py-3 text-2xl text-center">
-                  <span title={forecast.symbolCode}>
-                    {getWeatherSymbol(forecast.symbolCode)}
-                  </span>
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700">
                   {forecast.tidePhase || '—'}
@@ -178,13 +173,18 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
                     from {getDirectionLabel(forecast.waveDirection)}
                   </div>
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
+                <td className="px-4 py-3 text-2xl text-center bg-amber-50/50 border-l-2 border-amber-200">
+                  <span title={forecast.symbolCode}>
+                    {getWeatherSymbol(forecast.symbolCode)}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700 bg-amber-50/50">
                   {formatValue(forecast.precipitation, 1, ' mm')}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
+                <td className="px-4 py-3 text-sm text-gray-700 bg-amber-50/50">
                   {formatValue(forecast.temperature, 1, '°C')}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
+                <td className="px-4 py-3 text-sm text-gray-700 bg-amber-50/50 border-r-2 border-amber-200">
                   {formatValue(forecast.seaTemperature, 1, '°C')}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700 bg-teal-50/50 border-l-2 border-teal-200">
