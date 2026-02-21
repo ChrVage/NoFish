@@ -119,6 +119,9 @@ export interface HourlyForecast {
   symbolCode?: string;
   tideHeight?: number;
   tidePhase?: string; // e.g., "Hi (13:18)", "Hi+1", "Falling", "Lo-2", etc.
+  sunPhase?: string;      // e.g., "Daylight (06:23)", "Civil (17:45)", "Nautical (18:12)", "—"
+  sunElevation?: number;  // Sun altitude above/below horizon in degrees
+  sunAzimuth?: number;    // Sun azimuth in degrees (0=N, 90=E, 180=S, 270=W)
 }
 
 // Kartverket Tide API types

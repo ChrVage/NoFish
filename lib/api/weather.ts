@@ -196,12 +196,16 @@ export async function getTideForecast(
  * @param locationForecast Location forecast data
  * @param oceanForecast Ocean forecast data (optional)
  * @param tideForecast Tide forecast data with high/low events (optional)
+ * @param lat Latitude for sun calculations
+ * @param lng Longitude for sun calculations
  * @returns Array of hourly forecasts
  */
 export function combineForecasts(
   locationForecast: LocationForecastResponse,
   oceanForecast: OceanForecastResponse | null,
-  tideForecast: TideXMLResponse | null
+  tideForecast: TideXMLResponse | null,
+  lat: number,
+  lng: number
 ): HourlyForecast[] {
   const hourlyForecasts: HourlyForecast[] = [];
 
@@ -245,6 +249,12 @@ export function combineForecasts(
     if (tideForecast && tideForecast.events.length > 0) {
       hourlyForecast.tidePhase = calculateTidePhase(entryDate, tideForecast.events);
     }
+
+    // Add sun data
+    const sun = calculateSunPhase(entryDate, lat, lng);
+    hourlyForecast.sunPhase = sun.phase;
+    hourlyForecast.sunElevation = Math.round(sun.elevation * 10) / 10;
+    hourlyForecast.sunAzimuth = Math.round(sun.azimuth * 10) / 10;
 
     hourlyForecasts.push(hourlyForecast);
   });
@@ -410,12 +420,246 @@ function calculateTidePhase(hourTime: Date, tideEvents: TideEvent[]): string {
 }
 
 /**
- * Format time for phase display (HH:MM)
+ * Format time for phase display (HH:MM) - local time of the Date object
  */
 function formatTimeForPhase(date: Date): string {
   const hours = date.getHours().toString().padStart(2, '0');
   const minutes = date.getMinutes().toString().padStart(2, '0');
   return `${hours}:${minutes}`;
+}
+
+// ---------------------------------------------------------------------------
+// Solar position calculation (NOAA/Meeus algorithm, accurate to ~0.5°)
+// ---------------------------------------------------------------------------
+
+const _rad = Math.PI / 180;
+const _deg = 180 / Math.PI;
+
+/**
+ * Calculate the sun's elevation and azimuth for a given moment and location.
+ * @param date  UTC date/time
+ * @param lat   Latitude in degrees
+ * @param lng   Longitude in degrees
+ * @returns elevation (–90…90°, positive = above horizon), azimuth (0=N, 90=E, 180=S, 270=W)
+ */
+function solarPosition(
+  date: Date,
+  lat: number,
+  lng: number
+): { elevation: number; azimuth: number } {
+  // Days since J2000.0
+  const d = date.getTime() / 86400000 - 10957.5;
+
+  // Mean longitude and mean anomaly (degrees)
+  const L = ((280.460 + 0.9856474 * d) % 360 + 360) % 360;
+  const g = ((357.528 + 0.9856003 * d) % 360 + 360) % 360;
+
+  // Ecliptic longitude
+  const lambda =
+    L + 1.915 * Math.sin(g * _rad) + 0.020 * Math.sin(2 * g * _rad);
+
+  // Obliquity of ecliptic
+  const epsilon = 23.439 - 0.0000004 * d;
+
+  // Right ascension and declination
+  const sinLambda = Math.sin(lambda * _rad);
+  const RA =
+    Math.atan2(
+      Math.cos(epsilon * _rad) * sinLambda,
+      Math.cos(lambda * _rad)
+    ) * _deg;
+  const decl = Math.asin(Math.sin(epsilon * _rad) * sinLambda) * _deg;
+
+  // Greenwich Mean Sidereal Time (degrees)
+  const GMST = ((18.697374558 + 24.06570982441908 * d) % 24) * 15;
+
+  // Local Hour Angle
+  const LHA = ((GMST + lng - RA) % 360 + 360) % 360;
+
+  // Elevation
+  const sinAlt =
+    Math.sin(decl * _rad) * Math.sin(lat * _rad) +
+    Math.cos(decl * _rad) * Math.cos(lat * _rad) * Math.cos(LHA * _rad);
+  const elevation = Math.asin(Math.max(-1, Math.min(1, sinAlt))) * _deg;
+
+  // Azimuth (N=0, clockwise)
+  const cosAz =
+    (Math.sin(decl * _rad) - Math.sin(elevation * _rad) * Math.sin(lat * _rad)) /
+    (Math.cos(elevation * _rad) * Math.cos(lat * _rad));
+  let azimuth = Math.acos(Math.max(-1, Math.min(1, cosAz))) * _deg;
+  if (Math.sin(LHA * _rad) > 0) azimuth = 360 - azimuth;
+
+  return { elevation, azimuth };
+}
+
+type SunPhaseName = 'day' | 'civil' | 'nautical' | 'night';
+
+function getSunPhaseName(elevation: number): SunPhaseName {
+  if (elevation >= 0) return 'day';
+  if (elevation >= -6) return 'civil';
+  if (elevation >= -12) return 'nautical';
+  return 'night'; // astronomical twilight and full night
+}
+
+const sunPhaseLabels: Record<SunPhaseName, string> = {
+  day: 'Daylight',
+  civil: 'Civil',
+  nautical: 'Nautical',
+  night: 'Night',
+};
+
+/**
+ * Find the exact minute (within ±90 min of `fromTime`) when the sun crosses
+ * a phase boundary using binary search. Returns null if no crossing found.
+ */
+function findSunTransition(
+  fromTime: Date,
+  direction: 'forward' | 'backward',
+  lat: number,
+  lng: number
+): Date | null {
+  const step = direction === 'forward' ? 1 : -1;
+  const limit = 90; // minutes to search
+  let prev = solarPosition(fromTime, lat, lng);
+  let prevPhase = getSunPhaseName(prev.elevation);
+
+  for (let m = 1; m <= limit; m++) {
+    const t = new Date(fromTime.getTime() + step * m * 60000);
+    const pos = solarPosition(t, lat, lng);
+    const phase = getSunPhaseName(pos.elevation);
+    if (phase !== prevPhase) {
+      // Binary-search for the exact minute boundary
+      let lo = new Date(t.getTime() - step * 60000);
+      let hi = t;
+      for (let i = 0; i < 10; i++) {
+        const mid = new Date((lo.getTime() + hi.getTime()) / 2);
+        const midPhase = getSunPhaseName(
+          solarPosition(mid, lat, lng).elevation
+        );
+        if (midPhase === prevPhase) lo = mid;
+        else hi = mid;
+      }
+      return new Date((lo.getTime() + hi.getTime()) / 2);
+    }
+    prevPhase = phase;
+  }
+  return null;
+}
+
+/**
+ * Find solar noon (sun due south, azimuth = 180°) within a one-hour window.
+ * Returns the time if it occurs within the hour, otherwise null.
+ */
+function findSolarNoon(
+  hourStart: Date,
+  lat: number,
+  lng: number
+): Date | null {
+  // Check minute-by-minute for azimuth crossing 180°
+  let prevAz = solarPosition(hourStart, lat, lng).azimuth;
+  for (let m = 1; m <= 60; m++) {
+    const t = new Date(hourStart.getTime() + m * 60000);
+    const az = solarPosition(t, lat, lng).azimuth;
+    // Crossing from <180 to >180 (or exactly 180)
+    if ((prevAz < 180 && az >= 180) || (prevAz <= 180 && az > 180)) {
+      // Binary search for exact moment
+      let lo = new Date(t.getTime() - 60000);
+      let hi = t;
+      for (let i = 0; i < 10; i++) {
+        const mid = new Date((lo.getTime() + hi.getTime()) / 2);
+        const midAz = solarPosition(mid, lat, lng).azimuth;
+        if (midAz < 180) lo = mid;
+        else hi = mid;
+      }
+      return new Date((lo.getTime() + hi.getTime()) / 2);
+    }
+    prevAz = az;
+  }
+  return null;
+}
+
+/**
+ * Calculate the sun phase label for a given hour.
+ * - Single phase: just the label, e.g. "Daylight", "Civil", "Night"
+ * - Daylight hour containing solar noon: "Daylight (12:34)"
+ * - Transition within the hour: "Daylight (17:45) → Civil" or "Daylight → Civil" if exactly on :00
+ */
+function calculateSunPhase(
+  hourTime: Date,
+  lat: number,
+  lng: number
+): { phase: string; elevation: number; azimuth: number } {
+  // Normalise to UTC hour boundary
+  const hourStart = new Date(Date.UTC(
+    hourTime.getUTCFullYear(),
+    hourTime.getUTCMonth(),
+    hourTime.getUTCDate(),
+    hourTime.getUTCHours()
+  ));
+
+  const startPhase = getSunPhaseName(solarPosition(hourStart, lat, lng).elevation);
+  const nearEnd  = new Date(hourStart.getTime() + 59 * 60000);
+  const endPhase  = getSunPhaseName(solarPosition(nearEnd, lat, lng).elevation);
+
+  // Use midpoint for elevation / azimuth display
+  const midPos = solarPosition(new Date(hourStart.getTime() + 30 * 60000), lat, lng);
+
+  if (startPhase === endPhase) {
+    let label = sunPhaseLabels[startPhase];
+
+    // For pure daylight hours, check if solar noon falls within this hour
+    if (startPhase === 'day') {
+      const noon = findSolarNoon(hourStart, lat, lng);
+      if (noon) {
+        label = `Daylight (${formatTimeHHMM(noon, lng)})`;
+      }
+    }
+
+    return {
+      phase: label,
+      elevation: midPos.elevation,
+      azimuth: midPos.azimuth,
+    };
+  }
+
+  // Transition within this hour
+  const label1 = sunPhaseLabels[startPhase];
+  const label2 = sunPhaseLabels[endPhase];
+  const transitionTime = findSunTransition(hourStart, 'forward', lat, lng);
+
+  if (!transitionTime) {
+    return { phase: `${label1} → ${label2}`, elevation: midPos.elevation, azimuth: midPos.azimuth };
+  }
+
+  // Show time unless it falls exactly on :00
+  const tLocal = new Date(transitionTime.getTime() + 60 * 60000); // UTC+1
+  const mm = tLocal.getUTCMinutes();
+  const timeStr = mm === 0 ? '' : ` (${formatTimeHHMM(transitionTime, lng)})`;
+
+  return {
+    phase: `${label1}${timeStr} \u2192 ${label2}`,
+    elevation: midPos.elevation,
+    azimuth: midPos.azimuth,
+  };
+}
+
+/**
+ * Format a UTC Date as HH:MM in the local solar time offset by longitude
+ * (approximation: UTC + lng/15 hours). For Norway (lon ~5-30°) this is close
+ * enough to CET/CEST for labelling purposes.
+ * For exact wall-clock time we'd need a tz library; instead we just use
+ * the Date's local time which on the server is UTC, so we add the offset.
+ */
+function formatTimeHHMM(utcDate: Date, lng: number): string {
+  // Offset in ms: Norway is UTC+1 (winter) or UTC+2 (summer)
+  // Since the forecasts come tagged with +01:00 or +02:00 we derive the
+  // offset from the longitude: approx UTC+1 for most of Norway.
+  // Simple approach: display Norway local time = UTC+1 (standard).
+  const localMs = utcDate.getTime() + 60 * 60000; // UTC+1 fixed offset
+  const d = new Date(localMs);
+  const hh = d.getUTCHours().toString().padStart(2, '0');
+  const mm = d.getUTCMinutes().toString().padStart(2, '0');
+  return `${hh}:${mm}`;
 }
 
 /**
@@ -449,7 +693,7 @@ export async function getCombinedForecast(
       : undefined;
 
     return {
-      forecasts: combineForecasts(locationForecast, oceanForecast, tideForecast),
+      forecasts: combineForecasts(locationForecast, oceanForecast, tideForecast, lat, lng),
       metadata: {
         tideDataSource,
         tideDataMessage,

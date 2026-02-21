@@ -86,29 +86,14 @@ export default function Map({ onPositionConfirm }: MapProps) {
       (async () => {
         try {
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?` +
-              `format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1`,
-            {
-              headers: {
-                'User-Agent': 'NoFish/1.0 (fishing conditions app)',
-              },
-              mode: 'cors',
-            }
+            `/api/geocoding?lat=${lat}&lon=${lng}`
           );
 
           if (response.ok) {
-            const data = await response.json();
-            console.log('Geocoding response:', data);
-            const address = data.address || {};
-            const name =
-              address.village ||
-              address.town ||
-              address.city ||
-              address.hamlet ||
-              address.municipality ||
-              address.county ||
-              address.state ||
-              address.locality ||
+            const result = await response.json();
+            const name = result.data?.name ||
+              result.data?.municipality ||
+              result.data?.displayName ||
               'Unknown location';
             
             // Update popup name

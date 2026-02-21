@@ -123,6 +123,15 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
               <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider bg-ocean-800/30 border-r-2 border-ocean-400/30">
                 Wave Dir
               </th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-yellow-900/20 border-l-2 border-yellow-400/30">
+                Sun
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-yellow-900/20">
+                Elev.
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider bg-yellow-900/20 border-r-2 border-yellow-400/30">
+                Az.
+              </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-teal-900/20 border-l-2 border-teal-400/30">
                 Current
               </th>
@@ -166,6 +175,19 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700 text-center bg-ocean-50/50 border-r-2 border-ocean-200">
                   <DirectionArrow degrees={forecast.waveDirection} isFromDirection={true} className="text-ocean-600" />
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700 bg-yellow-50/50 border-l-2 border-yellow-200">
+                  {forecast.sunPhase || '\u2014'}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700 bg-yellow-50/50">
+                  {forecast.sunElevation !== undefined ? `${forecast.sunElevation.toFixed(1)}\u00b0` : '\u2014'}
+                </td>
+                <td className="px-4 py-3 text-center bg-yellow-50/50 border-r-2 border-yellow-200">
+                  {forecast.sunAzimuth !== undefined && forecast.sunPhase !== undefined && !forecast.sunPhase.startsWith('Night') && !forecast.sunPhase.includes('→ Night') ? (
+                    <DirectionArrow degrees={forecast.sunAzimuth} isFromDirection={true} className="text-yellow-500" />
+                  ) : (
+                    <span className="text-sm text-gray-400">{'—'}</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700 bg-teal-50/50 border-l-2 border-teal-200">
                   {formatValue(forecast.currentSpeed, 2, ' m/s')}
