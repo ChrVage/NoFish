@@ -158,7 +158,7 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700">
-                  {formatValue(forecast.tideHeight, 0, ' cm')}
+                  {forecast.tidePhase || '—'}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700 bg-blue-50/50 border-l-2 border-blue-200">
                   {formatValue(forecast.windSpeed, 1, ' m/s')}

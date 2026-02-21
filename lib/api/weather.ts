@@ -10,6 +10,8 @@ import type {
   TideForecastResponse,
   TideForecastTimeseries,
   HourlyForecast,
+  TideEvent,
+  TideXMLResponse,
 } from '@/types/weather';
 
 export interface WeatherValidationResult {
@@ -139,27 +141,27 @@ export async function getOceanForecast(
 }
 
 /**
- * Fetch Tide forecast data from Kartverket API
+ * Fetch Tide forecast data from Kartverket API (XML format with high/low tide events)
  * @param lat Latitude
  * @param lng Longitude
- * @returns Tide forecast data or null if unavailable
+ * @returns Tide events (high/low) or null if unavailable
  */
 export async function getTideForecast(
   lat: number,
   lng: number
-): Promise<TideForecastResponse | null> {
+): Promise<TideXMLResponse | null> {
   try {
     const fromTime = new Date();
     const toTime = new Date(fromTime.getTime() + 10 * 24 * 60 * 60 * 1000); // 10 days ahead
     
-    // Format dates as ISO strings for the API
-    const fromTimeStr = fromTime.toISOString();
-    const toTimeStr = toTime.toISOString();
+    // Format dates for the API (URL encoded)
+    const fromTimeStr = fromTime.toISOString().replace(/\.\d{3}Z$/, ''); // Remove milliseconds
+    const toTimeStr = toTime.toISOString().replace(/\.\d{3}Z$/, '');
     
     const url = `https://vannstand.kartverket.no/tideapi.php?` +
-        `lat=${lat.toFixed(4)}&lon=${lng.toFixed(4)}` +
-        `&fromtime=${fromTimeStr}&totime=${toTimeStr}` +
-        `&datatype=all&refcode=cd&place=&file=&lang=en&interval=60&dst=0&tzone=&tide_request=locationdata`;
+        `lat=${lat.toFixed(0)}&lon=${lng.toFixed(0)}` +
+        `&fromtime=${encodeURIComponent(fromTimeStr)}&totime=${encodeURIComponent(toTimeStr)}` +
+        `&datatype=tab&refcode=cd&lang=en&tide_request=locationdata`;
     
     console.log('🌊 Fetching tide data from:', url);
     
@@ -173,21 +175,19 @@ export async function getTideForecast(
 
     if (!response.ok) {
       console.warn(`❌ Kartverket Tide API returned ${response.status}`);
-      return generateSampleTideData(lat, lng, fromTime, toTime);
+      return null;
     }
 
     const text = await response.text();
-    console.log('🌊 Tide API response (first 200 chars):', text.substring(0, 200));
+    console.log('🌊 Tide API response (first 500 chars):', text.substring(0, 500));
     
-    const parsed = parseTideTabFormat(text, lat, lng);
-    console.log('✅ Successfully parsed tide data:', parsed.properties.timeseries.length, 'entries');
+    // Parse XML to extract high/low tide events
+    const parsed = parseTideXML(text, lat, lng);
+    console.log('✅ Successfully parsed tide events:', parsed.events.length, 'events');
     return parsed;
   } catch (error) {
     console.error('❌ Tide API error:', error);
-    // Generate sample data as fallback
-    const fromTime = new Date();
-    const toTime = new Date(fromTime.getTime() + 10 * 24 * 60 * 60 * 1000);
-    return generateSampleTideData(lat, lng, fromTime, toTime);
+    return null;
   }
 }
 
@@ -195,13 +195,13 @@ export async function getTideForecast(
  * Combine location, ocean, and tide forecast data into hourly forecast
  * @param locationForecast Location forecast data
  * @param oceanForecast Ocean forecast data (optional)
- * @param tideForecast Tide forecast data (optional)
+ * @param tideForecast Tide forecast data with high/low events (optional)
  * @returns Array of hourly forecasts
  */
 export function combineForecasts(
   locationForecast: LocationForecastResponse,
   oceanForecast: OceanForecastResponse | null,
-  tideForecast: TideForecastResponse | null
+  tideForecast: TideXMLResponse | null
 ): HourlyForecast[] {
   const hourlyForecasts: HourlyForecast[] = [];
 
@@ -213,35 +213,11 @@ export function combineForecasts(
     });
   }
 
-  // Create a map of tide data by hour for quick lookup
-  const tideDataMap = new Map<string, TideForecastTimeseries>();
-  if (tideForecast) {
-    tideForecast.properties.timeseries.forEach((entry) => {
-      // Round time to nearest hour for matching
-      const entryDate = new Date(entry.time);
-      const hourKey = new Date(
-        entryDate.getFullYear(),
-        entryDate.getMonth(),
-        entryDate.getDate(),
-        entryDate.getHours()
-      ).toISOString();
-      tideDataMap.set(hourKey, entry);
-    });
-  }
-
   // Process location forecast timeseries
   locationForecast.properties.timeseries.forEach((entry) => {
     const oceanData = oceanDataMap.get(entry.time);
     
-    // Find tide data for this hour
     const entryDate = new Date(entry.time);
-    const hourKey = new Date(
-      entryDate.getFullYear(),
-      entryDate.getMonth(),
-      entryDate.getDate(),
-      entryDate.getHours()
-    ).toISOString();
-    const tideData = tideDataMap.get(hourKey);
 
     const hourlyForecast: HourlyForecast = {
       time: entry.time,
@@ -265,9 +241,9 @@ export function combineForecasts(
       hourlyForecast.currentDirection = oceanData.data.instant.details.sea_water_to_direction;
     }
 
-    // Add tide data if available
-    if (tideData) {
-      hourlyForecast.tideHeight = tideData.data.instant.details.sea_surface_height_above_chart_datum;
+    // Add tide phase if tide data is available
+    if (tideForecast && tideForecast.events.length > 0) {
+      hourlyForecast.tidePhase = calculateTidePhase(entryDate, tideForecast.events);
     }
 
     hourlyForecasts.push(hourlyForecast);
@@ -277,125 +253,169 @@ export function combineForecasts(
 }
 
 /**
- * Parse tab-separated tide data from Kartverket API
+ * Parse XML tide data from Kartverket API to extract high/low tide events
  */
-function parseTideTabFormat(
-  text: string,
+function parseTideXML(
+  xmlText: string,
   lat: number,
   lng: number
-): TideForecastResponse {
-  const lines = text.trim().split('\n');
-  const timeseries: TideForecastTimeseries[] = [];
+): TideXMLResponse {
+  const events: TideEvent[] = [];
+  let stationName: string | undefined;
   
-  for (const line of lines) {
-    if (line.startsWith('#') || line.startsWith('time') || !line.trim()) {
-      continue;
-    }
+  // Simple XML parsing using regex (for production, consider using a proper XML parser)
+  // Extract location name
+  const locationMatch = xmlText.match(/<location[^>]+name="([^"]+)"/);
+  if (locationMatch) {
+    stationName = locationMatch[1];
+  }
+  
+  // Extract waterlevel elements with high/low flags
+  const waterLevelRegex = /<waterlevel\s+value="([\d.]+)"\s+time="([^"]+)"\s+flag="(high|low)"\/>/g;
+  let match;
+  
+  while ((match = waterLevelRegex.exec(xmlText)) !== null) {
+    const value = parseFloat(match[1]);
+    const time = match[2];
+    const flag = match[3] as 'high' | 'low';
     
-    const parts = line.split('\t');
-    if (parts.length >= 2) {
-      const timeStr = parts[0].trim();
-      try {
-        const value = parseFloat(parts[1].trim());
-        timeseries.push({
-          time: timeStr,
-          data: {
-            instant: {
-              details: {
-                sea_surface_height_above_chart_datum: value
-              }
-            }
-          }
-        });
-      } catch {
-        continue;
-      }
-    }
+    events.push({
+      time,
+      value,
+      flag
+    });
   }
   
   return {
-    type: 'Feature',
-    geometry: {
-      type: 'Point',
-      coordinates: [lng, lat]
-    },
-    properties: {
-      meta: {
-        updated_at: new Date().toISOString(),
-        station_name: 'Kartverket Station',
-        station_code: 'AUTO',
-        units: {
-          sea_surface_height_above_chart_datum: 'cm'
-        }
-      },
-      timeseries
-    }
+    events,
+    stationName,
+    latitude: lat,
+    longitude: lng
   };
 }
 
 /**
- * Generate sample tide data using semi-diurnal tidal model
+ * Calculate tide phase for a given hour based on high/low tide events
+ * Example phases: "Hi (13:18)", "Hi+1", "Hi+2", "Falling", "Lo-2", "Lo-1", "Lo (19:18)", "Rising"
  */
-function generateSampleTideData(
-  lat: number,
-  lng: number,
-  fromTime: Date,
-  toTime: Date
-): TideForecastResponse {
-  const timeseries: TideForecastTimeseries[] = [];
-  const tidalPeriodHours = 12.42; // Semi-diurnal tide period
-  const meanHighWater = 150; // cm
-  const meanLowWater = 50; // cm
-  const tidalRange = meanHighWater - meanLowWater;
-  const meanTide = (meanHighWater + meanLowWater) / 2;
-  
-  let currentTime = new Date(fromTime);
-  const interval = 60 * 60 * 1000; // 1 hour in milliseconds
-  
-  while (currentTime <= toTime) {
-    const hoursElapsed = (currentTime.getTime() - fromTime.getTime()) / (1000 * 60 * 60);
-    
-    // Primary semi-diurnal component (M2)
-    const tideM2 = Math.sin(2 * Math.PI * hoursElapsed / tidalPeriodHours);
-    
-    // Secondary component (S2 - solar semi-diurnal)
-    const tideS2 = 0.3 * Math.sin(2 * Math.PI * hoursElapsed / 12.0);
-    
-    // Combine components and scale
-    const tideHeight = meanTide + (tidalRange / 2) * (tideM2 + tideS2);
-    
-    timeseries.push({
-      time: currentTime.toISOString(),
-      data: {
-        instant: {
-          details: {
-            sea_surface_height_above_chart_datum: Math.round(tideHeight * 10) / 10
-          }
-        }
-      }
-    });
-    
-    currentTime = new Date(currentTime.getTime() + interval);
+function calculateTidePhase(hourTime: Date, tideEvents: TideEvent[]): string {
+  if (!tideEvents || tideEvents.length === 0) {
+    return '—';
   }
   
-  return {
-    type: 'Feature',
-    geometry: {
-      type: 'Point',
-      coordinates: [lng, lat]
-    },
-    properties: {
-      meta: {
-        updated_at: new Date().toISOString(),
-        station_name: 'Sample Data (API Unavailable)',
-        station_code: 'SAMPLE',
-        units: {
-          sea_surface_height_above_chart_datum: 'cm'
-        }
-      },
-      timeseries
+  // Normalize hourTime to the start of the hour
+  const currentHour = new Date(
+    hourTime.getFullYear(),
+    hourTime.getMonth(),
+    hourTime.getDate(),
+    hourTime.getHours()
+  );
+  
+  // Find the previous and next tide events relative to this hour
+  let prevEvent: TideEvent | null = null;
+  let nextEvent: TideEvent | null = null;
+  
+  for (let i = 0; i < tideEvents.length; i++) {
+    const eventTime = new Date(tideEvents[i].time);
+    
+    if (eventTime < currentHour) {
+      prevEvent = tideEvents[i];
+    } else if (eventTime >= currentHour && !nextEvent) {
+      nextEvent = tideEvents[i];
+      break;
     }
-  };
+  }
+  
+  // Handle case where we're before the first event (backward calculation)
+  if (!prevEvent && nextEvent) {
+    const nextEventTime = new Date(nextEvent.time);
+    const nextEventHour = new Date(
+      nextEventTime.getFullYear(),
+      nextEventTime.getMonth(),
+      nextEventTime.getDate(),
+      nextEventTime.getHours()
+    );
+    
+    // Check if the current hour contains the next event
+    if (currentHour.getTime() === nextEventHour.getTime()) {
+      const timeStr = formatTimeForPhase(nextEventTime);
+      return nextEvent.flag === 'high' ? `Hi (${timeStr})` : `Lo (${timeStr})`;
+    }
+    
+    const hoursBeforeNextEventHour = Math.round((nextEventHour.getTime() - currentHour.getTime()) / (1000 * 60 * 60));
+    
+    // If next event is high tide, we're in Rising phase approaching it
+    if (nextEvent.flag === 'high') {
+      if (hoursBeforeNextEventHour === 1) return 'Hi-1';
+      if (hoursBeforeNextEventHour === 2) return 'Hi-2';
+      return 'Rising';
+    } else {
+      // If next event is low tide, we're in Falling phase approaching it
+      if (hoursBeforeNextEventHour === 1) return 'Lo-1';
+      if (hoursBeforeNextEventHour === 2) return 'Lo-2';
+      return 'Falling';
+    }
+  }
+  
+  if (!prevEvent || !nextEvent) {
+    return '—';
+  }
+  
+  const prevEventTime = new Date(prevEvent.time);
+  const nextEventTime = new Date(nextEvent.time);
+  
+  // Get the hour that contains each event
+  const prevEventHour = new Date(
+    prevEventTime.getFullYear(),
+    prevEventTime.getMonth(),
+    prevEventTime.getDate(),
+    prevEventTime.getHours()
+  );
+  
+  const nextEventHour = new Date(
+    nextEventTime.getFullYear(),
+    nextEventTime.getMonth(),
+    nextEventTime.getDate(),
+    nextEventTime.getHours()
+  );
+  
+  // Check if the current hour contains the next event
+  if (currentHour.getTime() === nextEventHour.getTime()) {
+    const timeStr = formatTimeForPhase(nextEventTime);
+    return nextEvent.flag === 'high' ? `Hi (${timeStr})` : `Lo (${timeStr})`;
+  }
+  
+  // Calculate hours from the hour containing each event
+  const hoursAfterPrevEventHour = Math.round((currentHour.getTime() - prevEventHour.getTime()) / (1000 * 60 * 60));
+  const hoursBeforeNextEventHour = Math.round((nextEventHour.getTime() - currentHour.getTime()) / (1000 * 60 * 60));
+  
+  // Determine the phase based on position between events
+  if (prevEvent.flag === 'high' && nextEvent.flag === 'low') {
+    // Falling tide: Hi -> Lo
+    if (hoursAfterPrevEventHour === 1) return 'Hi+1';
+    if (hoursAfterPrevEventHour === 2) return 'Hi+2';
+    if (hoursBeforeNextEventHour === 2) return 'Lo-2';
+    if (hoursBeforeNextEventHour === 1) return 'Lo-1';
+    return 'Falling';
+  } else if (prevEvent.flag === 'low' && nextEvent.flag === 'high') {
+    // Rising tide: Lo -> Hi
+    if (hoursAfterPrevEventHour === 1) return 'Lo+1';
+    if (hoursAfterPrevEventHour === 2) return 'Lo+2';
+    if (hoursBeforeNextEventHour === 2) return 'Hi-2';
+    if (hoursBeforeNextEventHour === 1) return 'Hi-1';
+    return 'Rising';
+  }
+  
+  return '—';
+}
+
+/**
+ * Format time for phase display (HH:MM)
+ */
+function formatTimeForPhase(date: Date): string {
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  return `${hours}:${minutes}`;
 }
 
 /**
@@ -422,10 +442,10 @@ export async function getCombinedForecast(
       getTideForecast(lat, lng),
     ]);
 
-    // Check if tide data is sample or real
-    const tideDataSource = tideForecast?.properties.meta.station_code === 'SAMPLE' ? 'sample' : 'real';
+    // Check if tide data is available
+    const tideDataSource = tideForecast && tideForecast.events.length > 0 ? 'real' : 'sample';
     const tideDataMessage = tideDataSource === 'sample' 
-      ? 'Using simulated tide data (Kartverket API unavailable)'
+      ? 'Tide data unavailable for this location'
       : undefined;
 
     return {

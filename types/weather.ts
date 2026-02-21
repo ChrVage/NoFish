@@ -118,6 +118,7 @@ export interface HourlyForecast {
   currentDirection?: number;
   symbolCode?: string;
   tideHeight?: number;
+  tidePhase?: string; // e.g., "Hi (13:18)", "Hi+1", "Falling", "Lo-2", etc.
 }
 
 // Kartverket Tide API types
@@ -149,4 +150,18 @@ export interface TideForecastTimeseries {
       };
     };
   };
+}
+
+// Kartverket Tide API XML types (high/low tide events)
+export interface TideEvent {
+  time: string; // ISO timestamp
+  value: number; // Water level in cm
+  flag: 'high' | 'low';
+}
+
+export interface TideXMLResponse {
+  events: TideEvent[]; // High and low tide events
+  stationName?: string;
+  latitude: number;
+  longitude: number;
 }
