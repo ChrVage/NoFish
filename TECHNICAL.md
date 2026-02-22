@@ -9,6 +9,7 @@
 | Runtime | React 19.2.3 |
 | Styling | Tailwind CSS v4 |
 | Map | Leaflet.js + react-leaflet with OpenStreetMap tiles |
+| Database | Neon (serverless Postgres) via `@neondatabase/serverless` |
 
 ### External APIs
 
@@ -39,6 +40,8 @@ app/
       route.ts          # Server-side proxy → MET Norway weather + ocean forecasts
     tides/
       route.ts          # Placeholder (tide integration pending)
+    log/
+      route.ts          # POST — logs each lookup to Neon (IP + User-Agent added server-side)
 
 components/
   Map.tsx               # Leaflet map (SSR-disabled, dynamic import)
@@ -48,6 +51,9 @@ lib/
   api/
     weather.ts          # Core logic: fetches & merges weather, ocean, and tide data
     geocoding.ts        # Nominatim reverse geocoding helper
+  db/
+    index.ts            # Neon SQL client (reads DATABASE_URL)
+    lookups.ts          # insertLookup() + ensureTable() helpers
 
 types/
   weather.ts            # Weather, ocean, and tide TypeScript types
@@ -56,6 +62,57 @@ types/
 
 public/                 # Static assets
 ```
+
+---
+
+## Database (Neon)
+
+Every location lookup is logged to a Neon serverless Postgres database.
+
+### What is stored
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | serial | Auto-incrementing primary key |
+| `lat` | double precision | Clicked latitude |
+| `lon` | double precision | Clicked longitude |
+| `location_name` | text | Reverse-geocoded place name |
+| `municipality` | text | Municipality name |
+| `county` | text | County name |
+| `ip_address` | text | Client IP (from `x-forwarded-for`) |
+| `user_agent` | text | Browser / OS string |
+| `created_at` | timestamptz | UTC timestamp (auto-set) |
+
+### Setup
+
+1. Create a free project at [neon.com](https://neon.com) (or use the **Neon** integration in the Vercel dashboard — it adds `DATABASE_URL` automatically).
+
+2. Add the connection string to your environment:
+   ```bash
+   # .env.local (local dev)
+   DATABASE_URL=postgres://user:password@host/dbname?sslmode=require
+   ```
+   On Vercel, add `DATABASE_URL` under **Settings → Environment Variables**.
+
+3. Create the table — run this once in the [Neon SQL editor](https://console.neon.tech):
+   ```sql
+   CREATE TABLE IF NOT EXISTS lookups (
+     id            SERIAL PRIMARY KEY,
+     lat           DOUBLE PRECISION NOT NULL,
+     lon           DOUBLE PRECISION NOT NULL,
+     location_name TEXT,
+     municipality  TEXT,
+     county        TEXT,
+     ip_address    TEXT,
+     user_agent    TEXT,
+     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+   );
+   ```
+   The `ensureTable()` helper in `lib/db/lookups.ts` will also create it automatically on the first cold start if it doesn't exist.
+
+4. Start the dev server — lookups will be inserted on every forecast request.
+
+> **Without `DATABASE_URL`** the `/api/log` route will throw an error on startup. If you want to run the app without a database, remove the `DATABASE_URL` check in `lib/db/index.ts` and make `insertLookup` a no-op.
 
 ---
 

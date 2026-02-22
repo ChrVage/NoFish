@@ -69,6 +69,20 @@ function ResultsContent() {
         } else {
           throw new Error(weatherResult.error || 'Failed to load forecast data');
         }
+
+        // Fire-and-forget: log the lookup to the database
+        const locationInfo = geocodingResult.success ? geocodingResult.data : null;
+        fetch('/api/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lat,
+            lon,
+            locationName: locationInfo?.name ?? null,
+            municipality: locationInfo?.municipality ?? null,
+            county: locationInfo?.county ?? null,
+          }),
+        }).catch((err) => console.warn('Failed to log lookup:', err));
       } catch (err) {
         console.error('❌ Error fetching location data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load forecast data. Please try again.');
