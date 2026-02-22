@@ -162,22 +162,24 @@ npm run lint
 
 ## Deployment (Vercel)
 
-The live app runs on [Vercel](https://vercel.com) at [no-fish.vercel.app](https://no-fish.vercel.app), with automatic deployments triggered by pushes to the main branch.
+The live app runs on [Vercel](https://vercel.com) at [nofish.no](https://nofish.no), with automatic deployments triggered by pushes to the main branch.
 
-No environment variables are required — all APIs are public and unauthenticated.
+**Required environment variable:** `DATABASE_URL` (Neon connection string — see [Database setup](#database-neon) above).
 
 ### Deploy Your Own Fork
 
 **Via Vercel Dashboard (recommended)**
 
 1. Push your fork to GitHub/GitLab/Bitbucket
-2. Import at [vercel.com/new](https://vercel.com/new)
-3. Vercel auto-detects Next.js and configures everything
+2. Import at [vercel.com/new](https://vercel.com/new) — Vercel auto-detects Next.js
+3. Go to **Storage → Connect Store → Neon** to create a Neon project and add `DATABASE_URL` automatically
+4. Deploy — Vercel redeploys automatically on every push
 
 **Via Vercel CLI**
 
 ```bash
 npm install -g vercel
+vercel env add DATABASE_URL production   # paste your Neon connection string
 vercel --prod
 ```
 

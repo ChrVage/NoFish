@@ -4,7 +4,7 @@
 
 It shows hourly weather, ocean, and tide forecasts for any point on the Norwegian coast so you can plan (or skip) your fishing trips with confidence.
 
-🌐 **Live App:** [no-fish.vercel.app](https://no-fish.vercel.app)
+🌐 **Live App:** [nofish.no](https://nofish.no)
 
 > For setup instructions, tech stack, and deployment details see [TECHNICAL.md](TECHNICAL.md).
 
@@ -24,7 +24,7 @@ It shows hourly weather, ocean, and tide forecasts for any point on the Norwegia
 ## How It Works
 
 1. **Select a location** — Click anywhere on the map
-2. **Data is fetched** — Weather, ocean, and tide data for those coordinates is retrieved via server-side API routes
+2. **Data is fetched** — Weather, ocean, and tide data for those coordinates is retrieved via server-side API routes; the lookup is also logged to the database
 3. **View the forecast** — A detailed hourly table covers the next 10 days
 4. **Plan accordingly** — Use the data to decide whether it's worth heading out
 
@@ -42,4 +42,5 @@ It shows hourly weather, ocean, and tide forecasts for any point on the Norwegia
 ## Future Enhancements
 
 - **Fishing Condition Scoring** — 0–100% suitability rating based on combined conditions
+
 ---
