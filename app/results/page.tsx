@@ -77,7 +77,7 @@ function ResultsContent() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             lat,
-            lon,
+            lon: lng,
             locationName: locationInfo?.name ?? null,
             municipality: locationInfo?.municipality ?? null,
             county: locationInfo?.county ?? null,
