@@ -259,7 +259,7 @@ export function combineForecasts(
 
     // Add tide phase if tide data is available
     if (tideForecast && tideForecast.events.length > 0) {
-      hourlyForecast.tidePhase = calculateTidePhase(entryDate, tideForecast.events);
+      hourlyForecast.tidePhase = calculateTidePhase(entryDate, windowEnd, tideForecast.events);
     }
 
     // Add sun data
@@ -317,117 +317,64 @@ function parseTideXML(
 }
 
 /**
- * Calculate tide phase for a given hour based on high/low tide events
- * Example phases: "Hi (13:18)", "Hi+1", "Hi+2", "Falling", "Lo-2", "Lo-1", "Lo (19:18)", "Rising"
+ * Calculate tide phase for a time window.
+ *
+ * If any high/low tide event falls within [windowStart, windowEnd) those events
+ * are listed explicitly, e.g. "Hi (13:18)", "Lo (19:30)", or
+ * "Hi (13:18) · Lo (19:30)" when multiple events occur in the window.
+ *
+ * When no event falls inside the window, "Rising" or "Falling" is returned
+ * based on the direction between the bracketing events.
  */
-function calculateTidePhase(hourTime: Date, tideEvents: TideEvent[]): string {
+function calculateTidePhase(
+  windowStart: Date,
+  windowEnd: Date,
+  tideEvents: TideEvent[]
+): string {
   if (!tideEvents || tideEvents.length === 0) {
     return '—';
   }
-  
-  // Normalize hourTime to the start of the hour
-  const currentHour = new Date(
-    hourTime.getFullYear(),
-    hourTime.getMonth(),
-    hourTime.getDate(),
-    hourTime.getHours()
-  );
-  
-  // Find the previous and next tide events relative to this hour
+
+  // 1. Collect all events that fall inside [windowStart, windowEnd)
+  const eventsInWindow = tideEvents.filter((e) => {
+    const t = new Date(e.time);
+    return t >= windowStart && t < windowEnd;
+  });
+
+  if (eventsInWindow.length > 0) {
+    return eventsInWindow
+      .map((e) => {
+        const timeStr = formatTimeForPhase(new Date(e.time));
+        return e.flag === 'high' ? `Hi (${timeStr})` : `Lo (${timeStr})`;
+      })
+      .join(' · ');
+  }
+
+  // 2. No event in window — determine direction from bracketing events
   let prevEvent: TideEvent | null = null;
   let nextEvent: TideEvent | null = null;
-  
-  for (let i = 0; i < tideEvents.length; i++) {
-    const eventTime = new Date(tideEvents[i].time);
-    
-    if (eventTime < currentHour) {
-      prevEvent = tideEvents[i];
-    } else if (eventTime >= currentHour && !nextEvent) {
-      nextEvent = tideEvents[i];
+
+  for (const e of tideEvents) {
+    const t = new Date(e.time);
+    if (t < windowStart) {
+      prevEvent = e;
+    } else if (t >= windowEnd && !nextEvent) {
+      nextEvent = e;
       break;
     }
   }
-  
-  // Handle case where we're before the first event (backward calculation)
+
   if (!prevEvent && nextEvent) {
-    const nextEventTime = new Date(nextEvent.time);
-    const nextEventHour = new Date(
-      nextEventTime.getFullYear(),
-      nextEventTime.getMonth(),
-      nextEventTime.getDate(),
-      nextEventTime.getHours()
-    );
-    
-    // Check if the current hour contains the next event
-    if (currentHour.getTime() === nextEventHour.getTime()) {
-      const timeStr = formatTimeForPhase(nextEventTime);
-      return nextEvent.flag === 'high' ? `Hi (${timeStr})` : `Lo (${timeStr})`;
-    }
-    
-    const hoursBeforeNextEventHour = Math.round((nextEventHour.getTime() - currentHour.getTime()) / (1000 * 60 * 60));
-    
-    // If next event is high tide, we're in Rising phase approaching it
-    if (nextEvent.flag === 'high') {
-      if (hoursBeforeNextEventHour === 1) return 'Hi-1';
-      if (hoursBeforeNextEventHour === 2) return 'Hi-2';
-      return 'Rising';
-    } else {
-      // If next event is low tide, we're in Falling phase approaching it
-      if (hoursBeforeNextEventHour === 1) return 'Lo-1';
-      if (hoursBeforeNextEventHour === 2) return 'Lo-2';
-      return 'Falling';
-    }
+    return nextEvent.flag === 'high' ? 'Rising' : 'Falling';
   }
-  
-  if (!prevEvent || !nextEvent) {
-    return '—';
+  if (prevEvent && !nextEvent) {
+    return prevEvent.flag === 'high' ? 'Falling' : 'Rising';
   }
-  
-  const prevEventTime = new Date(prevEvent.time);
-  const nextEventTime = new Date(nextEvent.time);
-  
-  // Get the hour that contains each event
-  const prevEventHour = new Date(
-    prevEventTime.getFullYear(),
-    prevEventTime.getMonth(),
-    prevEventTime.getDate(),
-    prevEventTime.getHours()
-  );
-  
-  const nextEventHour = new Date(
-    nextEventTime.getFullYear(),
-    nextEventTime.getMonth(),
-    nextEventTime.getDate(),
-    nextEventTime.getHours()
-  );
-  
-  // Check if the current hour contains the next event
-  if (currentHour.getTime() === nextEventHour.getTime()) {
-    const timeStr = formatTimeForPhase(nextEventTime);
-    return nextEvent.flag === 'high' ? `Hi (${timeStr})` : `Lo (${timeStr})`;
+  if (prevEvent && nextEvent) {
+    if (prevEvent.flag === 'low' && nextEvent.flag === 'high') return 'Rising';
+    if (prevEvent.flag === 'high' && nextEvent.flag === 'low') return 'Falling';
   }
-  
-  // Calculate hours from the hour containing each event
-  const hoursAfterPrevEventHour = Math.round((currentHour.getTime() - prevEventHour.getTime()) / (1000 * 60 * 60));
-  const hoursBeforeNextEventHour = Math.round((nextEventHour.getTime() - currentHour.getTime()) / (1000 * 60 * 60));
-  
-  // Determine the phase based on position between events
-  if (prevEvent.flag === 'high' && nextEvent.flag === 'low') {
-    // Falling tide: Hi -> Lo
-    if (hoursAfterPrevEventHour === 1) return 'Hi+1';
-    if (hoursAfterPrevEventHour === 2) return 'Hi+2';
-    if (hoursBeforeNextEventHour === 2) return 'Lo-2';
-    if (hoursBeforeNextEventHour === 1) return 'Lo-1';
-    return 'Falling';
-  } else if (prevEvent.flag === 'low' && nextEvent.flag === 'high') {
-    // Rising tide: Lo -> Hi
-    if (hoursAfterPrevEventHour === 1) return 'Lo+1';
-    if (hoursAfterPrevEventHour === 2) return 'Lo+2';
-    if (hoursBeforeNextEventHour === 2) return 'Hi-2';
-    if (hoursBeforeNextEventHour === 1) return 'Hi-1';
-    return 'Rising';
-  }
-  
+
   return '—';
 }
 
