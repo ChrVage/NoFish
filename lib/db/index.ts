@@ -1,25 +1,17 @@
-import { neon } from '@neondatabase/serverless';
+import { neon, type NeonQueryFunction } from '@neondatabase/serverless';
+
+let _sql: NeonQueryFunction<false, false> | undefined;
 
 /**
- * Lazily-initialised SQL client.  Throws only when first called, not at
+ * Lazily-initialised SQL client. Throws only when first called, not at
  * module-load time, so the app boots locally without DATABASE_URL.
  */
-function getSql() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error('DATABASE_URL environment variable is not set');
+export function getSql(): NeonQueryFunction<false, false> {
+  if (!_sql) {
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL environment variable is not set');
+    }
+    _sql = neon(process.env.DATABASE_URL);
   }
-  return neon(process.env.DATABASE_URL);
+  return _sql;
 }
-
-let _sql: ReturnType<typeof neon> | undefined;
-
-export const sql: ReturnType<typeof neon> = new Proxy({} as ReturnType<typeof neon>, {
-  apply(_target, thisArg, args) {
-    if (!_sql) _sql = getSql();
-    return Reflect.apply(_sql as object as (...a: unknown[]) => unknown, thisArg, args);
-  },
-  get(_target, prop) {
-    if (!_sql) _sql = getSql();
-    return Reflect.get(_sql, prop);
-  },
-});

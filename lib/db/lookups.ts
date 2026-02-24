@@ -1,4 +1,4 @@
-import { sql } from './index';
+import { getSql } from './index';
 
 export interface LookupRecord {
   lat: number;
@@ -15,6 +15,7 @@ export interface LookupRecord {
  * Run this once manually in the Neon SQL editor instead if you prefer explicit migrations.
  */
 export async function ensureTable(): Promise<void> {
+  const sql = getSql();
   await sql`
     CREATE TABLE IF NOT EXISTS lookups (
       id          SERIAL PRIMARY KEY,
@@ -31,6 +32,7 @@ export async function ensureTable(): Promise<void> {
 }
 
 export async function insertLookup(record: LookupRecord): Promise<void> {
+  const sql = getSql();
   await sql`
     INSERT INTO lookups (lat, lon, location_name, municipality, county, ip_address, user_agent)
     VALUES (
