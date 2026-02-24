@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { after } from 'next/server';
+import { headers } from 'next/headers';
 import { getCombinedForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
 import { insertLookup, ensureTable } from '@/lib/db/lookups';
@@ -27,6 +28,19 @@ export default async function ResultsPage({ searchParams }: PageProps) {
 
   const { forecasts, metadata } = weatherResult;
 
+  // Capture request headers now — not available inside after()
+  const reqHeaders = await headers();
+  const forwarded = reqHeaders.get('x-forwarded-for');
+  const ipAddress = (forwarded ? forwarded.split(',')[0].trim() : reqHeaders.get('x-real-ip')) ?? undefined;
+  const userAgent = reqHeaders.get('user-agent') ?? undefined;
+  // Vercel injects these automatically on every request
+  const geoCountry = reqHeaders.get('x-vercel-ip-country') || undefined;
+  const geoRegion  = reqHeaders.get('x-vercel-ip-country-region') || undefined;
+  const geoCityRaw = reqHeaders.get('x-vercel-ip-city') || undefined;
+  const geoCity    = geoCityRaw
+    ? (() => { try { return decodeURIComponent(geoCityRaw); } catch { return geoCityRaw; } })()
+    : undefined;
+
   // Log the lookup after the response is sent — skipped in local development
   if (process.env.NODE_ENV === 'production') {
     after(async () => {
@@ -38,6 +52,11 @@ export default async function ResultsPage({ searchParams }: PageProps) {
           locationName: locationData?.name ?? undefined,
           municipality: locationData?.municipality ?? undefined,
           county: locationData?.county ?? undefined,
+          ipAddress,
+          userAgent,
+          geoCountry,
+          geoRegion,
+          geoCity,
         });
       } catch (err) {
         console.warn('Failed to log lookup:', err);
