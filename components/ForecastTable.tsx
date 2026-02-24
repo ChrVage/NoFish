@@ -72,6 +72,7 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
     // Format for Norway timezone (Europe/Oslo)
     const formatter = new Intl.DateTimeFormat('en-US', {
       weekday: 'short',
+      day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
@@ -80,10 +81,11 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
     
     const parts = formatter.formatToParts(date);
     const weekday = parts.find(p => p.type === 'weekday')?.value || '';
+    const day = parts.find(p => p.type === 'day')?.value || '';
     const hour = parts.find(p => p.type === 'hour')?.value || '00';
     const minute = parts.find(p => p.type === 'minute')?.value || '00';
     
-    return `${weekday}. ${hour}:${minute}`;
+    return `${weekday}. ${day}. ${hour}:${minute}`;
   };
 
   const formatValue = (value: number | undefined, decimals: number = 1, unit: string = '') => {
