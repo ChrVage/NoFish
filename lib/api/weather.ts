@@ -85,7 +85,7 @@ export async function getLocationForecast(
 ): Promise<LocationForecastResponse> {
   try {
     const response = await fetch(
-      `https://api.met.no/weatherapi/locationforecast/2.0/compact?` +
+      `https://api.met.no/weatherapi/locationforecast/2.0/complete?` +
         `lat=${lat.toFixed(4)}&lon=${lng.toFixed(4)}`,
       {
         headers: {
@@ -228,11 +228,18 @@ export function combineForecasts(
       temperature: entry.data.instant.details.air_temperature,
       windSpeed: entry.data.instant.details.wind_speed,
       windDirection: entry.data.instant.details.wind_from_direction,
+      windGust: entry.data.instant.details.wind_speed_of_gust,
+      windSpeedP10: entry.data.instant.details.wind_speed_percentile_10,
+      windSpeedP90: entry.data.instant.details.wind_speed_percentile_90,
       humidity: entry.data.instant.details.relative_humidity,
       cloudCover: entry.data.instant.details.cloud_area_fraction,
       pressure: entry.data.instant.details.air_pressure_at_sea_level,
       precipitation: entry.data.next_1_hours?.details.precipitation_amount,
-      symbolCode: entry.data.next_1_hours?.summary.symbol_code || 
+      precipitationMin: entry.data.next_1_hours?.details.precipitation_amount_min,
+      precipitationMax: entry.data.next_1_hours?.details.precipitation_amount_max,
+      temperatureP10: entry.data.instant.details.air_temperature_percentile_10,
+      temperatureP90: entry.data.instant.details.air_temperature_percentile_90,
+      symbolCode: entry.data.next_1_hours?.summary.symbol_code ||
                   entry.data.next_6_hours?.summary.symbol_code,
     };
 

@@ -93,6 +93,36 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
     return `${value.toFixed(decimals)}${unit}`;
   };
 
+  // Format wind as "10.5 ±2.0 (15.0) m/s"
+  // median = reported speed, ±half-spread from P10/P90, (gust) in parens
+  const formatWind = (speed: number | undefined, p10: number | undefined, p90: number | undefined, gust: number | undefined) => {
+    if (speed === undefined) return '—';
+    const base = speed.toFixed(1);
+    const uncertainty = (p10 !== undefined && p90 !== undefined)
+      ? ` ±${((p90 - p10) / 2).toFixed(1)}`
+      : '';
+    const gustPart = gust !== undefined ? ` (${gust.toFixed(1)})` : '';
+    return `${base}${uncertainty}${gustPart} m/s`;
+  };
+
+  // Confidence dot based on relative P90–P10 spread
+  const WindConfidence = ({ p10, p90, median }: { p10?: number; p90?: number; median?: number }) => {
+    if (p10 === undefined || p90 === undefined || !median) return null;
+    const relative = (p90 - p10) / median;
+    const [color, title] =
+      relative < 0.4
+        ? ['bg-green-400', `Spread ${(p90 - p10).toFixed(1)} m/s — high confidence`]
+        : relative < 0.9
+        ? ['bg-amber-400', `Spread ${(p90 - p10).toFixed(1)} m/s — moderate confidence`]
+        : ['bg-red-500',   `Spread ${(p90 - p10).toFixed(1)} m/s — low confidence`];
+    return (
+      <span
+        title={title}
+        className={`inline-block w-2 h-2 rounded-full ml-1 align-middle ${color}`}
+      />
+    );
+  };
+
   const getDirectionLabel = (degrees: number | undefined, isToDirection: boolean = false) => {
     if (degrees === undefined) return '—';
     const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
@@ -167,7 +197,10 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
                   {forecast.tidePhase || '—'}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700 bg-blue-50/50 border-l-2 border-blue-200">
-                  {formatValue(forecast.windSpeed, 1, ' m/s')}
+                  <span className="whitespace-nowrap">
+                    {formatWind(forecast.windSpeed, forecast.windSpeedP10, forecast.windSpeedP90, forecast.windGust)}
+                    <WindConfidence p10={forecast.windSpeedP10} p90={forecast.windSpeedP90} median={forecast.windSpeed} />
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700 text-center bg-blue-50/50 border-r-2 border-blue-200">
                   <DirectionArrow degrees={forecast.windDirection} isFromDirection={true} className="text-blue-600" />

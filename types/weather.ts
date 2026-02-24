@@ -33,11 +33,15 @@ export interface LocationForecastTimeseries {
       details: {
         air_pressure_at_sea_level?: number;
         air_temperature?: number;
+        air_temperature_percentile_10?: number;
+        air_temperature_percentile_90?: number;
         cloud_area_fraction?: number;
         relative_humidity?: number;
         wind_from_direction?: number;
         wind_speed?: number;
         wind_speed_of_gust?: number;
+        wind_speed_percentile_10?: number;
+        wind_speed_percentile_90?: number;
       };
     };
     next_1_hours?: {
@@ -46,6 +50,8 @@ export interface LocationForecastTimeseries {
       };
       details: {
         precipitation_amount?: number;
+        precipitation_amount_min?: number;
+        precipitation_amount_max?: number;
       };
     };
     next_6_hours?: {
@@ -54,6 +60,8 @@ export interface LocationForecastTimeseries {
       };
       details: {
         precipitation_amount?: number;
+        precipitation_amount_min?: number;
+        precipitation_amount_max?: number;
       };
     };
   };
@@ -122,6 +130,14 @@ export interface HourlyForecast {
   sunPhase?: string;      // e.g., "Daylight (06:23)", "Civil (17:45)", "Nautical (18:12)", "—"
   sunElevation?: number;  // Sun altitude above/below horizon in degrees
   sunAzimuth?: number;    // Sun azimuth in degrees (0=N, 90=E, 180=S, 270=W)
+  // Forecast uncertainty / percentile range from the complete endpoint
+  windSpeedP10?: number;
+  windSpeedP90?: number;
+  windGust?: number;
+  temperatureP10?: number;
+  temperatureP90?: number;
+  precipitationMin?: number;
+  precipitationMax?: number;
 }
 
 // Kartverket Tide API types
