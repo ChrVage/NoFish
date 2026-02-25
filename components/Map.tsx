@@ -1,18 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-interface MapProps {
-  onPositionConfirm?: (lat: number, lng: number) => void;
-}
-
-export default function Map({ onPositionConfirm }: MapProps) {
+export default function Map() {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const [selectedMarker, setSelectedMarker] = useState<L.Marker | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -47,31 +42,36 @@ export default function Map({ onPositionConfirm }: MapProps) {
     map.on('click', (e: L.LeafletMouseEvent) => {
       const { lat, lng } = e.latlng;
 
-      // Remove previous marker if exists
-      if (selectedMarker) {
-        map.removeLayer(selectedMarker);
-        setSelectedMarker(null);
-      }
-
       // Add temporary marker at clicked position
       const tempMarker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
 
-      // Create popup with confirm button
+      // Create popup with three navigation links
       const popupContent = document.createElement('div');
       popupContent.className = 'text-sm';
       popupContent.innerHTML = `
-        <div class="min-w-[200px]">
-          <strong class="text-ocean-700 block mb-2" id="location-name">Loading...</strong>
-          <div class="text-gray-600 text-xs mb-3">
-            <span>Lat: ${lat.toFixed(4)}</span><br/>
-            <span>Lng: ${lng.toFixed(4)}</span>
+        <div class="min-w-[180px]">
+          <strong class="text-ocean-700 block mb-1" id="location-name">Loading...</strong>
+          <div class="text-gray-500 text-xs mb-3">${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E</div>
+          <div class="flex flex-col gap-1.5">
+            <button id="go-score" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-1.5 px-3 rounded-lg transition-colors flex items-center gap-2 text-sm">
+              <svg width="10" height="10" style="flex-shrink:0;color:#16a34a" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+              Score
+            </button>
+            <button id="go-details" class="w-full bg-ocean-500 hover:bg-ocean-700 text-white font-medium py-1.5 px-3 rounded-lg transition-colors flex items-center gap-2 text-sm">
+              <svg width="10" height="10" style="flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M3 6h18M3 18h18"/>
+              </svg>
+              Details
+            </button>
+            <button id="go-tide" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-medium py-1.5 px-3 rounded-lg transition-colors flex items-center gap-2 text-sm">
+              <svg width="10" height="10" style="flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+              </svg>
+              Tides
+            </button>
           </div>
-          <button id="confirm-location" class="w-full bg-ocean-500 hover:bg-ocean-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-            Analyze conditions
-          </button>
         </div>
       `;
 
@@ -117,24 +117,21 @@ export default function Map({ onPositionConfirm }: MapProps) {
         }
       })();
 
-      // Add event listener to confirm button
-      const confirmButton = popupContent.querySelector('#confirm-location');
-      if (confirmButton) {
-        confirmButton.addEventListener('click', () => {
-          // Add confirmed marker first
-          const confirmedMarker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
-          setSelectedMarker(confirmedMarker);
+      const navigate = (path: string) => {
+        map.removeLayer(tempMarker);
+        map.closePopup();
+        router.push(path);
+      };
 
-          // Then remove temporary marker
-          map.removeLayer(tempMarker);
-
-          // Close popup
-          map.closePopup();
-
-          // Navigate to details page with coordinates
-          router.push(`/details?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}`);
-        });
-      }
+      popupContent.querySelector('#go-score')?.addEventListener('click', () =>
+        navigate(`/score?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}`)
+      );
+      popupContent.querySelector('#go-details')?.addEventListener('click', () =>
+        navigate(`/details?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}`)
+      );
+      popupContent.querySelector('#go-tide')?.addEventListener('click', () =>
+        navigate(`/tide?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}`)
+      );
 
       // Clean up when popup closes
       tempMarker.on('popupclose', () => {
