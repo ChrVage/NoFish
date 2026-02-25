@@ -263,10 +263,7 @@ export function combineForecasts(
     }
 
     // Add sun data
-    const sun = calculateSunPhase(entryDate, windowEnd, lat, lng);
-    hourlyForecast.sunPhase = sun.phase;
-    hourlyForecast.sunElevation = Math.round(sun.elevation * 10) / 10;
-    hourlyForecast.sunAzimuth = Math.round(sun.azimuth * 10) / 10;
+    hourlyForecast.sunPhase = calculateSunPhase(entryDate, windowEnd, lat, lng);
 
     hourlyForecasts.push(hourlyForecast);
   });
@@ -564,11 +561,7 @@ function calculateSunPhase(
   windowEnd: Date,
   lat: number,
   lng: number
-): { phase: string; elevation: number; azimuth: number } {
-  // Midpoint position for elevation / azimuth display
-  const mid = new Date((windowStart.getTime() + windowEnd.getTime()) / 2);
-  const midPos = solarPosition(mid, lat, lng);
-
+): string {
   const startPhase = getSunPhaseName(solarPosition(windowStart, lat, lng).elevation);
   const windowMinutes = Math.ceil((windowEnd.getTime() - windowStart.getTime()) / 60_000);
 
@@ -597,9 +590,12 @@ function calculateSunPhase(
     let label = sunPhaseLabels[startPhase];
     if (startPhase === 'day') {
       const noon = findSolarNoon(windowStart, windowEnd, lat, lng);
-      if (noon) label = `Daylight (${formatTimeHHMM(noon, lng)})`;
+      if (noon) {
+        const noonElevation = solarPosition(noon, lat, lng).elevation;
+        label = `Daylight (${formatTimeHHMM(noon, lng)}, ${noonElevation.toFixed(1)}°)`;
+      }
     }
-    return { phase: label, elevation: midPos.elevation, azimuth: midPos.azimuth };
+    return label;
   }
 
   // Build compound label: "Phase1 (T1) → Phase2 (T2) → Phase3 ..."
@@ -607,7 +603,7 @@ function calculateSunPhase(
   for (const tr of transitions) {
     label += ` (${formatTimeHHMM(tr.time, lng)}) → ${sunPhaseLabels[tr.to]}`;
   }
-  return { phase: label, elevation: midPos.elevation, azimuth: midPos.azimuth };
+  return label;
 }
 
 /**
