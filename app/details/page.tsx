@@ -11,7 +11,7 @@ interface PageProps {
   searchParams: Promise<{ lat?: string; lng?: string }>;
 }
 
-export default async function ResultsPage({ searchParams }: PageProps) {
+export default async function DetailsPage({ searchParams }: PageProps) {
   const { lat: latStr, lng: lngStr } = await searchParams;
   const lat = parseFloat(latStr ?? '');
   const lng = parseFloat(lngStr ?? '');

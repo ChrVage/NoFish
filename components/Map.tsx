@@ -131,8 +131,8 @@ export default function Map({ onPositionConfirm }: MapProps) {
           // Close popup
           map.closePopup();
 
-          // Navigate to results page with coordinates
-          router.push(`/results?lat=${lat}&lng=${lng}`);
+          // Navigate to details page with coordinates
+          router.push(`/details?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}`);
         });
       }
 
