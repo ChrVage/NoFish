@@ -17,6 +17,16 @@ export const metadata: Metadata = {
   description: "Analyze weather, tides, and conditions to decide when NOT to go fishing on the Norwegian coast",
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "NoFish",
+  "applicationCategory": "WeatherApplication",
+  "operatingSystem": "Web",
+  "description": "Interactive map providing specialized weather and sea conditions for small boat fishing.",
+  "genre": "https://schema.org/Fishing",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -24,6 +34,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
