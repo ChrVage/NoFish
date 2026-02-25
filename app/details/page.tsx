@@ -6,6 +6,7 @@ import { reverseGeocode } from '@/lib/api/geocoding';
 import { insertLookup, ensureTable } from '@/lib/db/lookups';
 import ForecastTable from '@/components/ForecastTable';
 import BackButton from './BackButton';
+import PageNav from '@/components/PageNav';
 
 interface PageProps {
   searchParams: Promise<{ lat?: string; lng?: string }>;
@@ -102,11 +103,12 @@ export default async function DetailsPage({ searchParams }: PageProps) {
             <ForecastTable forecasts={forecasts} />
           </div>
 
-          {/* Action button */}
-          <div className="flex gap-4">
+          {/* Navigation */}
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+            <PageNav lat={lat} lng={lng} current="details" />
             <BackButton
               label="Select different location"
-              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors"
+              className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm"
             />
           </div>
         </div>

@@ -2,11 +2,19 @@
 
 import { useRouter } from 'next/navigation';
 
-export default function BackButton() {
+interface BackButtonProps {
+  label?: string;
+  className?: string;
+}
+
+export default function BackButton({
+  label = '← Back',
+  className = 'text-ocean-50 hover:text-white transition-colors',
+}: BackButtonProps) {
   const { push } = useRouter();
   return (
-    <button onClick={() => push('/')} className="text-ocean-50 hover:text-white transition-colors">
-      ← Back
+    <button onClick={() => push('/')} className={className}>
+      {label}
     </button>
   );
 }

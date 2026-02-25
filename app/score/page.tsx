@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { reverseGeocode } from '@/lib/api/geocoding';
 import BackButton from './BackButton';
+import PageNav from '@/components/PageNav';
 
 interface PageProps {
   searchParams: Promise<{ lat?: string; lng?: string }>;
@@ -51,6 +52,14 @@ export default async function ScorePage({ searchParams }: PageProps) {
             <p className="text-gray-500 max-w-sm">
               This page will show a combined fishing score based on tides, weather, and seasonal conditions.
             </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-100">
+            <PageNav lat={lat} lng={lng} current="score" />
+            <BackButton
+              label="Select different location"
+              className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+            />
           </div>
         </div>
       </main>
