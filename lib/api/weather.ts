@@ -323,8 +323,11 @@ function parseTideXML(
  * are listed explicitly, e.g. "Hi (13:18)", "Lo (19:30)", or
  * "Hi (13:18) · Lo (19:30)" when multiple events occur in the window.
  *
- * When no event falls inside the window, "Rising" or "Falling" is returned
- * based on the direction between the bracketing events.
+ * For 1-hour windows only: hours adjacent to a tide event are labelled
+ * Hi-2, Hi-1, Hi+1, Hi+2 (or Lo±) when the event time rounds to exactly
+ * 1 or 2 hours from the window start.
+ *
+ * Only when none of the above applies is "Rising" or "Falling" returned.
  */
 function calculateTidePhase(
   windowStart: Date,
@@ -335,6 +338,10 @@ function calculateTidePhase(
     return '—';
   }
 
+  // Determine window duration before any branching
+  const windowDurationMs = windowEnd.getTime() - windowStart.getTime();
+  const isHourlyWindow = Math.abs(windowDurationMs - 60 * 60 * 1000) < 60 * 1000;
+
   // 1. Collect all events that fall inside [windowStart, windowEnd)
   const eventsInWindow = tideEvents.filter((e) => {
     const t = new Date(e.time);
@@ -342,6 +349,7 @@ function calculateTidePhase(
   });
 
   if (eventsInWindow.length > 0) {
+    // Always show exact time for Hi/Lo events
     return eventsInWindow
       .map((e) => {
         const timeStr = formatTimeForPhase(new Date(e.time));
@@ -350,7 +358,7 @@ function calculateTidePhase(
       .join(' · ');
   }
 
-  // 2. No event in window — determine direction from bracketing events
+  // 2. No event in window — find the closest bracketing events
   let prevEvent: TideEvent | null = null;
   let nextEvent: TideEvent | null = null;
 
@@ -364,6 +372,51 @@ function calculateTidePhase(
     }
   }
 
+  // 3. For 1-hour windows only, try Hi/Lo ±1/±2 labels.
+  //    Slot distance is counted using the event's floored hour bucket so that
+  //    the position of the event within its hour does not affect adjacent labels.
+  //    e.g. Hi at 13:45 → bucket = 13:00
+  //         window 12:00-13:00 → 1 slot before bucket → Hi-1
+  //         window 11:00-12:00 → 2 slots before bucket → Hi-2
+
+  if (isHourlyWindow) {
+    const HOUR_MS = 3600 * 1000;
+
+    let nextLabel: string | null = null;
+    let nextSlots = Infinity;
+    let prevLabel: string | null = null;
+    let prevSlots = Infinity;
+
+    if (nextEvent) {
+      // Floor the event time to its hour bucket
+      const bucketMs = Math.floor(new Date(nextEvent.time).getTime() / HOUR_MS) * HOUR_MS;
+      const slots = (bucketMs - windowStart.getTime()) / HOUR_MS;
+      if (slots === 1 || slots === 2) {
+        const label = nextEvent.flag === 'high' ? 'Hi' : 'Lo';
+        nextLabel = `${label}-${slots}`;
+        nextSlots = slots;
+      }
+    }
+
+    if (prevEvent) {
+      const bucketMs = Math.floor(new Date(prevEvent.time).getTime() / HOUR_MS) * HOUR_MS;
+      const slots = (windowStart.getTime() - bucketMs) / HOUR_MS;
+      if (slots === 1 || slots === 2) {
+        const label = prevEvent.flag === 'high' ? 'Hi' : 'Lo';
+        prevLabel = `${label}+${slots}`;
+        prevSlots = slots;
+      }
+    }
+
+    // Nearest event wins; if equally near, prefer the upcoming one (negative side)
+    if (nextLabel && prevLabel) {
+      return nextSlots <= prevSlots ? nextLabel : prevLabel;
+    }
+    if (nextLabel) return nextLabel;
+    if (prevLabel) return prevLabel;
+  }
+
+  // 4. Fall back to Rising / Falling
   if (!prevEvent && nextEvent) {
     return nextEvent.flag === 'high' ? 'Rising' : 'Falling';
   }
@@ -587,10 +640,7 @@ export async function getCombinedForecast(
   lng: number
 ): Promise<{
   forecasts: HourlyForecast[];
-  metadata: {
-    tideDataSource: 'real' | 'sample';
-    tideDataMessage?: string;
-  };
+  metadata: Record<string, never>;
 }> {
   try {
     // Fetch all forecasts in parallel
@@ -600,18 +650,12 @@ export async function getCombinedForecast(
       getTideForecast(lat, lng),
     ]);
 
-    // Check if tide data is available
-    const tideDataSource = tideForecast && tideForecast.events.length > 0 ? 'real' : 'sample';
-    const tideDataMessage = tideDataSource === 'sample' 
-      ? 'Tide data unavailable for this location'
-      : undefined;
+    // Only pass tide data if real events were returned
+    const realTideForecast = tideForecast && tideForecast.events.length > 0 ? tideForecast : null;
 
     return {
-      forecasts: combineForecasts(locationForecast, oceanForecast, tideForecast, lat, lng),
-      metadata: {
-        tideDataSource,
-        tideDataMessage,
-      },
+      forecasts: combineForecasts(locationForecast, oceanForecast, realTideForecast, lat, lng),
+      metadata: {},
     };
   } catch (error) {
     console.error('Combined forecast error:', error);

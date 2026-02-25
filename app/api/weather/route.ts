@@ -6,10 +6,7 @@ export interface WeatherApiResponse {
   success: boolean;
   data?: HourlyForecast[];
   error?: string;
-  metadata?: {
-    tideDataSource?: 'real' | 'sample';
-    tideDataMessage?: string;
-  };
+  metadata?: Record<string, never>;
 }
 
 export async function GET(request: NextRequest) {

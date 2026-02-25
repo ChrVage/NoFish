@@ -26,7 +26,7 @@ export default async function ResultsPage({ searchParams }: PageProps) {
     getCombinedForecast(lat, lng),
   ]);
 
-  const { forecasts, metadata } = weatherResult;
+  const { forecasts } = weatherResult;
 
   // Capture request headers now — not available inside after()
   const reqHeaders = await headers();
@@ -96,21 +96,6 @@ export default async function ResultsPage({ searchParams }: PageProps) {
               {Math.abs(lng).toFixed(4)}°{lng >= 0 ? 'E' : 'W'}
             </p>
           </div>
-
-          {/* Tide data notice */}
-          {metadata.tideDataSource === 'sample' && (
-            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-start gap-2">
-                <span className="text-yellow-600 text-lg">ℹ️</span>
-                <div>
-                  <p className="text-sm font-medium text-yellow-900">Using Simulated Tide Data</p>
-                  <p className="text-xs text-yellow-700 mt-1">
-                    {metadata.tideDataMessage ?? 'Real tide data temporarily unavailable'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Forecast table */}
           <div className="mb-6">
