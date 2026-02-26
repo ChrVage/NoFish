@@ -13,6 +13,7 @@ import type {
   TideEvent,
   TideXMLResponse,
 } from '@/types/weather';
+import { getCached, setCached } from '@/lib/db/cache';
 
 export interface WeatherValidationResult {
   available: boolean;
@@ -150,6 +151,11 @@ export async function getTideForecast(
   lat: number,
   lng: number
 ): Promise<TideXMLResponse | null> {
+  // Cache key matches the API's own precision (integer lat/lon)
+  const tideCacheKey = `tide:${lat.toFixed(0)}:${lng.toFixed(0)}`;
+  const cachedTide = await getCached<TideXMLResponse>(tideCacheKey);
+  if (cachedTide) return cachedTide;
+
   try {
     const fromTime = new Date();
     const toTime = new Date(fromTime.getTime() + 10 * 24 * 60 * 60 * 1000); // 10 days ahead
@@ -184,6 +190,8 @@ export async function getTideForecast(
     // Parse XML to extract high/low tide events
     const parsed = parseTideXML(text, lat, lng);
     console.log('✅ Successfully parsed tide events:', parsed.events.length, 'events');
+    // Cache for 6 hours — tide tables are predictable
+    await setCached(tideCacheKey, parsed, 6);
     return parsed;
   } catch (error) {
     console.error('❌ Tide API error:', error);
@@ -638,6 +646,11 @@ export async function getCombinedForecast(
   forecasts: HourlyForecast[];
   metadata: Record<string, never>;
 }> {
+  // Cache key uses 2 dp (≈1 km) — forecast resolution doesn't need more
+  const weatherCacheKey = `weather:${lat.toFixed(2)}:${lng.toFixed(2)}`;
+  const cachedWeather = await getCached<{ forecasts: HourlyForecast[]; metadata: Record<string, never> }>(weatherCacheKey);
+  if (cachedWeather) return cachedWeather;
+
   try {
     // Fetch all forecasts in parallel
     const [locationForecast, oceanForecast, tideForecast] = await Promise.all([
@@ -649,10 +662,15 @@ export async function getCombinedForecast(
     // Only pass tide data if real events were returned
     const realTideForecast = tideForecast && tideForecast.events.length > 0 ? tideForecast : null;
 
-    return {
+    const result = {
       forecasts: combineForecasts(locationForecast, oceanForecast, realTideForecast, lat, lng),
-      metadata: {},
+      metadata: {} as Record<string, never>,
     };
+
+    // Cache for 1 hour — weather changes, but not every minute
+    await setCached(weatherCacheKey, result, 1);
+
+    return result;
   } catch (error) {
     console.error('Combined forecast error:', error);
     throw error;
