@@ -5,7 +5,7 @@ import { getCombinedForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
 import { insertLookup, ensureTable } from '@/lib/db/lookups';
 import ForecastTable from '@/components/ForecastTable';
-import BackButton from './BackButton';
+import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
 
 interface PageProps {

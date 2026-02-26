@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { reverseGeocode } from '@/lib/api/geocoding';
-import BackButton from './BackButton';
+import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
 
 interface PageProps {

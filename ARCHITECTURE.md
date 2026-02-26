@@ -14,24 +14,18 @@ app/
   details/
     page.tsx            # Full hourly weather + ocean forecast table
     loading.tsx         # Streaming loading state
-    BackButton.tsx      # Client component — back to map
   score/
     page.tsx            # Fishing score (coming soon)
-    BackButton.tsx
   tide/
     page.tsx            # High/low tide event table
-    BackButton.tsx
   api/
     geocoding/
-      route.ts          # Server-side proxy → Nominatim reverse geocoding
+      route.ts          # Thin proxy — delegates to lib/api/geocoding.ts (cached)
     weather/
-      route.ts          # Server-side proxy → MET Norway weather + ocean forecasts
-    tides/
-      route.ts          # Placeholder (tide integration pending)
-    log/
-      route.ts          # POST — logs each lookup to Neon
+      route.ts          # Thin proxy — delegates to lib/api/weather.ts (cached)
 
 components/
+  BackButton.tsx        # Client component — back to map (shared across all pages)
   Map.tsx               # Leaflet map — click to place marker; popup with Score/Details/Tides buttons
   ForecastTable.tsx     # Hourly forecast table with direction arrows and weather icons
   PageNav.tsx           # Header navigation — icon + label buttons for the other two views
@@ -39,7 +33,7 @@ components/
 lib/
   api/
     weather.ts          # Fetches and merges weather + ocean data from MET Norway
-    geocoding.ts        # Nominatim reverse geocoding helper
+    geocoding.ts        # Nominatim reverse geocoding with 30-day cache
   db/
     index.ts            # Neon SQL client (reads DATABASE_URL)
     lookups.ts          # insertLookup() + ensureTable()
@@ -47,8 +41,6 @@ lib/
 
 types/
   weather.ts            # Weather, ocean, and tide types
-  fishing.ts            # Fishing-related types
-  api.ts                # API response types
 
 public/                 # Static assets (og image, icons)
 ```
@@ -75,7 +67,8 @@ The map popup and all page headers share the same three icon-over-label buttons:
 ```
 Browser click on map
   └─ Map.tsx (client)
-       ├─ Reverse geocoding:  GET /api/geocoding?lat=…&lon=…  → Nominatim
+       ├─ Reverse geocoding:  GET /api/geocoding?lat=…&lon=…
+       │    └─ lib/api/geocoding.ts → cache hit? return / miss → Nominatim → cache
        └─ User navigates to /details | /score | /tide
 
   Page (Server Component)
@@ -128,6 +121,5 @@ Set in `app/layout.tsx`:
 ## Future Work
 
 - [ ] Fishing Score algorithm (weather + tide + seasonal weighting)
-- [ ] Real tide data via Kartverket server-side proxy
 - [ ] CSP moved to HTTP response headers (`next.config.ts`)
 - [ ] Sitemap and `robots.txt`

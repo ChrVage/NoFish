@@ -20,11 +20,10 @@
 | [MET Norway Locationforecast 2.0](https://api.met.no/weatherapi/locationforecast/2.0/documentation) | Weather data | None |
 | [MET Norway Oceanforecast 2.0](https://api.met.no/weatherapi/oceanforecast/2.0/documentation) | Ocean/marine data | None |
 | [Nominatim (OpenStreetMap)](https://nominatim.org/release-docs/develop/api/Reverse/) | Reverse geocoding | None |
-| Kartverket Tide API | Tide data — **not used** (CORS restrictions) | None |
+| [Kartverket Tide API](https://api.kartverket.no/sehavniva/) | Tide high/low event data (XML, server-side) | None |
 
 All external calls are made server-side to avoid CORS issues and comply with MET Norway’s rate-limiting requirements. A `User-Agent` header is sent with every request.
 
-Tide heights are currently generated server-side using a semi-diurnal tidal model (simulated). To integrate real data, implement the proxy in `app/api/tides/route.ts`.
 
 ---
 

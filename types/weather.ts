@@ -127,48 +127,8 @@ export interface HourlyForecast {
   symbolCode?: string;
   tideHeight?: number;
   tidePhase?: string; // e.g., "Hi (13:18)", "Hi+1", "Falling", "Lo-2", etc.
-  sunPhase?: string;      // e.g., "Daylight (06:23)", "Civil (17:45)", "Nautical (18:12)", "—"
-  sunElevation?: number;  // Sun altitude above/below horizon in degrees
-  sunAzimuth?: number;    // Sun azimuth in degrees (0=N, 90=E, 180=S, 270=W)
-  // Forecast uncertainty / percentile range from the complete endpoint
-  windSpeedP10?: number;
-  windSpeedP90?: number;
+  sunPhase?: string;  // e.g., "Daylight (06:23)", "Civil (17:45)", "Nautical (18:12)", "—"
   windGust?: number;
-  temperatureP10?: number;
-  temperatureP90?: number;
-  precipitationMin?: number;
-  precipitationMax?: number;
-}
-
-// Kartverket Tide API types
-export interface TideForecastResponse {
-  type: string;
-  geometry: {
-    type: string;
-    coordinates: [number, number];
-  };
-  properties: {
-    meta: {
-      updated_at: string;
-      station_name: string;
-      station_code: string;
-      units: {
-        sea_surface_height_above_chart_datum: string;
-      };
-    };
-    timeseries: TideForecastTimeseries[];
-  };
-}
-
-export interface TideForecastTimeseries {
-  time: string;
-  data: {
-    instant: {
-      details: {
-        sea_surface_height_above_chart_datum: number;
-      };
-    };
-  };
 }
 
 // Kartverket Tide API XML types (high/low tide events)

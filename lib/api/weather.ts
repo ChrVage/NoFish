@@ -7,72 +7,13 @@ import type {
   LocationForecastResponse,
   OceanForecastResponse,
   OceanForecastTimeseries,
-  TideForecastResponse,
-  TideForecastTimeseries,
   HourlyForecast,
   TideEvent,
   TideXMLResponse,
 } from '@/types/weather';
 import { getCached, setCached } from '@/lib/db/cache';
 
-export interface WeatherValidationResult {
-  available: boolean;
-  locationName?: string;
-  error?: string;
-}
-
 const USER_AGENT = 'NoFish/1.0 github.com/ChrVage/NoFish';
-
-/**
- * Check if MET.no can provide weather forecast for the given coordinates
- * @param lat Latitude
- * @param lng Longitude
- * @returns Validation result indicating if weather data is available
- */
-export async function validateWeatherLocation(
-  lat: number,
-  lng: number
-): Promise<WeatherValidationResult> {
-  try {
-    // MET.no Locationforecast API
-    const response = await fetch(
-      `https://api.met.no/weatherapi/locationforecast/2.0/compact?` +
-        `lat=${lat.toFixed(4)}&lon=${lng.toFixed(4)}`,
-      {
-        headers: {
-          'User-Agent': USER_AGENT,
-        },
-      }
-    );
-
-    if (!response.ok) {
-      return {
-        available: false,
-        error: `MET.no API returned ${response.status}`,
-      };
-    }
-
-    const data = await response.json();
-
-    // Check if we got valid forecast data
-    if (data.properties?.timeseries && data.properties.timeseries.length > 0) {
-      return {
-        available: true,
-      };
-    }
-
-    return {
-      available: false,
-      error: 'No forecast data available for this location',
-    };
-  } catch (error) {
-    console.error('Weather validation error:', error);
-    return {
-      available: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
-}
 
 /**
  * Fetch Locationforecast data from MET.no
@@ -242,16 +183,10 @@ export function combineForecasts(
       windSpeed: entry.data.instant.details.wind_speed,
       windDirection: entry.data.instant.details.wind_from_direction,
       windGust: entry.data.instant.details.wind_speed_of_gust,
-      windSpeedP10: entry.data.instant.details.wind_speed_percentile_10,
-      windSpeedP90: entry.data.instant.details.wind_speed_percentile_90,
       humidity: entry.data.instant.details.relative_humidity,
       cloudCover: entry.data.instant.details.cloud_area_fraction,
       pressure: entry.data.instant.details.air_pressure_at_sea_level,
       precipitation: entry.data.next_1_hours?.details.precipitation_amount,
-      precipitationMin: entry.data.next_1_hours?.details.precipitation_amount_min,
-      precipitationMax: entry.data.next_1_hours?.details.precipitation_amount_max,
-      temperatureP10: entry.data.instant.details.air_temperature_percentile_10,
-      temperatureP90: entry.data.instant.details.air_temperature_percentile_90,
       symbolCode: entry.data.next_1_hours?.summary.symbol_code ||
                   entry.data.next_6_hours?.summary.symbol_code,
     };
