@@ -34,6 +34,11 @@ export default async function TidePage({ searchParams }: PageProps) {
 
   const events = tideForecast?.events ?? [];
 
+  const highEvents = events.filter((e) => e.flag === 'high');
+  const lowEvents  = events.filter((e) => e.flag === 'low');
+  const maxHighValue = highEvents.length ? Math.max(...highEvents.map((e) => e.value)) : null;
+  const minLowValue  = lowEvents.length  ? Math.min(...lowEvents.map((e) => e.value))  : null;
+
   return (
     <div className="min-h-screen bg-ocean-50">
       <header className="bg-ocean-900 text-white px-6 py-4 shadow-lg">
@@ -70,28 +75,48 @@ export default async function TidePage({ searchParams }: PageProps) {
           {events.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No tide data available for this location.</p>
           ) : (
-            <table className="w-full text-sm">
+            <table className="text-sm">
               <thead>
                 <tr className="border-b border-gray-200 text-left text-xs uppercase text-gray-400 tracking-wider">
-                  <th className="pb-2 pr-4">Time</th>
-                  <th className="pb-2 pr-4">Type</th>
-                  <th className="pb-2 text-right">Height</th>
+                  <th className="pb-2 pr-6">Time</th>
+                  <th className="pb-2 pr-6 text-center">Type</th>
+                  <th className="pb-2 pr-2 text-right">Height</th>
+                  <th className="pb-2 w-10"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {events.map((event, i) => (
-                  <tr key={i} className={event.flag === 'high' ? 'text-blue-700' : 'text-teal-700'}>
-                    <td className="py-2 pr-4 tabular-nums">
-                      {timeFormatter.format(new Date(event.time))}
-                    </td>
-                    <td className="py-2 pr-4 font-semibold">
-                      {event.flag === 'high' ? 'Hi' : 'Lo'}
-                    </td>
-                    <td className="py-2 text-right tabular-nums">
-                      {event.value} cm
-                    </td>
-                  </tr>
-                ))}
+                {events.map((event, i) => {
+                  const isPeakHigh = event.flag === 'high' && event.value === maxHighValue;
+                  const isPeakLow  = event.flag === 'low'  && event.value === minLowValue;
+                  return (
+                    <tr
+                      key={i}
+                      className={
+                        isPeakHigh
+                          ? 'bg-blue-50 text-blue-800 font-bold'
+                          : isPeakLow
+                          ? 'bg-teal-50 text-teal-800 font-bold'
+                          : event.flag === 'high'
+                          ? 'text-blue-700'
+                          : 'text-teal-700'
+                      }
+                    >
+                      <td className="py-2 pr-6 tabular-nums">
+                        {timeFormatter.format(new Date(event.time))}
+                      </td>
+                      <td className="py-2 pr-6 font-semibold text-center">
+                        {event.flag === 'high' ? 'Hi' : 'Lo'}
+                      </td>
+                      <td className="py-2 pr-2 text-right tabular-nums whitespace-nowrap">
+                        {Math.round(event.value)} cm
+                      </td>
+                      <td className="py-2 w-10 text-xs font-normal opacity-60 whitespace-nowrap">
+                        {isPeakHigh && '↑ max'}
+                        {isPeakLow  && '↓ min'}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
