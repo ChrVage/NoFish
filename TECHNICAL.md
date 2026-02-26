@@ -8,7 +8,7 @@
 | Language | TypeScript |
 | Runtime | React 19.2.3 |
 | Styling | Tailwind CSS v4 |
-| Map | Leaflet.js + react-leaflet with OpenStreetMap tiles |
+| Map | Leaflet.js (vanilla, via `useEffect`) with OpenStreetMap tiles |
 | Database | Neon (serverless Postgres) via `@neondatabase/serverless` |
 
 ### External APIs
@@ -31,8 +31,16 @@ app/
   layout.tsx            # Root layout with metadata
   page.tsx              # Home page — interactive map
   globals.css           # Global styles (Tailwind)
-  results/
-    page.tsx            # Results page — forecast table for selected location
+  details/
+    page.tsx            # Full hourly weather + ocean forecast table
+    loading.tsx         # Streaming loading state
+    BackButton.tsx      # Client component — back to map
+  score/
+    page.tsx            # Fishing score (coming soon)
+    BackButton.tsx
+  tide/
+    page.tsx            # High/low tide event table
+    BackButton.tsx
   api/
     geocoding/
       route.ts          # Server-side proxy → Nominatim reverse geocoding
@@ -44,8 +52,9 @@ app/
       route.ts          # POST — logs each lookup to Neon (IP + User-Agent added server-side)
 
 components/
-  Map.tsx               # Leaflet map (SSR-disabled, dynamic import)
+  Map.tsx               # Leaflet map — click to place marker; popup with Score/Details/Tides buttons
   ForecastTable.tsx     # Hourly forecast table with direction arrows and weather icons
+  PageNav.tsx           # Header navigation — icon + label buttons linking to the other two views
 
 lib/
   api/
@@ -65,9 +74,23 @@ public/                 # Static assets
 
 ---
 
+## Navigation
+
+The map popup and the page headers share the same three icon-over-label buttons:
+
+| Button | Colour | Destination |
+|---|---|---|
+| Score | Green icon / grey background | `/score?lat=…&lng=…` |
+| Details | White icon / ocean blue background | `/details?lat=…&lng=…` |
+| Tides | White moon icon / blue background | `/tide?lat=…&lng=…` |
+
+The button for the current page is hidden on that page's header. Clicking anywhere else on the map while a popup is open closes the previous popup and marker before opening a new one.
+
+---
+
 ## Database (Neon)
 
-Every location lookup is logged to a Neon serverless Postgres database.
+Every location lookup is logged to a Neon serverless Postgres database. **Logging only runs in production** (`NODE_ENV === 'production'`); it is skipped locally.
 
 ### What is stored
 
@@ -81,6 +104,9 @@ Every location lookup is logged to a Neon serverless Postgres database.
 | `county` | text | County name |
 | `ip_address` | text | Client IP (from `x-forwarded-for`) |
 | `user_agent` | text | Browser / OS string |
+| `geo_country` | text | Country code from Vercel header (`x-vercel-ip-country`) |
+| `geo_region` | text | Region from Vercel header (`x-vercel-ip-country-region`) |
+| `geo_city` | text | City from Vercel header (`x-vercel-ip-city`) |
 | `created_at` | timestamptz | UTC timestamp (auto-set) |
 
 ### Setup
@@ -94,25 +120,9 @@ Every location lookup is logged to a Neon serverless Postgres database.
    ```
    On Vercel, add `DATABASE_URL` under **Settings → Environment Variables**.
 
-3. Create the table — run this once in the [Neon SQL editor](https://console.neon.tech):
-   ```sql
-   CREATE TABLE IF NOT EXISTS lookups (
-     id            SERIAL PRIMARY KEY,
-     lat           DOUBLE PRECISION NOT NULL,
-     lon           DOUBLE PRECISION NOT NULL,
-     location_name TEXT,
-     municipality  TEXT,
-     county        TEXT,
-     ip_address    TEXT,
-     user_agent    TEXT,
-     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
-   );
-   ```
-   The `ensureTable()` helper in `lib/db/lookups.ts` will also create it automatically on the first cold start if it doesn't exist.
+3. The `ensureTable()` helper in `lib/db/lookups.ts` creates the table automatically on the first production cold start. Alternatively, run the SQL manually in the [Neon SQL editor](https://console.neon.tech).
 
-4. Start the dev server — lookups will be inserted on every forecast request.
-
-> **Without `DATABASE_URL`** the `/api/log` route will throw an error on startup. If you want to run the app without a database, remove the `DATABASE_URL` check in `lib/db/index.ts` and make `insertLookup` a no-op.
+> **Without `DATABASE_URL`** the app will throw on startup. If you want to run without a database, make `insertLookup` a no-op in `lib/db/lookups.ts`.
 
 ---
 
@@ -187,4 +197,4 @@ vercel --prod
 
 ## API Notes
 
-All external API calls are made server-side (via Next.js API routes) to avoid CORS issues and to comply with API rate-limiting best practices. A `User-Agent` header identifying the app is included with every request as required by MET Norway.
+All external API calls are made server-side (via Next.js API routes or direct `lib/` calls from Server Components) to avoid CORS issues and to comply with API rate-limiting best practices. A `User-Agent` header identifying the app is included with every request as required by MET Norway.
