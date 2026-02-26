@@ -27,7 +27,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
             <span className="text-3xl">🎣</span>
             <h1 className="text-2xl font-bold">NoFish</h1>
           </div>
-          <p className="text-ocean-50 text-sm hidden sm:block">Fishing Score</p>
+          <PageNav lat={lat} lng={lng} current="score" />
         </div>
       </header>
 
@@ -54,13 +54,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-100">
-            <PageNav lat={lat} lng={lng} current="score" />
-            <BackButton
-              label="Select different location"
-              className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm"
-            />
-          </div>
+
         </div>
       </main>
     </div>

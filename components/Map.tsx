@@ -49,27 +49,27 @@ export default function Map() {
       const popupContent = document.createElement('div');
       popupContent.className = 'text-sm';
       popupContent.innerHTML = `
-        <div class="min-w-[180px]">
+        <div class="min-w-[200px]">
           <strong class="text-ocean-700 block mb-1" id="location-name">Loading...</strong>
           <div class="text-gray-500 text-xs mb-3">${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E</div>
-          <div class="flex flex-col gap-1.5">
-            <button id="go-score" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-1.5 px-3 rounded-lg transition-colors flex items-center gap-2 text-sm">
-              <svg width="10" height="10" style="flex-shrink:0;color:#16a34a" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex flex-row gap-2 justify-around">
+            <button id="go-score" class="flex flex-col items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-3 rounded-lg transition-colors flex-1">
+              <svg width="24" height="24" style="color:#16a34a" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
               </svg>
-              Score
+              <span class="text-xs">Score</span>
             </button>
-            <button id="go-details" class="w-full bg-ocean-500 hover:bg-ocean-700 text-white font-medium py-1.5 px-3 rounded-lg transition-colors flex items-center gap-2 text-sm">
-              <svg width="10" height="10" style="flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="go-details" class="flex flex-col items-center gap-1 bg-ocean-500 hover:bg-ocean-700 text-white font-medium py-2 px-3 rounded-lg transition-colors flex-1">
+              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M3 6h18M3 18h18"/>
               </svg>
-              Details
+              <span class="text-xs">Details</span>
             </button>
-            <button id="go-tide" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-medium py-1.5 px-3 rounded-lg transition-colors flex items-center gap-2 text-sm">
-              <svg width="10" height="10" style="flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+            <button id="go-tide" class="flex flex-col items-center gap-1 bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-lg transition-colors flex-1">
+              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
               </svg>
-              Tides
+              <span class="text-xs">Tides</span>
             </button>
           </div>
         </div>
@@ -78,7 +78,7 @@ export default function Map() {
       // Bind popup and open it
       tempMarker.bindPopup(popupContent, {
         closeButton: true,
-        autoClose: false,
+        autoClose: true,
         closeOnClick: false,
       }).openPopup();
 
@@ -97,20 +97,20 @@ export default function Map() {
               'Unknown location';
             
             // Update popup name
-            const nameElement = document.getElementById('location-name');
+            const nameElement = popupContent.querySelector('#location-name');
             if (nameElement) {
               nameElement.textContent = name;
             }
           } else {
             console.error('Geocoding failed with status:', response.status);
-            const nameElement = document.getElementById('location-name');
+            const nameElement = popupContent.querySelector('#location-name');
             if (nameElement) {
               nameElement.textContent = 'Unknown location';
             }
           }
         } catch (error) {
           console.error('Geocoding error:', error);
-          const nameElement = document.getElementById('location-name');
+          const nameElement = popupContent.querySelector('#location-name');
           if (nameElement) {
             nameElement.textContent = 'Unknown location';
           }
