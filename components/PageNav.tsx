@@ -35,8 +35,8 @@ const pages = [
     href: (lat: number, lng: number) => `/tide?lat=${lat}&lng=${lng}`,
     className: 'bg-blue-500 hover:bg-blue-700 text-white',
     icon: (
-      <svg width="24" height="24" style={{ color: '#ffffff' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+      <svg width="24" height="24" style={{ color: '#ffffff' }} fill="currentColor" viewBox="0 0 24 24">
+        <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
       </svg>
     ),
   },
