@@ -7,6 +7,7 @@ import { insertLookup, ensureTable } from '@/lib/db/lookups';
 import ForecastTable from '@/components/ForecastTable';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
+import Footer from '@/components/Footer';
 
 interface PageProps {
   searchParams: Promise<{ lat?: string; lng?: string }>;
@@ -104,6 +105,8 @@ export default async function DetailsPage({ searchParams }: PageProps) {
 
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }
