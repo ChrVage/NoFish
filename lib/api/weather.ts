@@ -11,7 +11,8 @@ import type {
   TideEvent,
   TideXMLResponse,
 } from '@/types/weather';
-import { getCached, setCached } from '@/lib/db/cache';
+import { getCached, setCached, withInflight } from '@/lib/db/cache';
+import { getTimezone } from '@/lib/utils/timezone';
 
 const USER_AGENT = 'NoFish/1.0 github.com/ChrVage/NoFish';
 
@@ -97,47 +98,49 @@ export async function getTideForecast(
   const cachedTide = await getCached<TideXMLResponse>(tideCacheKey);
   if (cachedTide) return cachedTide;
 
-  try {
-    const fromTime = new Date();
-    const toTime = new Date(fromTime.getTime() + 10 * 24 * 60 * 60 * 1000); // 10 days ahead
-    
-    // Format dates for the API (URL encoded)
-    const fromTimeStr = fromTime.toISOString().replace(/\.\d{3}Z$/, ''); // Remove milliseconds
-    const toTimeStr = toTime.toISOString().replace(/\.\d{3}Z$/, '');
-    
-    const url = `https://vannstand.kartverket.no/tideapi.php?` +
-        `lat=${lat.toFixed(0)}&lon=${lng.toFixed(0)}` +
-        `&fromtime=${encodeURIComponent(fromTimeStr)}&totime=${encodeURIComponent(toTimeStr)}` +
-        `&datatype=tab&refcode=cd&lang=en&tide_request=locationdata`;
-    
-    console.log('🌊 Fetching tide data from:', url);
-    
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': USER_AGENT,
-      },
-    });
+  return withInflight<TideXMLResponse | null>(tideCacheKey, async () => {
+    try {
+      const fromTime = new Date();
+      const toTime = new Date(fromTime.getTime() + 10 * 24 * 60 * 60 * 1000); // 10 days ahead
 
-    console.log('🌊 Tide API response status:', response.status);
+      // Format dates for the API (URL encoded)
+      const fromTimeStr = fromTime.toISOString().replace(/\.\d{3}Z$/, ''); // Remove milliseconds
+      const toTimeStr = toTime.toISOString().replace(/\.\d{3}Z$/, '');
 
-    if (!response.ok) {
-      console.warn(`❌ Kartverket Tide API returned ${response.status}`);
+      const url = `https://vannstand.kartverket.no/tideapi.php?` +
+          `lat=${lat.toFixed(0)}&lon=${lng.toFixed(0)}` +
+          `&fromtime=${encodeURIComponent(fromTimeStr)}&totime=${encodeURIComponent(toTimeStr)}` +
+          `&datatype=tab&refcode=cd&lang=en&tide_request=locationdata`;
+
+      console.log('🌊 Fetching tide data from:', url);
+
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': USER_AGENT,
+        },
+      });
+
+      console.log('🌊 Tide API response status:', response.status);
+
+      if (!response.ok) {
+        console.warn(`❌ Kartverket Tide API returned ${response.status}`);
+        return null;
+      }
+
+      const text = await response.text();
+      console.log('🌊 Tide API response (first 500 chars):', text.substring(0, 500));
+
+      // Parse XML to extract high/low tide events
+      const parsed = parseTideXML(text, lat, lng);
+      console.log('✅ Successfully parsed tide events:', parsed.events.length, 'events');
+      // Cache for 6 hours — tide tables are predictable
+      await setCached(tideCacheKey, parsed, 6);
+      return parsed;
+    } catch (error) {
+      console.error('❌ Tide API error:', error);
       return null;
     }
-
-    const text = await response.text();
-    console.log('🌊 Tide API response (first 500 chars):', text.substring(0, 500));
-    
-    // Parse XML to extract high/low tide events
-    const parsed = parseTideXML(text, lat, lng);
-    console.log('✅ Successfully parsed tide events:', parsed.events.length, 'events');
-    // Cache for 6 hours — tide tables are predictable
-    await setCached(tideCacheKey, parsed, 6);
-    return parsed;
-  } catch (error) {
-    console.error('❌ Tide API error:', error);
-    return null;
-  }
+  });
 }
 
 /**
@@ -156,6 +159,7 @@ export function combineForecasts(
   lat: number,
   lng: number
 ): HourlyForecast[] {
+  const timezone = getTimezone(lat, lng);
   const hourlyForecasts: HourlyForecast[] = [];
 
   // Create a map of ocean data by time for quick lookup
@@ -202,11 +206,11 @@ export function combineForecasts(
 
     // Add tide phase if tide data is available
     if (tideForecast && tideForecast.events.length > 0) {
-      hourlyForecast.tidePhase = calculateTidePhase(entryDate, windowEnd, tideForecast.events);
+      hourlyForecast.tidePhase = calculateTidePhase(entryDate, windowEnd, tideForecast.events, timezone);
     }
 
     // Add sun data
-    hourlyForecast.sunPhase = calculateSunPhase(entryDate, windowEnd, lat, lng);
+    hourlyForecast.sunPhase = calculateSunPhase(entryDate, windowEnd, lat, lng, timezone);
 
     hourlyForecasts.push(hourlyForecast);
   });
@@ -272,7 +276,8 @@ function parseTideXML(
 function calculateTidePhase(
   windowStart: Date,
   windowEnd: Date,
-  tideEvents: TideEvent[]
+  tideEvents: TideEvent[],
+  timezone: string
 ): string {
   if (!tideEvents || tideEvents.length === 0) {
     return '—';
@@ -292,7 +297,7 @@ function calculateTidePhase(
     // Always show exact time for Hi/Lo events
     return eventsInWindow
       .map((e) => {
-        const timeStr = formatTimeForPhase(new Date(e.time));
+        const timeStr = formatTimeForPhase(new Date(e.time), timezone);
         return e.flag === 'high' ? `Hi (${timeStr})` : `Lo (${timeStr})`;
       })
       .join(' · ');
@@ -372,12 +377,15 @@ function calculateTidePhase(
 }
 
 /**
- * Format time for phase display (HH:MM) - local time of the Date object
+ * Format time for phase display (HH:MM) in the location's local timezone.
  */
-function formatTimeForPhase(date: Date): string {
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  return `${hours}:${minutes}`;
+function formatTimeForPhase(date: Date, timezone: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: timezone,
+  }).format(date);
 }
 
 // ---------------------------------------------------------------------------
@@ -503,7 +511,8 @@ function calculateSunPhase(
   windowStart: Date,
   windowEnd: Date,
   lat: number,
-  lng: number
+  lng: number,
+  timezone: string
 ): string {
   const startPhase = getSunPhaseName(solarPosition(windowStart, lat, lng).elevation);
   const windowMinutes = Math.ceil((windowEnd.getTime() - windowStart.getTime()) / 60_000);
@@ -535,7 +544,7 @@ function calculateSunPhase(
       const noon = findSolarNoon(windowStart, windowEnd, lat, lng);
       if (noon) {
         const noonElevation = solarPosition(noon, lat, lng).elevation;
-        label = `Daylight (${formatTimeHHMM(noon, lng)}, ${noonElevation.toFixed(1)}°)`;
+        label = `Daylight (${formatTimeHHMM(noon, timezone)}, ${noonElevation.toFixed(1)}°)`;
       }
     }
     return label;
@@ -544,28 +553,21 @@ function calculateSunPhase(
   // Build compound label: "Phase1 (T1) → Phase2 (T2) → Phase3 ..."
   let label = sunPhaseLabels[startPhase];
   for (const tr of transitions) {
-    label += ` (${formatTimeHHMM(tr.time, lng)}) → ${sunPhaseLabels[tr.to]}`;
+    label += ` (${formatTimeHHMM(tr.time, timezone)}) → ${sunPhaseLabels[tr.to]}`;
   }
   return label;
 }
 
 /**
- * Format a UTC Date as HH:MM in the local solar time offset by longitude
- * (approximation: UTC + lng/15 hours). For Norway (lon ~5-30°) this is close
- * enough to CET/CEST for labelling purposes.
- * For exact wall-clock time we'd need a tz library; instead we just use
- * the Date's local time which on the server is UTC, so we add the offset.
+ * Format a UTC Date as HH:MM in the location's IANA timezone.
  */
-function formatTimeHHMM(utcDate: Date, lng: number): string {
-  // Offset in ms: Norway is UTC+1 (winter) or UTC+2 (summer)
-  // Since the forecasts come tagged with +01:00 or +02:00 we derive the
-  // offset from the longitude: approx UTC+1 for most of Norway.
-  // Simple approach: display Norway local time = UTC+1 (standard).
-  const localMs = utcDate.getTime() + 60 * 60000; // UTC+1 fixed offset
-  const d = new Date(localMs);
-  const hh = d.getUTCHours().toString().padStart(2, '0');
-  const mm = d.getUTCMinutes().toString().padStart(2, '0');
-  return `${hh}:${mm}`;
+function formatTimeHHMM(utcDate: Date, timezone: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: timezone,
+  }).format(utcDate);
 }
 
 /**
@@ -586,7 +588,7 @@ export async function getCombinedForecast(
   const cachedWeather = await getCached<{ forecasts: HourlyForecast[]; metadata: Record<string, never> }>(weatherCacheKey);
   if (cachedWeather) return cachedWeather;
 
-  try {
+  return withInflight(weatherCacheKey, async () => {
     // Fetch all forecasts in parallel
     const [locationForecast, oceanForecast, tideForecast] = await Promise.all([
       getLocationForecast(lat, lng),
@@ -606,8 +608,5 @@ export async function getCombinedForecast(
     await setCached(weatherCacheKey, result, 1);
 
     return result;
-  } catch (error) {
-    console.error('Combined forecast error:', error);
-    throw error;
-  }
+  });
 }

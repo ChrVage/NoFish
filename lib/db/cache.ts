@@ -10,16 +10,43 @@
 
 import { getSql } from './index';
 
-async function ensureCacheTable(): Promise<void> {
-  const sql = getSql();
-  await sql`
-    CREATE TABLE IF NOT EXISTS forecast_cache (
-      cache_key  TEXT PRIMARY KEY,
-      data       JSONB NOT NULL,
-      cached_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      expires_at TIMESTAMPTZ NOT NULL
-    )
-  `;
+// DDL guard — fires once per process, not on every cache write
+let _cacheTableInit: Promise<void> | null = null;
+
+function ensureCacheTable(): Promise<void> {
+  if (!_cacheTableInit) {
+    const sql = getSql();
+    _cacheTableInit = sql`
+      CREATE TABLE IF NOT EXISTS forecast_cache (
+        cache_key  TEXT PRIMARY KEY,
+        data       JSONB NOT NULL,
+        cached_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        expires_at TIMESTAMPTZ NOT NULL
+      )
+    `.then(() => undefined).catch((err) => {
+      _cacheTableInit = null; // allow retry on transient failure
+      return Promise.reject(err);
+    });
+  }
+  return _cacheTableInit;
+}
+
+// In-flight deduplication map — keyed by cache key
+// Prevents concurrent requests from all firing the same expensive external fetch
+// when the cache is cold. Promise is removed once settled.
+const _inflight = new Map<string, Promise<unknown>>();
+
+/**
+ * Deduplicate concurrent fetches for the same `key`.
+ * If a fetch is already in-flight, returns the existing Promise instead of
+ * starting a new one. The entry is removed from the map when the promise settles.
+ */
+export function withInflight<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const existing = _inflight.get(key);
+  if (existing) return existing as Promise<T>;
+  const p = fn().finally(() => _inflight.delete(key));
+  _inflight.set(key, p);
+  return p;
 }
 
 /**
@@ -53,8 +80,8 @@ export async function setCached(
 ): Promise<void> {
   if (!process.env.DATABASE_URL) return;
   try {
-    const sql = getSql();
     await ensureCacheTable();
+    const sql = getSql();
     await sql`
       INSERT INTO forecast_cache (cache_key, data, expires_at)
       VALUES (

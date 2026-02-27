@@ -27,17 +27,19 @@ app/
 components/
   BackButton.tsx        # Client component — back to map (shared across all pages)
   Map.tsx               # Leaflet map — click to place marker; popup with Score/Details/Tides buttons
-  ForecastTable.tsx     # Hourly forecast table with direction arrows and weather icons
+  ForecastTable.tsx     # Hourly forecast table with direction arrows and weather icons; accepts timezone prop
   PageNav.tsx           # Header navigation — icon + label buttons for the other two views
 
 lib/
   api/
-    weather.ts          # Fetches and merges weather + ocean data from MET Norway
+    weather.ts          # Fetches and merges weather + ocean data from MET Norway; solar/tide phase logic
     geocoding.ts        # Nominatim reverse geocoding with 30-day cache
   db/
     index.ts            # Neon SQL client (reads DATABASE_URL)
-    lookups.ts          # insertLookup() + ensureTable()
-    cache.ts            # forecast_cache table — getCached() / setCached()
+    lookups.ts          # insertLookup() + ensureTable() — DDL memoized, fires once per process
+    cache.ts            # forecast_cache table — getCached() / setCached() / withInflight()
+  utils/
+    timezone.ts         # getTimezone(lat, lng) → IANA name via tz-lookup; getTimezoneLabel() → "Zone (GMT+N)"
 
 types/
   weather.ts            # Weather, ocean, and tide types
@@ -72,19 +74,23 @@ Browser click on map
        └─ User navigates to /details | /score | /tide
 
   Page (Server Component)
+       ├─ lib/utils/timezone.ts (getTimezone)
+       │    └─ tz-lookup → IANA timezone for the clicked coordinates (pure JS, no file I/O)
        ├─ lib/api/geocoding.ts
        │    └─ cache hit?  → return cached result (TTL: 30 days)
-       │    └─ cache miss → Nominatim → write to cache → return
+       │    └─ cache miss → withInflight → Nominatim → write to cache → return
        ├─ lib/api/weather.ts (getCombinedForecast)
        │    └─ cache hit?  → return cached result (TTL: 1 hour)
-       │    └─ cache miss → MET Norway (weather + ocean) → write to cache → return
+       │    └─ cache miss → withInflight → MET Norway (weather + ocean) → write to cache → return
        ├─ lib/api/weather.ts (getTideForecast)
        │    └─ cache hit?  → return cached result (TTL: 6 hours)
-       │    └─ cache miss → Kartverket → write to cache → return
+       │    └─ cache miss → withInflight → Kartverket → write to cache → return
        └─ after(): lib/db/lookups.ts → Neon (production only)
 ```
 
 All outbound requests are made server-side. The browser only ever talks to `/api/*` routes on the same origin.
+
+`withInflight` in `lib/db/cache.ts` deduplicates concurrent cold-cache requests for the same key — only one external fetch fires even if multiple requests arrive simultaneously.
 
 ### Cache table
 
@@ -123,3 +129,6 @@ Set in `app/layout.tsx`:
 - [ ] Fishing Score algorithm (weather + tide + seasonal weighting)
 - [ ] CSP moved to HTTP response headers (`next.config.ts`)
 - [ ] Sitemap and `robots.txt`
+- [ ] `error.tsx` boundary pages for `/details` and `/tide`
+- [ ] `loading.tsx` streaming states for `/score` and `/tide`
+- [ ] Coordinate bounds validation (reject obviously invalid lat/lng early)

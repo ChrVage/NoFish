@@ -10,6 +10,7 @@
 | Styling | Tailwind CSS v4 |
 | Map | Leaflet.js (vanilla, via `useEffect`) with OpenStreetMap tiles |
 | Database | Neon (serverless Postgres) via `@neondatabase/serverless` |
+| Timezone lookup | `tz-lookup` — pure-JS IANA timezone from coordinates (no file I/O, works on Vercel) |
 
 ---
 
@@ -53,6 +54,7 @@ Lookups are logged to Neon serverless Postgres **in production only** (`NODE_ENV
    DATABASE_URL=postgres://user:password@host/dbname?sslmode=require
    ```
 3. `ensureTable()` in `lib/db/lookups.ts` auto-creates the table on first cold start.
+   The DDL round-trip is memoized — it fires at most once per process lifetime, not on every request.
 
 > **Without `DATABASE_URL`** the app throws on startup. To run without a DB, make `insertLookup` a no-op.
 

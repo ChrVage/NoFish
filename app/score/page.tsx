@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { reverseGeocode } from '@/lib/api/geocoding';
+import { getTimezone, getTimezoneLabel } from '@/lib/utils/timezone';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
 import Footer from '@/components/Footer';
@@ -18,6 +19,8 @@ export default async function ScorePage({ searchParams }: PageProps) {
   }
 
   const locationData = await reverseGeocode(lat, lng);
+  const timezone = getTimezone(lat, lng);
+  const timezoneLabel = getTimezoneLabel(timezone);
 
   return (
     <div className="min-h-screen bg-ocean-50">
@@ -44,6 +47,9 @@ export default async function ScorePage({ searchParams }: PageProps) {
             <p className="text-sm text-gray-500">
               {Math.abs(lat).toFixed(4)}°{lat >= 0 ? 'N' : 'S'},{' '}
               {Math.abs(lng).toFixed(4)}°{lng >= 0 ? 'E' : 'W'}
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Times shown in local time · {timezoneLabel}
             </p>
           </div>
 

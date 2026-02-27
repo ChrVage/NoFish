@@ -4,6 +4,7 @@ import type { HourlyForecast } from '@/types/weather';
 
 interface ForecastTableProps {
   forecasts: HourlyForecast[];
+  timezone: string;
 }
 
 // Weather symbol mapping (MET Norway symbol codes)
@@ -58,7 +59,7 @@ const DirectionArrow = ({
   );
 };
 
-export default function ForecastTable({ forecasts }: ForecastTableProps) {
+export default function ForecastTable({ forecasts, timezone }: ForecastTableProps) {
   if (!forecasts || forecasts.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-8 text-center">
@@ -69,14 +70,13 @@ export default function ForecastTable({ forecasts }: ForecastTableProps) {
 
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
-    // Format for Norway timezone (Europe/Oslo)
     const formatter = new Intl.DateTimeFormat('en-US', {
       weekday: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
-      timeZone: 'Europe/Oslo'
+      timeZone: timezone,
     });
     
     const parts = formatter.formatToParts(date);

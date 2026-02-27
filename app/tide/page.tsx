@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTideForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
+import { getTimezone, getTimezoneLabel } from '@/lib/utils/timezone';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
 import Footer from '@/components/Footer';
@@ -8,16 +9,6 @@ import Footer from '@/components/Footer';
 interface PageProps {
   searchParams: Promise<{ lat?: string; lng?: string }>;
 }
-
-const timeFormatter = new Intl.DateTimeFormat('en-GB', {
-  weekday: 'short',
-  day: 'numeric',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-  timeZone: 'Europe/Oslo',
-});
 
 export default async function TidePage({ searchParams }: PageProps) {
   const { lat: latStr, lng: lngStr } = await searchParams;
@@ -33,6 +24,17 @@ export default async function TidePage({ searchParams }: PageProps) {
     getTideForecast(lat, lng),
   ]);
 
+  const timezone = getTimezone(lat, lng);
+  const timezoneLabel = getTimezoneLabel(timezone);
+  const timeFormatter = new Intl.DateTimeFormat('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: timezone,
+  });
   const events = tideForecast?.events ?? [];
 
   const highEvents = events.filter((e) => e.flag === 'high');
@@ -65,6 +67,9 @@ export default async function TidePage({ searchParams }: PageProps) {
             <p className="text-sm text-gray-500">
               {Math.abs(lat).toFixed(4)}°{lat >= 0 ? 'N' : 'S'},{' '}
               {Math.abs(lng).toFixed(4)}°{lng >= 0 ? 'E' : 'W'}
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Times shown in local time · {timezoneLabel}
             </p>
             {tideForecast?.stationName && (
               <p className="text-xs text-gray-400 mt-1">

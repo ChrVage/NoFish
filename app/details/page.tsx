@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { getCombinedForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
 import { insertLookup, ensureTable } from '@/lib/db/lookups';
+import { getTimezone, getTimezoneLabel } from '@/lib/utils/timezone';
 import ForecastTable from '@/components/ForecastTable';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
@@ -29,6 +30,8 @@ export default async function DetailsPage({ searchParams }: PageProps) {
   ]);
 
   const { forecasts } = weatherResult;
+  const timezone = getTimezone(lat, lng);
+  const timezoneLabel = getTimezoneLabel(timezone);
 
   // Capture request headers now — not available inside after()
   const reqHeaders = await headers();
@@ -95,11 +98,14 @@ export default async function DetailsPage({ searchParams }: PageProps) {
               {Math.abs(lat).toFixed(4)}°{lat >= 0 ? 'N' : 'S'},{' '}
               {Math.abs(lng).toFixed(4)}°{lng >= 0 ? 'E' : 'W'}
             </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Times shown in local time · {timezoneLabel}
+            </p>
           </div>
 
           {/* Forecast table */}
           <div className="mb-6">
-            <ForecastTable forecasts={forecasts} />
+            <ForecastTable forecasts={forecasts} timezone={timezone} />
           </div>
 
 
