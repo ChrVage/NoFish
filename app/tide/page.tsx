@@ -3,6 +3,7 @@ import { getTideForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
+import Footer from '@/components/Footer';
 
 interface PageProps {
   searchParams: Promise<{ lat?: string; lng?: string }>;
@@ -124,6 +125,8 @@ export default async function TidePage({ searchParams }: PageProps) {
 
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }

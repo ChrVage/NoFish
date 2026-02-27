@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import Footer from '@/components/Footer';
 
 // Import Map with SSR disabled (Leaflet requires browser window object)
 const Map = dynamic(() => import('@/components/Map'), {
@@ -37,6 +38,8 @@ export default function Home() {
       <div className="flex-1 relative">
         <Map />
       </div>
+
+      <Footer />
     </div>
   );
 }
