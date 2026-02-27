@@ -66,8 +66,8 @@ export default function Map() {
               <span class="text-xs">Details</span>
             </button>
             <button id="go-tide" class="flex flex-col items-center gap-1 bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-lg transition-colors flex-1">
-              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+              <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
               </svg>
               <span class="text-xs">Tides</span>
             </button>
