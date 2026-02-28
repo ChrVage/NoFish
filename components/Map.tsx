@@ -54,8 +54,8 @@ export default function Map() {
     });
 
     const openMarkerAt = (lat: number, lng: number) => {
-
-      // Add temporary marker at clicked position
+      // Guard: bail if the map has already been removed
+      if (!map.getContainer().isConnected) return;
       const tempMarker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
 
       // Create popup with three navigation links
@@ -158,9 +158,10 @@ export default function Map() {
     };
 
     // If returning from a detail page, restore the marker + popup
+    let restoreTimer: ReturnType<typeof setTimeout> | null = null;
     if (hasRestore) {
       // Small delay so the map tiles have a chance to start loading
-      setTimeout(() => {
+      restoreTimer = setTimeout(() => {
         openMarkerAt(restoreLat, restoreLng);
 
         // Show the ocean forecast grid point as a small red dot
@@ -188,6 +189,7 @@ export default function Map() {
     mapRef.current = map;
 
     return () => {
+      if (restoreTimer !== null) clearTimeout(restoreTimer);
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;

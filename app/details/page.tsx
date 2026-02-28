@@ -30,10 +30,9 @@ export default async function DetailsPage({ searchParams }: PageProps) {
     getCombinedForecast(lat, lng),
   ]);
 
-  const { forecasts, forecastLat, forecastLng, oceanForecastLat, oceanForecastLng, tideStationName, tideStationLat, tideStationLng } = weatherResult;
+  const { forecasts, oceanForecastLat, oceanForecastLng, tideStationName, tideStationLat, tideStationLng } = weatherResult;
   const timezone = getTimezone(lat, lng);
   const timezoneLabel = getTimezoneLabel(timezone);
-  const weatherForecastDistance = haversineDistance(lat, lng, forecastLat, forecastLng);
   const oceanForecastDistance = oceanForecastLat !== undefined && oceanForecastLng !== undefined
     ? haversineDistance(lat, lng, oceanForecastLat, oceanForecastLng)
     : null;
@@ -115,11 +114,6 @@ export default async function DetailsPage({ searchParams }: PageProps) {
               Times shown in local time · {timezoneLabel}
             </p>
             <div className="mt-2 space-y-0.5">
-              <p className="text-xs text-gray-400">
-                <span className="font-medium text-blue-600">MET Weather</span>
-                {' '}· forecast grid point {formatDistance(weatherForecastDistance)} away
-                {' '}({forecastLat.toFixed(4)}°N, {forecastLng.toFixed(4)}°E)
-              </p>
               {oceanForecastDistance !== null && oceanForecastLat !== undefined && oceanForecastLng !== undefined && (
                 <p className="text-xs text-gray-400">
                   <span className="font-medium text-ocean-600">MET Ocean</span>
