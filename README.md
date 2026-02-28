@@ -31,3 +31,7 @@ NoFish gives small boat fishers precise wind, wave, and tide forecasts for any p
 
 - [TECHNICAL.md](TECHNICAL.md) — tech stack, APIs, database, and deployment
 - [ARCHITECTURE.md](ARCHITECTURE.md) — project structure and data flow
+
+## Feedback and issues
+Did you find an issue, or do you have a wish for new functionality? 
+[Create a new issue on GitHub here](https://github.com/ChrVage/NoFish/issues/new)
