@@ -30,10 +30,16 @@ export default async function DetailsPage({ searchParams }: PageProps) {
     getCombinedForecast(lat, lng),
   ]);
 
-  const { forecasts, forecastLat, forecastLng } = weatherResult;
+  const { forecasts, forecastLat, forecastLng, oceanForecastLat, oceanForecastLng, tideStationName, tideStationLat, tideStationLng } = weatherResult;
   const timezone = getTimezone(lat, lng);
   const timezoneLabel = getTimezoneLabel(timezone);
-  const forecastDistance = haversineDistance(lat, lng, forecastLat, forecastLng);
+  const weatherForecastDistance = haversineDistance(lat, lng, forecastLat, forecastLng);
+  const oceanForecastDistance = oceanForecastLat !== undefined && oceanForecastLng !== undefined
+    ? haversineDistance(lat, lng, oceanForecastLat, oceanForecastLng)
+    : null;
+  const tideStationDistance = tideStationLat !== undefined && tideStationLng !== undefined
+    ? haversineDistance(lat, lng, tideStationLat, tideStationLng)
+    : null;
 
   // Capture request headers now — not available inside after()
   const reqHeaders = await headers();
@@ -77,7 +83,12 @@ export default async function DetailsPage({ searchParams }: PageProps) {
       <header className="bg-ocean-900 text-white px-6 py-4 shadow-lg">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <BackButton />
+            <BackButton
+              extraParams={oceanForecastLat !== undefined && oceanForecastLng !== undefined
+                ? { oceanLat: oceanForecastLat, oceanLng: oceanForecastLng }
+                : undefined
+              }
+            />
             <span className="text-3xl">🎣</span>
             <h1 className="text-2xl font-bold">NoFish</h1>
           </div>
@@ -103,9 +114,28 @@ export default async function DetailsPage({ searchParams }: PageProps) {
             <p className="text-xs text-gray-400 mt-1">
               Times shown in local time · {timezoneLabel}
             </p>
-            <p className="text-xs text-gray-400 mt-1">
-              Forecast point {formatDistance(forecastDistance)} from selected location
-            </p>
+            <div className="mt-2 space-y-0.5">
+              <p className="text-xs text-gray-400">
+                <span className="font-medium text-blue-600">MET Weather</span>
+                {' '}· forecast grid point {formatDistance(weatherForecastDistance)} away
+                {' '}({forecastLat.toFixed(4)}°N, {forecastLng.toFixed(4)}°E)
+              </p>
+              {oceanForecastDistance !== null && oceanForecastLat !== undefined && oceanForecastLng !== undefined && (
+                <p className="text-xs text-gray-400">
+                  <span className="font-medium text-ocean-600">MET Ocean</span>
+                  {' '}· forecast grid point {formatDistance(oceanForecastDistance)} away
+                  {' '}({oceanForecastLat.toFixed(4)}°N, {oceanForecastLng.toFixed(4)}°E)
+                </p>
+              )}
+              {tideStationDistance !== null && tideStationLat !== undefined && tideStationLng !== undefined && (
+                <p className="text-xs text-gray-400">
+                  <span className="font-medium text-purple-600">Kartverket Tides</span>
+                  {' '}· nearest station {formatDistance(tideStationDistance)} away
+                  {tideStationName ? ` (${tideStationName})` : ''}
+                  {' '}({tideStationLat.toFixed(4)}°N, {tideStationLng.toFixed(4)}°E)
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Forecast table */}

@@ -116,60 +116,107 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-ocean-700 text-white">
+            {/* API source group header row */}
+            <tr className="bg-ocean-800 text-ocean-200 text-[10px] uppercase tracking-widest">
+              <th className="sticky left-0 bg-ocean-800 z-10" />
+              {/* MET Norway Locationforecast — always present */}
+              <th
+                colSpan={5}
+                className="px-4 py-1 text-center font-semibold border-l-2 border-amber-400/50 border-r border-amber-400/20"
+              >
+                MET Norway Locationforecast
+              </th>
+              {/* MET Norway Oceanforecast — coastal only */}
+              {hasOceanData && (
+                <th
+                  colSpan={5}
+                  className="px-4 py-1 text-center font-semibold border-l border-ocean-400/20 border-r border-ocean-400/20"
+                >
+                  MET Norway Oceanforecast
+                </th>
+              )}
+              {/* Kartverket — tied to ocean availability */}
+              {hasOceanData && (
+                <th
+                  colSpan={1}
+                  className="px-4 py-1 text-center font-semibold border-l border-purple-400/20 border-r border-purple-400/20"
+                >
+                  Kartverket
+                </th>
+              )}
+              {/* Calculated */}
+              <th
+                colSpan={1}
+                className="px-4 py-1 text-center font-semibold border-l border-yellow-400/20"
+              >
+                Calculated
+              </th>
+            </tr>
+
+            {/* Column header row */}
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider sticky left-0 bg-ocean-700 z-10">
                 Time
               </th>
-              {hasOceanData && (
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Tide
-                </th>
-              )}
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-blue-900/20 border-l-2 border-blue-400/30">
+
+              {/* ── MET Norway Locationforecast columns ── */}
+              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider bg-amber-900/20 border-l-2 border-amber-400/50">
+                Weather
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-amber-900/20">
                 Wind
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider bg-blue-900/20 border-r-2 border-blue-400/30">
+              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider bg-amber-900/20">
                 Wind Dir
-              </th>
-              {hasOceanData && (
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-ocean-800/30 border-l-2 border-ocean-400/30">
-                  Wave Height
-                </th>
-              )}
-              {hasOceanData && (
-                <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider bg-ocean-800/30 border-r-2 border-ocean-400/30">
-                  Wave Dir
-                </th>
-              )}
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-yellow-900/20 border-l-2 border-yellow-400/30 border-r-2">
-                Sun
-              </th>
-              {hasOceanData && (
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-teal-900/20 border-l-2 border-teal-400/30">
-                  Current
-                </th>
-              )}
-              {hasOceanData && (
-                <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider bg-teal-900/20 border-r-2 border-teal-400/30">
-                  Current Dir
-                </th>
-              )}
-              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider bg-amber-900/20 border-l-2 border-amber-400/30">
-                Weather
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-amber-900/20">
                 Precip.
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-amber-900/20">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-amber-900/20 border-r-2 border-amber-400/30">
                 Air Temp
               </th>
+
+              {/* ── MET Norway Oceanforecast columns ── */}
               {hasOceanData && (
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-amber-900/20 border-r-2 border-amber-400/30">
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-ocean-800/30 border-l-2 border-ocean-400/50">
+                  Wave Height
+                </th>
+              )}
+              {hasOceanData && (
+                <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider bg-ocean-800/30">
+                  Wave Dir
+                </th>
+              )}
+              {hasOceanData && (
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-ocean-800/30">
                   Sea Temp
                 </th>
               )}
+              {hasOceanData && (
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-ocean-800/30">
+                  Current
+                </th>
+              )}
+              {hasOceanData && (
+                <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider bg-ocean-800/30 border-r-2 border-ocean-400/30">
+                  Current Dir
+                </th>
+              )}
+
+              {/* ── Kartverket column ── */}
+              {hasOceanData && (
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-purple-900/20 border-l-2 border-purple-400/50 border-r-2 border-r-purple-400/30">
+                  Tide
+                </th>
+              )}
+
+              {/* ── Calculated column ── */}
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider bg-yellow-900/20 border-l-2 border-yellow-400/50">
+                Sun
+              </th>
             </tr>
           </thead>
+
           <tbody className="bg-white divide-y divide-gray-200">
             {forecasts.map((forecast, index) => (
               <tr
@@ -179,56 +226,64 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
                 <td className="px-4 py-3 text-sm font-medium text-gray-900 sticky left-0 z-10 bg-inherit">
                   {formatTime(forecast.time)}
                 </td>
-                {hasOceanData && (
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {forecast.tidePhase || '—'}
-                  </td>
-                )}
-                <td className="px-4 py-3 text-sm text-gray-700 bg-blue-50/50 border-l-2 border-blue-200">
-                  {formatWind(forecast.windSpeed, forecast.windGust)}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700 text-center bg-blue-50/50 border-r-2 border-blue-200">
-                  <DirectionArrow degrees={forecast.windDirection} isFromDirection={true} className="text-blue-600" />
-                </td>
-                {hasOceanData && (
-                  <td className="px-4 py-3 text-sm text-gray-700 bg-ocean-50/50 border-l-2 border-ocean-200">
-                    {formatValue(forecast.waveHeight, 1, ' m')}
-                  </td>
-                )}
-                {hasOceanData && (
-                  <td className="px-4 py-3 text-sm text-gray-700 text-center bg-ocean-50/50 border-r-2 border-ocean-200">
-                    <DirectionArrow degrees={forecast.waveDirection} isFromDirection={true} className="text-ocean-600" />
-                  </td>
-                )}
-                <td className="px-4 py-3 text-sm text-gray-700 bg-yellow-50/50 border-l-2 border-yellow-200 border-r-2">
-                  {forecast.sunPhase || '—'}
-                </td>
-                {hasOceanData && (
-                  <td className="px-4 py-3 text-sm text-gray-700 bg-teal-50/50 border-l-2 border-teal-200">
-                    {formatValue(forecast.currentSpeed, 2, ' m/s')}
-                  </td>
-                )}
-                {hasOceanData && (
-                  <td className="px-4 py-3 text-sm text-gray-700 text-center bg-teal-50/50 border-r-2 border-teal-200">
-                    <DirectionArrow degrees={forecast.currentDirection} className="text-teal-600" />
-                  </td>
-                )}
-                <td className="px-4 py-3 text-2xl text-center bg-amber-50/50 border-l-2 border-amber-200">
+
+                {/* ── MET Norway Locationforecast cells ── */}
+                <td className="px-4 py-3 text-2xl text-center bg-amber-50/50 border-l-2 border-amber-300/50">
                   <span title={forecast.symbolCode}>
                     {getWeatherSymbol(forecast.symbolCode)}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700 bg-amber-50/50">
-                  {formatValue(forecast.precipitation, 1, ' mm')}
+                  {formatWind(forecast.windSpeed, forecast.windGust)}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700 text-center bg-amber-50/50">
+                  <DirectionArrow degrees={forecast.windDirection} isFromDirection={true} className="text-amber-700" />
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700 bg-amber-50/50">
+                  {formatValue(forecast.precipitation, 1, ' mm')}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700 bg-amber-50/50 border-r-2 border-amber-200">
                   {formatValue(forecast.temperature, 1, '°C')}
                 </td>
+
+                {/* ── MET Norway Oceanforecast cells ── */}
                 {hasOceanData && (
-                  <td className="px-4 py-3 text-sm text-gray-700 bg-amber-50/50 border-r-2 border-amber-200">
+                  <td className="px-4 py-3 text-sm text-gray-700 bg-ocean-50/50 border-l-2 border-ocean-300/50">
+                    {formatValue(forecast.waveHeight, 1, ' m')}
+                  </td>
+                )}
+                {hasOceanData && (
+                  <td className="px-4 py-3 text-sm text-gray-700 text-center bg-ocean-50/50">
+                    <DirectionArrow degrees={forecast.waveDirection} isFromDirection={true} className="text-ocean-600" />
+                  </td>
+                )}
+                {hasOceanData && (
+                  <td className="px-4 py-3 text-sm text-gray-700 bg-ocean-50/50">
                     {formatValue(forecast.seaTemperature, 1, '°C')}
                   </td>
                 )}
+                {hasOceanData && (
+                  <td className="px-4 py-3 text-sm text-gray-700 bg-ocean-50/50">
+                    {formatValue(forecast.currentSpeed, 2, ' m/s')}
+                  </td>
+                )}
+                {hasOceanData && (
+                  <td className="px-4 py-3 text-sm text-gray-700 text-center bg-ocean-50/50 border-r-2 border-ocean-200">
+                    <DirectionArrow degrees={forecast.currentDirection} className="text-teal-600" />
+                  </td>
+                )}
+
+                {/* ── Kartverket cell ── */}
+                {hasOceanData && (
+                  <td className="px-4 py-3 text-sm text-gray-700 bg-purple-50/50 border-l-2 border-purple-300/50 border-r-2 border-r-purple-200">
+                    {forecast.tidePhase || '—'}
+                  </td>
+                )}
+
+                {/* ── Calculated cell ── */}
+                <td className="px-4 py-3 text-sm text-gray-700 bg-yellow-50/50 border-l-2 border-yellow-200">
+                  {forecast.sunPhase || '—'}
+                </td>
               </tr>
             ))}
           </tbody>

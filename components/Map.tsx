@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -9,14 +9,29 @@ export default function Map() {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
+    // Restore position/zoom when returning from a detail page
+    const restoreLat = parseFloat(searchParams.get('lat') ?? '');
+    const restoreLng = parseFloat(searchParams.get('lng') ?? '');
+    const restoreZoom = parseInt(searchParams.get('zoom') ?? '', 10);
+    const restoreOceanLat = parseFloat(searchParams.get('oceanLat') ?? '');
+    const restoreOceanLng = parseFloat(searchParams.get('oceanLng') ?? '');
+    const hasRestore = !isNaN(restoreLat) && !isNaN(restoreLng);
+    const hasOceanRestore = !isNaN(restoreOceanLat) && !isNaN(restoreOceanLng);
+
+    const initialCenter: [number, number] = hasRestore
+      ? [restoreLat, restoreLng]
+      : [62.0, 6.5];
+    const initialZoom = hasRestore && !isNaN(restoreZoom) ? restoreZoom : 6;
+
     // Initialize map centered on Norwegian coast
     const map = L.map(mapContainerRef.current, {
-      center: [62.0, 6.5], // Central Norway
-      zoom: 6,
+      center: initialCenter,
+      zoom: initialZoom,
       zoomControl: true,
     });
 
@@ -38,9 +53,7 @@ export default function Map() {
       iconAnchor: [16, 16],
     });
 
-    // Handle map clicks
-    map.on('click', (e: L.LeafletMouseEvent) => {
-      const { lat, lng } = e.latlng;
+    const openMarkerAt = (lat: number, lng: number) => {
 
       // Add temporary marker at clicked position
       const tempMarker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
@@ -125,20 +138,51 @@ export default function Map() {
         router.push(path);
       };
 
+      const zoom = map.getZoom();
       popupContent.querySelector('#go-score')?.addEventListener('click', () =>
-        navigate(`/score?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}`)
+        navigate(`/score?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}`)
       );
       popupContent.querySelector('#go-details')?.addEventListener('click', () =>
-        navigate(`/details?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}`)
+        navigate(`/details?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}`)
       );
       popupContent.querySelector('#go-tide')?.addEventListener('click', () =>
-        navigate(`/tide?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}`)
+        navigate(`/tide?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}`)
       );
 
       // Clean up when popup closes
       tempMarker.on('popupclose', () => {
         map.removeLayer(tempMarker);
       });
+
+      return tempMarker;
+    };
+
+    // If returning from a detail page, restore the marker + popup
+    if (hasRestore) {
+      // Small delay so the map tiles have a chance to start loading
+      setTimeout(() => {
+        openMarkerAt(restoreLat, restoreLng);
+
+        // Show the ocean forecast grid point as a small red dot
+        if (hasOceanRestore) {
+          const oceanDot = L.circleMarker([restoreOceanLat, restoreOceanLng], {
+            radius: 6,
+            color: '#dc2626',
+            fillColor: '#ef4444',
+            fillOpacity: 0.85,
+            weight: 2,
+          }).addTo(map);
+          oceanDot.bindTooltip(
+            `Ocean forecast point (${restoreOceanLat.toFixed(4)}°N, ${restoreOceanLng.toFixed(4)}°E)`,
+            { direction: 'top', offset: [0, -4] }
+          );
+        }
+      }, 150);
+    }
+
+    // Handle map clicks
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      openMarkerAt(e.latlng.lat, e.latlng.lng);
     });
 
     mapRef.current = map;

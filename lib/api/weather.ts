@@ -588,18 +588,28 @@ function formatTimeHHMM(utcDate: Date, timezone: string): string {
  * @param lng Longitude
  * @returns Array of hourly forecasts with metadata
  */
+export interface CombinedForecastResult {
+  forecasts: HourlyForecast[];
+  // MET Norway Locationforecast grid point
+  forecastLat: number;
+  forecastLng: number;
+  // MET Norway Oceanforecast grid point (undefined if ocean data unavailable)
+  oceanForecastLat?: number;
+  oceanForecastLng?: number;
+  // Kartverket tide station (undefined if tide data unavailable)
+  tideStationName?: string;
+  tideStationLat?: number;
+  tideStationLng?: number;
+  metadata: Record<string, never>;
+}
+
 export async function getCombinedForecast(
   lat: number,
   lng: number
-): Promise<{
-  forecasts: HourlyForecast[];
-  forecastLat: number;
-  forecastLng: number;
-  metadata: Record<string, never>;
-}> {
+): Promise<CombinedForecastResult> {
   // Cache key uses 2 dp (≈1 km) — forecast resolution doesn't need more
   const weatherCacheKey = `weather:${lat.toFixed(2)}:${lng.toFixed(2)}`;
-  const cachedWeather = await getCached<{ forecasts: HourlyForecast[]; forecastLat: number; forecastLng: number; metadata: Record<string, never> }>(weatherCacheKey);
+  const cachedWeather = await getCached<CombinedForecastResult>(weatherCacheKey);
   if (cachedWeather) return cachedWeather;
 
   return withInflight(weatherCacheKey, async () => {
@@ -617,10 +627,19 @@ export async function getCombinedForecast(
     const forecastLng = locationForecast.geometry.coordinates[0];
     const forecastLat = locationForecast.geometry.coordinates[1];
 
-    const result = {
+    // Ocean forecast grid point (only when data is available)
+    const oceanForecastLng = oceanForecast?.geometry.coordinates[0];
+    const oceanForecastLat = oceanForecast?.geometry.coordinates[1];
+
+    const result: CombinedForecastResult = {
       forecasts: combineForecasts(locationForecast, oceanForecast, realTideForecast, lat, lng),
       forecastLat,
       forecastLng,
+      oceanForecastLat,
+      oceanForecastLng,
+      tideStationName: realTideForecast?.stationName,
+      tideStationLat: realTideForecast?.stationLat,
+      tideStationLng: realTideForecast?.stationLng,
       metadata: {} as Record<string, never>,
     };
 
