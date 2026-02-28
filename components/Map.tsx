@@ -78,27 +78,27 @@ export default function Map() {
       const popupContent = document.createElement('div');
       popupContent.className = 'text-sm';
       popupContent.innerHTML = `
-        <div class="min-w-[200px]">
+        <div class="min-w-[220px]">
           <strong class="text-ocean-700 block mb-1" id="location-name">Loading...</strong>
           <div class="text-gray-500 text-xs mb-3">${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E</div>
           <div class="flex flex-row gap-2 justify-around">
-            <button id="go-score" class="flex flex-col items-center gap-1 bg-gray-100 hover:bg-gray-200 text-green-700 font-medium py-2 px-3 rounded-lg transition-colors flex-1">
-              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" id="go-score" aria-label="View score" class="flex flex-col items-center justify-center gap-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-green-700 font-medium py-4 px-4 rounded-lg transition-colors flex-1 min-h-[64px]">
+              <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
               </svg>
-              <span class="text-xs">Score</span>
+              <span class="text-sm font-semibold">Score</span>
             </button>
-            <button id="go-details" class="flex flex-col items-center gap-1 bg-ocean-500 hover:bg-ocean-700 text-white font-medium py-2 px-3 rounded-lg transition-colors flex-1">
-              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" id="go-details" aria-label="View forecast details" class="flex flex-col items-center justify-center gap-1 bg-ocean-500 hover:bg-ocean-700 active:bg-ocean-800 text-white font-medium py-4 px-4 rounded-lg transition-colors flex-1 min-h-[64px]">
+              <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M3 6h18M3 18h18"/>
               </svg>
-              <span class="text-xs">Details</span>
+              <span class="text-sm font-semibold">Details</span>
             </button>
-            <button id="go-tide" class="flex flex-col items-center gap-1 bg-blue-600 hover:bg-blue-800 text-white font-medium py-2 px-3 rounded-lg transition-colors flex-1">
-              <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <button type="button" id="go-tide" aria-label="View tides" class="flex flex-col items-center justify-center gap-1 bg-blue-600 hover:bg-blue-800 active:bg-blue-900 text-white font-medium py-4 px-4 rounded-lg transition-colors flex-1 min-h-[64px]">
+              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
               </svg>
-              <span class="text-xs">Tides</span>
+              <span class="text-sm font-semibold">Tides</span>
             </button>
           </div>
         </div>

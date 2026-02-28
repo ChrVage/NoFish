@@ -27,6 +27,23 @@ const getWeatherSymbol = (symbolCode: string | undefined) => {
   return '🌥️';
 };
 
+const getWeatherLabel = (symbolCode: string | undefined): string => {
+  if (!symbolCode) return 'Unknown weather';
+  const code = symbolCode.toLowerCase();
+  if (code.includes('clearsky')) return 'Clear sky';
+  if (code.includes('fair')) return 'Fair';
+  if (code.includes('partlycloudy')) return 'Partly cloudy';
+  if (code.includes('cloudy')) return 'Cloudy';
+  if (code.includes('lightrain') || code.includes('rainshowers')) return 'Light rain';
+  if (code.includes('heavyrain')) return 'Heavy rain';
+  if (code.includes('rain')) return 'Rain';
+  if (code.includes('sleet')) return 'Sleet';
+  if (code.includes('snow')) return 'Snow';
+  if (code.includes('fog')) return 'Fog';
+  if (code.includes('thunder')) return 'Thunder';
+  return 'Cloudy';
+};
+
 // Arrow component for direction visualization
 // For "from" directions (wind, waves), adds 180° to point toward where it's going
 // For "to" directions (current), uses the value as-is
@@ -39,13 +56,19 @@ const DirectionArrow = ({
   isFromDirection?: boolean;
   className?: string 
 }) => {
-  if (degrees === undefined) return <span>—</span>;
+  if (degrees === undefined) return <span aria-hidden="true">—</span>;
   
+  const cardinals = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const cardinal = cardinals[Math.round(degrees / 45) % 8];
+  const label = isFromDirection ? `From ${cardinal}` : `To ${cardinal}`;
+
   // If it's a "from" direction, add 180° to point toward where it's going
   const displayDegrees = isFromDirection ? (degrees + 180) % 360 : degrees;
   
   return (
     <svg
+      role="img"
+      aria-label={label}
       width="24"
       height="24"
       viewBox="0 0 24 24"
@@ -135,14 +158,15 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full divide-y divide-gray-200" aria-label="Hourly weather forecast">
           <thead className="bg-ocean-700 text-white">
             {/* API source group header row */}
             <tr className="bg-ocean-800 text-ocean-200 text-[10px] tracking-widest">
-              <th className="sticky left-0 bg-ocean-800 z-10" />
+              <th className="sticky left-0 bg-ocean-800 z-10" aria-hidden="true" />
               {/* MET Norway Locationforecast — always present */}
               <th
                 colSpan={5}
+                scope="colgroup"
                 className="px-4 py-1 text-center font-semibold border-l-2 border-amber-400/50 border-r border-amber-400/20"
               >
                 MET Norway Locationforecast
@@ -151,6 +175,7 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
               {hasOceanData && (
                 <th
                   colSpan={5}
+                  scope="colgroup"
                   className="px-4 py-1 text-center font-semibold border-l border-ocean-400/20 border-r border-ocean-400/20"
                 >
                   MET Norway Oceanforecast
@@ -160,6 +185,7 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
               {hasOceanData && (
                 <th
                   colSpan={1}
+                  scope="colgroup"
                   className="px-4 py-1 text-center font-semibold border-l border-purple-400/20 border-r border-purple-400/20"
                 >
                   Kartverket
@@ -168,6 +194,7 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
               {/* Calculated */}
               <th
                 colSpan={1}
+                scope="colgroup"
                 className="px-4 py-1 text-center font-semibold border-l border-yellow-400/20"
               >
                 Calculated
@@ -176,59 +203,59 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
 
             {/* Column header row */}
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium tracking-wider sticky left-0 bg-ocean-700 z-10">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider sticky left-0 bg-ocean-700 z-10">
                 Time
               </th>
 
               {/* ── MET Norway Locationforecast columns ── */}
-              <th className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-amber-900/20 border-l-2 border-amber-400/50">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-amber-900/20 border-l-2 border-amber-400/50">
                 Wind
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-amber-900/20">
+              <th scope="col" aria-label="Wind direction" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-amber-900/20">
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-amber-900/20">
+              <th scope="col" aria-label="Weather" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-amber-900/20">
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-amber-900/20">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-amber-900/20">
                 {precipLabel}
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-amber-900/20 border-r-2 border-amber-400/30">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-amber-900/20 border-r-2 border-amber-400/30">
                 Air Temp
               </th>
 
               {/* ── MET Norway Oceanforecast columns ── */}
               {hasOceanData && (
-                <th className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30 border-l-2 border-ocean-400/50">
+                <th scope="col" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30 border-l-2 border-ocean-400/50">
                   Wave Height
                 </th>
               )}
               {hasOceanData && (
-                <th className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30">
+                <th scope="col" aria-label="Wave direction" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30">
                 </th>
               )}
               {hasOceanData && (
-                <th className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-ocean-800/30">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-ocean-800/30">
                   Sea Temp
                 </th>
               )}
               {hasOceanData && (
-                <th className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-ocean-800/30">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-ocean-800/30">
                   Current
                 </th>
               )}
               {hasOceanData && (
-                <th className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30 border-r-2 border-ocean-400/30">
+                <th scope="col" aria-label="Current direction" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30 border-r-2 border-ocean-400/30">
                 </th>
               )}
 
               {/* ── Kartverket column ── */}
               {hasOceanData && (
-                <th className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-purple-900/20 border-l-2 border-purple-400/50 border-r-2 border-r-purple-400/30">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-purple-900/20 border-l-2 border-purple-400/50 border-r-2 border-r-purple-400/30">
                   Tide
                 </th>
               )}
 
               {/* ── Calculated column ── */}
-              <th className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-yellow-900/20 border-l-2 border-yellow-400/50">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-yellow-900/20 border-l-2 border-yellow-400/50">
                 Sun
               </th>
             </tr>
@@ -256,7 +283,7 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
                   <DirectionArrow degrees={forecast.windDirection} isFromDirection={true} className="text-amber-700" />
                 </td>
                 <td className="px-4 py-3 text-2xl text-center" style={locStyle}>
-                  <span title={forecast.symbolCode}>
+                  <span role="img" aria-label={getWeatherLabel(forecast.symbolCode)}>
                     {getWeatherSymbol(forecast.symbolCode)}
                   </span>
                 </td>
