@@ -127,6 +127,8 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
     return isToDirection ? `to ${direction}` : direction;
   };
 
+  const now = Date.now();
+
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
       <div className="overflow-x-auto">
@@ -235,7 +237,7 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
 
           <tbody className="bg-white divide-y divide-gray-200">
             {forecasts.map((forecast, index) => {
-              const daysAhead = (new Date(forecast.time).getTime() - Date.now()) / 86_400_000;
+              const daysAhead = (new Date(forecast.time).getTime() - now) / 86_400_000;
               const locStyle = getLocStyle(daysAhead);
               const oceanStyle = getOceanStyle(daysAhead);
               return (
