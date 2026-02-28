@@ -112,32 +112,26 @@ export async function getTideForecast(
           `&fromtime=${encodeURIComponent(fromTimeStr)}&totime=${encodeURIComponent(toTimeStr)}` +
           `&datatype=tab&refcode=cd&lang=en&tide_request=locationdata`;
 
-      console.log('🌊 Fetching tide data from:', url);
-
       const response = await fetch(url, {
         headers: {
           'User-Agent': USER_AGENT,
         },
       });
 
-      console.log('🌊 Tide API response status:', response.status);
-
       if (!response.ok) {
-        console.warn(`❌ Kartverket Tide API returned ${response.status}`);
+        console.warn(`Kartverket Tide API returned ${response.status}`);
         return null;
       }
 
       const text = await response.text();
-      console.log('🌊 Tide API response (first 500 chars):', text.substring(0, 500));
 
       // Parse XML to extract high/low tide events
       const parsed = parseTideXML(text, lat, lng);
-      console.log('✅ Successfully parsed tide events:', parsed.events.length, 'events');
       // Cache for 6 hours — tide tables are predictable
       await setCached(tideCacheKey, parsed, 6);
       return parsed;
     } catch (error) {
-      console.error('❌ Tide API error:', error);
+      console.error('Tide API error:', error);
       return null;
     }
   });
