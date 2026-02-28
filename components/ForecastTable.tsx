@@ -132,72 +132,40 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-ocean-700 text-white">
-            {/* API source group header row with accuracy badges */}
+            {/* API source group header row */}
             <tr className="bg-ocean-800 text-ocean-200 text-[10px] uppercase tracking-widest">
               <th className="sticky left-0 bg-ocean-800 z-10" />
               {/* MET Norway Locationforecast — always present */}
               <th
                 colSpan={5}
-                className="px-4 py-2 text-center font-semibold border-l-2 border-amber-400/50 border-r border-amber-400/20"
+                className="px-4 py-1 text-center font-semibold border-l-2 border-amber-400/50 border-r border-amber-400/20"
               >
-                <div>MET Norway Locationforecast</div>
-                <div className="flex gap-1 justify-center mt-1 normal-case tracking-normal flex-wrap">
-                  <span className="inline-flex items-center gap-0.5 bg-green-500/20 text-green-200 px-1.5 py-0.5 rounded">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" /> ≤3d excellent
-                  </span>
-                  <span className="inline-flex items-center gap-0.5 bg-amber-500/20 text-amber-200 px-1.5 py-0.5 rounded">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> 3–5d good
-                  </span>
-                  <span className="inline-flex items-center gap-0.5 bg-orange-500/20 text-orange-200 px-1.5 py-0.5 rounded">
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange-400 inline-block" /> &gt;5d fair
-                  </span>
-                </div>
+                MET Norway Locationforecast
               </th>
               {/* MET Norway Oceanforecast — coastal only */}
               {hasOceanData && (
                 <th
                   colSpan={5}
-                  className="px-4 py-2 text-center font-semibold border-l border-ocean-400/20 border-r border-ocean-400/20"
+                  className="px-4 py-1 text-center font-semibold border-l border-ocean-400/20 border-r border-ocean-400/20"
                 >
-                  <div>MET Norway Oceanforecast</div>
-                  <div className="flex gap-1 justify-center mt-1 normal-case tracking-normal flex-wrap">
-                    <span className="inline-flex items-center gap-0.5 bg-green-500/20 text-green-200 px-1.5 py-0.5 rounded">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" /> ≤2d good
-                    </span>
-                    <span className="inline-flex items-center gap-0.5 bg-sky-500/20 text-sky-200 px-1.5 py-0.5 rounded">
-                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400 inline-block" /> 2–4d fair
-                    </span>
-                    <span className="inline-flex items-center gap-0.5 bg-orange-500/20 text-orange-200 px-1.5 py-0.5 rounded">
-                      <span className="w-1.5 h-1.5 rounded-full bg-orange-400 inline-block" /> &gt;4d poor
-                    </span>
-                  </div>
+                  MET Norway Oceanforecast
                 </th>
               )}
-              {/* Kartverket — astronomical tides, always accurate */}
+              {/* Kartverket — astronomical tides */}
               {hasOceanData && (
                 <th
                   colSpan={1}
-                  className="px-4 py-2 text-center font-semibold border-l border-purple-400/20 border-r border-purple-400/20"
+                  className="px-4 py-1 text-center font-semibold border-l border-purple-400/20 border-r border-purple-400/20"
                 >
-                  <div>Kartverket</div>
-                  <div className="flex justify-center mt-1 normal-case tracking-normal">
-                    <span className="inline-flex items-center gap-0.5 bg-green-500/20 text-green-200 px-1.5 py-0.5 rounded">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" /> All horizons
-                    </span>
-                  </div>
+                  Kartverket
                 </th>
               )}
-              {/* Calculated — always accurate */}
+              {/* Calculated */}
               <th
                 colSpan={1}
-                className="px-4 py-2 text-center font-semibold border-l border-yellow-400/20"
+                className="px-4 py-1 text-center font-semibold border-l border-yellow-400/20"
               >
-                <div>Calculated</div>
-                <div className="flex justify-center mt-1 normal-case tracking-normal">
-                  <span className="inline-flex items-center gap-0.5 bg-green-500/20 text-green-200 px-1.5 py-0.5 rounded">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" /> Always accurate
-                  </span>
-                </div>
+                Calculated
               </th>
             </tr>
 

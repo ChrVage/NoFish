@@ -52,6 +52,7 @@ export default function Map() {
 
     let activeOceanDot: L.CircleMarker | null = null;
     let activeOceanLine: L.Polyline | null = null;
+    let activeFetchController: AbortController | null = null;
 
     const clearOceanLayers = () => {
       if (activeOceanLine) { map.removeLayer(activeOceanLine); activeOceanLine = null; }
@@ -62,8 +63,13 @@ export default function Map() {
       // Guard: bail if the map has already been removed
       if (!map.getContainer().isConnected) return;
 
-      // Remove any dot/line left over from a previous click (handles the race
-      // where a fast second click fires before the first fetch resolved)
+      // Abort any in-flight fetch from a previous click so its result can never
+      // add a stale dot/line after we've already moved on
+      if (activeFetchController) activeFetchController.abort();
+      activeFetchController = new AbortController();
+      const { signal } = activeFetchController;
+
+      // Remove any dot/line that already resolved before this click
       clearOceanLayers();
 
       const tempMarker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
@@ -109,8 +115,8 @@ export default function Map() {
       (async () => {
         try {
           const [geoResponse, weatherResponse] = await Promise.all([
-            fetch(`/api/geocoding?lat=${lat}&lon=${lng}`),
-            fetch(`/api/weather?lat=${lat}&lon=${lng}`),
+            fetch(`/api/geocoding?lat=${lat}&lon=${lng}`, { signal }),
+            fetch(`/api/weather?lat=${lat}&lon=${lng}`, { signal }),
           ]);
 
           if (geoResponse.ok) {
@@ -151,6 +157,8 @@ export default function Map() {
             }
           }
         } catch (error) {
+          // Ignore aborted fetches (user clicked a new spot before this resolved)
+          if (error instanceof DOMException && error.name === 'AbortError') return;
           console.error('Map fetch error:', error);
           const nameElement = popupContent.querySelector('#location-name');
           if (nameElement) nameElement.textContent = `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
@@ -202,6 +210,7 @@ export default function Map() {
 
     return () => {
       if (restoreTimer !== null) clearTimeout(restoreTimer);
+      if (activeFetchController) activeFetchController.abort();
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
