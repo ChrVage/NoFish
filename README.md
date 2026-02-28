@@ -29,8 +29,11 @@ NoFish gives small boat fishers precise wind, wave, and tide forecasts for any p
 
 ## Docs
 
-- [TECHNICAL.md](TECHNICAL.md) — tech stack, APIs, database, and deployment
-- [ARCHITECTURE.md](ARCHITECTURE.md) — project structure and data flow
+- [readme-technical.md](readme-technical.md) — tech stack, APIs, database, and deployment
+- [readme-architecture.md](readme-architecture.md) — project structure and data flow
+- [readme-dataquality.md](readme-dataquality.md) — data source ratings and limitations
+
+---
 
 ## Feedback and issues
 Did you find an issue, or do you have a wish for new functionality? 

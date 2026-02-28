@@ -101,4 +101,4 @@ vercel --prod
 
 ---
 
-> See [ARCHITECTURE.md](ARCHITECTURE.md) for project structure and data flow.
+> See [readme-architecture.md](readme-architecture.md) for project structure and data flow.
