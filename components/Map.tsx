@@ -101,6 +101,8 @@ export default function Map() {
             if (nameElement) {
               nameElement.textContent = name;
             }
+
+
           } else {
             console.error('Geocoding failed with status:', response.status);
             const nameElement = popupContent.querySelector('#location-name');

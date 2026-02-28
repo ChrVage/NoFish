@@ -16,8 +16,8 @@ export async function reverseGeocode(
   lat: number,
   lng: number
 ): Promise<GeocodingResult | null> {
-  // Cache key uses 2 dp (≈1 km) — sufficient for municipality-level geocoding
-  const cacheKey = `geo:${lat.toFixed(2)}:${lng.toFixed(2)}`;
+  // v2 prefix invalidates old entries cached with zoom=10 (incorrect isWater values)
+  const cacheKey = `geo2:${lat.toFixed(2)}:${lng.toFixed(2)}`;
 
   const cached = await getCached<GeocodingResult>(cacheKey);
   if (cached) return cached;
@@ -26,7 +26,7 @@ export async function reverseGeocode(
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?` +
-          `format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1`,
+          `format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
         {
           headers: {
             'User-Agent': 'NoFish/1.0 (fishing conditions app)',
@@ -48,6 +48,7 @@ export async function reverseGeocode(
           address.city ||
           address.hamlet ||
           address.locality ||
+          address.body_of_water ||
           'Unnamed location',
         municipality:
           address.municipality || address.county || 'Unknown municipality',

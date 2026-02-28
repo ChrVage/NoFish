@@ -27,7 +27,7 @@ app/
 components/
   BackButton.tsx        # Client component — back to map (shared across all pages)
   Map.tsx               # Leaflet map — click to place marker; popup with Score/Details/Tides buttons
-  ForecastTable.tsx     # Hourly forecast table with direction arrows and weather icons; accepts timezone prop
+  ForecastTable.tsx     # Hourly forecast table — direction arrows, weather icons; ocean columns auto-hidden when no wave data
   PageNav.tsx           # Header navigation — icon + label buttons for the other two views
 
 lib/
@@ -40,9 +40,6 @@ lib/
     cache.ts            # forecast_cache table — getCached() / setCached() / withInflight()
   utils/
     timezone.ts         # getTimezone(lat, lng) → IANA name via tz-lookup; getTimezoneLabel() → "Zone (GMT+N)"
-
-types/
-  weather.ts            # Weather, ocean, and tide types
 
 public/                 # Static assets (og image, icons)
 ```
@@ -86,6 +83,10 @@ Browser click on map
        │    └─ cache hit?  → return cached result (TTL: 6 hours)
        │    └─ cache miss → withInflight → Kartverket → write to cache → return
        └─ after(): lib/db/lookups.ts → Neon (production only)
+
+ForecastTable (client component)
+       └─ derives hasOceanData = forecasts.some(f => f.waveHeight !== undefined)
+            └─ Tide, Wave, Current, Sea Temp columns hidden automatically for inland points
 ```
 
 All outbound requests are made server-side. The browser only ever talks to `/api/*` routes on the same origin.
@@ -98,7 +99,7 @@ All outbound requests are made server-side. The browser only ever talks to `/api
 
 | Column | Description |
 |---|---|
-| `cache_key` | Text primary key — e.g. `geo:59.91:10.75`, `weather:59.91:10.75`, `tide:60:11` |
+| `cache_key` | Text primary key — e.g. `geo2:59.91:10.75`, `weather:59.91:10.75`, `tide:60:11` |
 | `data` | JSONB — the full API response |
 | `cached_at` | When the row was last written |
 | `expires_at` | Row is ignored (and overwritten) after this timestamp |
@@ -127,6 +128,7 @@ Set in `app/layout.tsx`:
 ## Future Work
 
 - [ ] Fishing Score algorithm (weather + tide + seasonal weighting)
+- [ ] Land location detection (MET Oceanforecast returns no wave data for inland points — use this as the signal, already done for ForecastTable column hiding)
 - [ ] CSP moved to HTTP response headers (`next.config.ts`)
 - [ ] Sitemap and `robots.txt`
 - [ ] `error.tsx` boundary pages for `/details` and `/tide`
