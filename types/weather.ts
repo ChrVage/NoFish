@@ -141,6 +141,8 @@ export interface TideEvent {
 export interface TideXMLResponse {
   events: TideEvent[]; // High and low tide events
   stationName?: string;
+  stationLat?: number;
+  stationLng?: number;
   latitude: number;
   longitude: number;
 }

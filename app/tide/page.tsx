@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { getTideForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
 import { getTimezone, getTimezoneLabel } from '@/lib/utils/timezone';
+import { haversineDistance, formatDistance } from '@/lib/utils/distance';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
 import Footer from '@/components/Footer';
@@ -71,11 +72,17 @@ export default async function TidePage({ searchParams }: PageProps) {
             <p className="text-xs text-gray-400 mt-1">
               Times shown in local time · {timezoneLabel}
             </p>
-            {tideForecast?.stationName && (
-              <p className="text-xs text-gray-400 mt-1">
-                Station: {tideForecast.stationName}
-              </p>
-            )}
+            {tideForecast?.stationName && (() => {
+              const hasCoords = tideForecast.stationLat != null && tideForecast.stationLng != null;
+              return (
+                <p className="text-xs text-gray-400 mt-1">
+                  Station: {tideForecast.stationName}
+                  {hasCoords && (
+                    <> · {formatDistance(haversineDistance(lat, lng, tideForecast.stationLat!, tideForecast.stationLng!))} from selected location</>
+                  )}
+                </p>
+              );
+            })()}
           </div>
 
           {events.length === 0 ? (
