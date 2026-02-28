@@ -3,6 +3,7 @@
  * Validates if weather data is available for a location
  */
 
+import { XMLParser } from 'fast-xml-parser';
 import type {
   LocationForecastResponse,
   OceanForecastResponse,
@@ -220,50 +221,46 @@ function parseTideXML(
   lat: number,
   lng: number
 ): TideXMLResponse {
-  const events: TideEvent[] = [];
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: '',
+    // Ensure these are always arrays even when only one element is present
+    isArray: (name) => name === 'data' || name === 'waterlevel',
+  });
+
+  type WaterLevelAttr = { value: string; time: string; flag: string };
+  type DataBlock = { waterlevel?: WaterLevelAttr[] };
+  type LocationAttr = { name?: string; lat?: string | number; lon?: string | number };
+  type LocationData = { location?: LocationAttr; data?: DataBlock[] };
+  type TideDoc = { tide?: { locationdata?: LocationData } };
+
+  const doc = parser.parse(xmlText) as TideDoc;
+  const locationdata = doc?.tide?.locationdata;
+
   let stationName: string | undefined;
   let stationLat: number | undefined;
   let stationLng: number | undefined;
 
-  // Simple XML parsing using regex (for production, consider using a proper XML parser)
-  // Extract location element attributes (name, lat, lon)
-  const locationTagMatch = xmlText.match(/<location[^>]+>/);
-  if (locationTagMatch) {
-    const tag = locationTagMatch[0];
-    const nameMatch = tag.match(/name="([^"]+)"/);
-    const latMatch = tag.match(/\blat="([+-]?\d+\.?\d*)"/);
-    const lonMatch = tag.match(/\blon="([+-]?\d+\.?\d*)"/);
-    if (nameMatch) stationName = nameMatch[1];
-    if (latMatch && lonMatch) {
-      stationLat = parseFloat(latMatch[1]);
-      stationLng = parseFloat(lonMatch[1]);
+  const location = locationdata?.location;
+  if (location) {
+    stationName = location.name;
+    if (location.lat != null) stationLat = parseFloat(String(location.lat));
+    if (location.lon != null) stationLng = parseFloat(String(location.lon));
+  }
+
+  const events: TideEvent[] = [];
+  for (const block of locationdata?.data ?? []) {
+    for (const wl of block.waterlevel ?? []) {
+      if (wl.flag !== 'high' && wl.flag !== 'low') continue;
+      events.push({
+        time: wl.time,
+        value: parseFloat(wl.value),
+        flag: wl.flag,
+      });
     }
   }
-  
-  // Extract waterlevel elements with high/low flags
-  const waterLevelRegex = /<waterlevel\s+value="([\d.]+)"\s+time="([^"]+)"\s+flag="(high|low)"\/>/g;
-  let match;
-  
-  while ((match = waterLevelRegex.exec(xmlText)) !== null) {
-    const value = parseFloat(match[1]);
-    const time = match[2];
-    const flag = match[3] as 'high' | 'low';
-    
-    events.push({
-      time,
-      value,
-      flag
-    });
-  }
-  
-  return {
-    events,
-    stationName,
-    stationLat,
-    stationLng,
-    latitude: lat,
-    longitude: lng
-  };
+
+  return { events, stationName, stationLat, stationLng, latitude: lat, longitude: lng };
 }
 
 /**
