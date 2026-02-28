@@ -2,7 +2,8 @@
 
 **Because fishing in bad weather is worse than no fishing at all.**
 
-NoFish gives small boat fishers precise wind, wave, and tide forecasts for any point on the Norwegian coast — so you can make a safe call before you leave the dock.
+NoFish gives small boat fishers access to data about wind, wave, and tide forecasts for many points on the Norwegian coast — so they can make a safer call before they leave the dock.
+This is not powered by AI - every boat user on the Norwegian coast need to use their own real intelligence and judgement before heading out in the North Sea.
 
 🌐 **[nofish.no](https://nofish.no)**
 
