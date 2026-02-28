@@ -8,7 +8,7 @@
 
 ```
 app/
-  layout.tsx            # Root layout — metadata, CSP header (meta tag), JSON-LD structured data
+  layout.tsx            # Root layout — metadata, JSON-LD structured data
   page.tsx              # Home page — full-screen interactive map
   globals.css           # Global styles (Tailwind base + custom scrollbar); light-mode only
   details/
@@ -22,13 +22,20 @@ app/
     geocoding/
       route.ts          # GET /api/geocoding?lat=&lon= — thin proxy to lib/api/geocoding.ts
     weather/
-      route.ts          # GET /api/weather?lat=&lon= — returns forecasts + ocean grid coordinates
+      route.ts          # GET /api/weather?lat=&lon= — returns full HourlyForecast[] + ocean grid coordinates
+    ocean-point/
+      route.ts          # GET /api/ocean-point?lat=&lon= — returns only oceanForecastLat/Lng (used by map)
 
 components/
   BackButton.tsx        # Client component — reads lat/lng/zoom from search params, navigates back to /?lat=&lng=&zoom=
+                        # Also used as the clickable 🎣 NoFish logo on all detail pages
   Footer.tsx            # "About NoFish" and "Feedback" links
   ForecastTable.tsx     # Hourly forecast table; columns grouped by API source; ocean columns hidden for inland points
-  Map.tsx               # Leaflet map; click → marker + popup; parallel geo+weather fetch; blue ocean dot + line
+                        # Wind speed and wave height numbers are bold; zero precipitation hidden;
+                        # Rain/Snow label derived from first-row air temperature;
+                        # row confidence colour coded with legend above table
+  Map.tsx               # Leaflet map; click → marker + popup with large touch-friendly buttons;
+                        # parallel geo+ocean-point fetch; blue dot + dashed line to ocean grid point
   PageNav.tsx           # Header nav buttons (Score / Details / Tides); current page button is hidden
 
 lib/
@@ -36,7 +43,8 @@ lib/
     weather.ts          # getCombinedForecast() — fetches and merges Locationforecast + Oceanforecast + Kartverket tides;
                         # exports CombinedForecastResult with ocean grid coords and tide station metadata;
                         # getTideForecast() for the tide-only page;
-                        # solar elevation / sun phase calculation; tide phase labelling
+                        # solar elevation / sun phase calculation; tide phase labelling;
+                        # XML parsed via fast-xml-parser
     geocoding.ts        # reverseGeocode() — Nominatim with rich name fallback chain (village, bay, fjord, sea…)
   db/
     index.ts            # Neon SQL client (reads DATABASE_URL)
@@ -67,14 +75,16 @@ Both the Leaflet popup and the in-page header share the same three buttons:
 | Details | White / ocean-blue | `/details?lat=…&lng=…&zoom=…` |
 | Tides | White / blue | `/tide?lat=…&lng=…&zoom=…` |
 
-The **current page’s button is hidden** in `PageNav`. The `zoom` param is appended by the map popup so the map zoom level can be restored when navigating back.
+The **current page's button is hidden** in `PageNav`. The `zoom` param is appended by the map popup so the map zoom level can be restored when navigating back.
 
 ### Back navigation
 
-`BackButton` reads `lat`, `lng`, and `zoom` from the current page’s search params and navigates to `/?lat=…&lng=…&zoom=…`. `Map.tsx` reads these on mount and:
+`BackButton` reads `lat`, `lng`, and `zoom` from the current page's search params and navigates to `/?lat=…&lng=…&zoom=…`. On detail pages it is rendered as the `🎣 NoFish` logo text — the entire logo is the back button.
+
+`Map.tsx` reads these params on mount and:
 1. Initialises the map at the saved center and zoom
 2. After 150 ms (tiles loading), calls `openMarkerAt()` to place the marker and open the popup
-3. `openMarkerAt()` also fires the parallel geo+weather fetch, so the blue ocean dot appears as normal
+3. `openMarkerAt()` also fires the parallel geo+ocean-point fetch, so the blue ocean dot appears as normal
 
 ---
 
@@ -89,12 +99,12 @@ User clicks map
        │    ├─ GET /api/geocoding?lat=&lon=
        │    │    └─ lib/api/geocoding.ts → cache hit? return / miss → Nominatim → cache (TTL 30 days)
        │    │         Name fallback: village → town → city → hamlet → bay → fjord → sea → display_name[0]
-       │    └─ GET /api/weather?lat=&lon=
+       │    └─ GET /api/ocean-point?lat=&lon=
        │         └─ lib/api/weather.ts (getCombinedForecast)
-       │              ├─ returns forecasts + oceanForecastLat/Lng
+       │              ├─ returns only oceanForecastLat/Lng (2-3 JSON fields)
        │              └─ Map draws blue CircleMarker + dashed Polyline to ocean grid point
        └─ Popup shows location name (updates when fetch resolves)
-            └─ Polyline and dot removed on popup close or page navigation
+            └─ Dot and line remain until next click or page navigation
 ```
 
 ### Detail/Tide page (Server Component)
@@ -107,7 +117,7 @@ User clicks map
        │    getCombinedForecast() → cache hit / miss → parallel:
        │         ├─ MET Norway Locationforecast 2.0 (weather, wind, precipitation…)
        │         ├─ MET Norway Oceanforecast 2.0   (waves, current, sea temp…)
-       │         └─ Kartverket Tide API             (high/low events, XML parsed server-side)
+       │         └─ Kartverket Tide API             (high/low events, XML parsed server-side via fast-xml-parser)
        │    Returns: CombinedForecastResult
        │         ├─ forecasts[]        — merged HourlyForecast array
        │         ├─ forecastLat/Lng    — Locationforecast grid point
@@ -130,12 +140,14 @@ The table has a two-row header. The top row spans columns by API source:
 
 | Group | Columns | Condition |
 |---|---|---|
-| MET Norway Locationforecast | Weather icon, Wind (+ gust), Wind dir, Precip., Air temp | Always shown |
-| MET Norway Oceanforecast | Wave height, Wave dir, Sea temp, Current speed, Current dir | Hidden if no `waveHeight` data |
+| MET Norway Locationforecast | Wind (bold speed + gust), Wind dir ↑, Weather icon, Rain/Snow, Air temp | Always shown |
+| MET Norway Oceanforecast | Wave height (bold), Wave dir ↑, Sea temp, Current speed, Current dir ↑ | Hidden if no `waveHeight` data |
 | Kartverket | Tide phase | Hidden if no ocean data |
 | Calculated | Sun phase | Always shown |
 
 `hasOceanData` is derived client-side: `forecasts.some(f => f.waveHeight !== undefined)`. Inland points get a clean 5-column table.
+
+Row background tinting indicates forecast confidence. A legend (High → Medium → Fair → Low) is shown above the table using the same colours as the rows.
 
 ---
 
@@ -145,7 +157,7 @@ The table has a two-row header. The top row spans columns by API source:
 |---|---|---|---|
 | Geocoding | `geo3:{lat.2dp}:{lng.2dp}` | ≈1 km | 30 days |
 | Weather + ocean | `weather:{lat.2dp}:{lng.2dp}` | ≈1 km | 1 hour |
-| Tides | `tide:{lat.0dp}:{lng.0dp}` | Integer (Kartverket’s own precision) | 6 hours |
+| Tides | `tide:{lat.0dp}:{lng.0dp}` | Integer (Kartverket's own precision) | 6 hours |
 
 The `geo3:` prefix replaced earlier `geo2:` and `geo:` prefixes to invalidate stale entries that lacked water-body name fallbacks.
 
@@ -153,23 +165,22 @@ The `geo3:` prefix replaced earlier `geo2:` and `geo:` prefixes to invalidate st
 
 ## Security
 
-Set in `app/layout.tsx` as a `<meta>` tag:
+Set in `next.config.ts` via `headers()` — applied as HTTP response headers to all routes:
 
-| Mechanism | Notes |
+| Header | Value |
 |---|---|
-| Content-Security-Policy | `script-src 'self' 'unsafe-inline'`; `img-src` allows OSM tile hosts; `connect-src 'self'` only |
-| Referrer-Policy | `no-referrer-when-downgrade` |
-| JSON-LD | `WebApplication` + `WeatherApplication` schema, genre `Fishing` |
+| `Content-Security-Policy` | `default-src 'self'`; `script-src 'self' 'unsafe-inline'`; `img-src` allows OSM tile hosts; `connect-src 'self'` only |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `DENY` |
+| `Referrer-Policy` | `no-referrer-when-downgrade` |
 
-> For header-level CSP enforcement (stronger), configure `next.config.ts` with `headers()`.
+JSON-LD (`WebApplication` + `WeatherApplication` schema, genre `Fishing`) is injected via a `<script>` tag in `app/layout.tsx`.
 
 ---
 
 ## Future Work
 
 - [ ] Fishing Score algorithm (weather + tide + seasonal weighting)
-- [ ] CSP promoted to HTTP response headers (`next.config.ts`)
 - [ ] `error.tsx` boundary pages for `/details` and `/tide`
 - [ ] `loading.tsx` streaming state for `/tide`
-- [ ] Coordinate bounds validation (reject invalid lat/lng early)
 - [ ] Sitemap and `robots.txt`

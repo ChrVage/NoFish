@@ -11,6 +11,7 @@
 | Runtime | React 19.2.3 |
 | Styling | Tailwind CSS v4 (light-mode only — dark-mode OS preference intentionally ignored) |
 | Map | Leaflet.js 1.9.4 (loaded client-side via `useEffect`; SSR-disabled with `next/dynamic`) with OpenStreetMap tiles |
+| XML parsing | `fast-xml-parser` — used to parse Kartverket's tide API XML response server-side |
 | Database | Neon serverless Postgres via `@neondatabase/serverless` |
 | Timezone | `tz-lookup` 6.1.25 — pure-JS IANA timezone from coordinates; no file I/O; works on Vercel Edge |
 | Deployment | Vercel (auto-deploy on push to `main`) |
@@ -26,9 +27,19 @@
 | [Kartverket Tide API](https://api.kartverket.no/sehavniva/) | High/low tide event times and heights | XML | None |
 | [Nominatim (OpenStreetMap)](https://nominatim.org/release-docs/develop/api/Reverse/) | Reverse geocoding — coordinates → place name | JSON | None |
 
-All external calls are made **server-side** to avoid CORS issues and comply with MET Norway’s rate-limiting policy. A `User-Agent: NoFish/1.0 github.com/ChrVage/NoFish` header is sent with every request.
+All external calls are made **server-side** to avoid CORS issues and comply with MET Norway's rate-limiting policy. A `User-Agent: NoFish/1.0 github.com/ChrVage/NoFish` header is sent with every request.
 
-The `/api/weather` route additionally returns the ocean forecast grid point coordinates (`oceanForecastLat`, `oceanForecastLng`) so the browser can render the blue map indicator without an extra round-trip.
+---
+
+## API Routes
+
+| Route | Purpose |
+|---|---|
+| `GET /api/geocoding?lat=&lon=` | Reverse geocodes coordinates via Nominatim. Returns place name with multi-level fallback. |
+| `GET /api/weather?lat=&lon=` | Returns the full 10-day merged `HourlyForecast[]` array plus ocean grid coordinates. Used by the Details and Tide pages via server-side direct lib calls; this route is exposed for external consumers. |
+| `GET /api/ocean-point?lat=&lon=` | Returns only `{ oceanForecastLat, oceanForecastLng }`. Used by the map to place the blue dot without fetching 240+ forecast rows. Cache-backed — usually a hit when the Details page has already been visited. |
+
+All three routes validate coordinate bounds (`lat` ∈ [−90, 90], `lon` ∈ [−180, 180]) and return `400` for out-of-range or non-numeric inputs.
 
 ---
 

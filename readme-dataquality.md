@@ -15,22 +15,40 @@ NoFish pulls from four external data sources. This document rates each on qualit
 
 ---
 
+## Forecast Confidence
+
+The Details table colour-codes rows by confidence tier. A legend above the table decodes the colours:
+
+| Colour | Label | Locationforecast | Oceanforecast |
+|---|---|---|---|
+| Green | High | ≤ 3 days ahead | ≤ 2 days ahead |
+| Amber | Medium | 3–5 days ahead | — |
+| Sky blue | Fair | — | 2–4 days ahead |
+| Orange | Low | > 5 days ahead | > 4 days ahead |
+
+Beyond the Low tier the underlying NWP models are essentially providing climatological averages rather than genuine forecasts. Treat those rows as rough planning indicators only.
+
+---
+
 ## Key Limitations
 
 **Ocean data is coastal only.**
-MET Norway’s Oceanforecast model covers Norwegian coastal waters. Points more than roughly 50 km offshore, or any inland location, return no ocean data. The app detects this automatically: wave, current, sea temperature, and tide columns are hidden from the forecast table when `waveHeight` is absent for all rows.
+MET Norway’s Oceanforecast model covers Norwegian coastal waters. Points more than roughly 50 km offshore, or any inland location, return no ocean data. The app detects this automatically: wave, current, sea temperature, and tide columns are hidden from the forecast table when \waveHeight\ is absent for all rows.
 
 **Tides are astronomical predictions only.**
-Kartverket’s tide API returns the predicted astronomical tide — the component driven by the moon and sun. Storm surge (meteorological tide) is not included. During strong onshore winds or low-pressure systems, actual water levels can differ significantly from the prediction.
+Kartverket’s tide API returns the predicted astronomical tide — the component driven by the moon and sun. Storm surge (meteorological tide) is not included. During strong onshore winds or low-pressure systems, actual water levels can differ significantly from the prediction. Skippers must account for local conditions themselves.
 
 **Weather accuracy beyond day 3–4.**
-All NWP (numerical weather prediction) models lose skill rapidly beyond 3–4 days. The 10-day forecast should be treated as a rough guide from day 5 onward, regardless of the resolution or quality of the underlying model.
+All NWP (numerical weather prediction) models lose skill rapidly beyond 3–4 days. The 10-day forecast should be treated as a rough planning guide from day 5 onward regardless of the resolution or quality of the underlying model. NoFish data is one input — local knowledge, VHF weather broadcasts, and personal judgment matter equally.
 
 **Forecast grid points vs. clicked point.**
 Both MET APIs snap the requested coordinates to their nearest internal grid point. The Details page shows the distance from your clicked point to the actual ocean forecast grid point used. On the map, a sky-blue dot and dashed line indicate the ocean grid point location.
 
 **Nominatim coverage at sea.**
 OpenStreetMap’s reverse geocoder has variable coverage for open-water locations. The app uses a wide fallback chain (village → town → city → hamlet → bay → fjord → strait → sea → ocean → first segment of display name) before falling back to raw coordinates.
+
+**Not a substitute for judgment.**
+NoFish is not powered by AI and does not make recommendations. Every skipper on the Norwegian coast must use their own experience, local knowledge, and real intelligence before heading out on the water. The numbers here inform that decision — they do not replace it.
 
 ---
 
