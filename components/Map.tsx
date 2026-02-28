@@ -183,10 +183,12 @@ export default function Map() {
         navigate(`/tide?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}`)
       );
 
-      // Clean up marker, line and ocean dot when popup closes
+      // Remove the pin when popup closes; leave dot/line on map until next click
+      // (clearOceanLayers runs at the top of openMarkerAt — removing it here
+      // prevents a race where popupclose fires after the next fetch has already
+      // placed a fresh dot, wiping it out immediately)
       tempMarker.on('popupclose', () => {
         map.removeLayer(tempMarker);
-        clearOceanLayers();
       });
 
       return tempMarker;

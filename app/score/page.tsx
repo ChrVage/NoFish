@@ -36,9 +36,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
       <header className="bg-ocean-900 text-white px-6 py-4 shadow-lg">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <BackButton />
-            <span className="text-3xl">🎣</span>
-            <h1 className="text-2xl font-bold">NoFish</h1>
+            <BackButton label="← 🎣 NoFish" className="text-sm font-normal text-white hover:text-ocean-200 transition-colors" />
           </div>
           <PageNav lat={lat} lng={lng} current="score" />
         </div>
