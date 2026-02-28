@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
+import { getLocationForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
 import { getTimezone, getTimezoneLabel } from '@/lib/utils/timezone';
+import { haversineDistance, formatDistance } from '@/lib/utils/distance';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
 import Footer from '@/components/Footer';
@@ -18,9 +20,16 @@ export default async function ScorePage({ searchParams }: PageProps) {
     notFound();
   }
 
-  const locationData = await reverseGeocode(lat, lng);
+  const [locationData, locationForecast] = await Promise.all([
+    reverseGeocode(lat, lng),
+    getLocationForecast(lat, lng),
+  ]);
   const timezone = getTimezone(lat, lng);
   const timezoneLabel = getTimezoneLabel(timezone);
+  // GeoJSON coordinates are [longitude, latitude, altitude]
+  const forecastLng = locationForecast.geometry.coordinates[0];
+  const forecastLat = locationForecast.geometry.coordinates[1];
+  const forecastDistance = haversineDistance(lat, lng, forecastLat, forecastLng);
 
   return (
     <div className="min-h-screen bg-ocean-50">
@@ -50,6 +59,9 @@ export default async function ScorePage({ searchParams }: PageProps) {
             </p>
             <p className="text-xs text-gray-400 mt-1">
               Times shown in local time · {timezoneLabel}
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Forecast point {formatDistance(forecastDistance)} from selected location
             </p>
           </div>
 

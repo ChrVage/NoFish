@@ -228,12 +228,22 @@ function parseTideXML(
 ): TideXMLResponse {
   const events: TideEvent[] = [];
   let stationName: string | undefined;
-  
+  let stationLat: number | undefined;
+  let stationLng: number | undefined;
+
   // Simple XML parsing using regex (for production, consider using a proper XML parser)
-  // Extract location name
-  const locationMatch = xmlText.match(/<location[^>]+name="([^"]+)"/);
-  if (locationMatch) {
-    stationName = locationMatch[1];
+  // Extract location element attributes (name, lat, lon)
+  const locationTagMatch = xmlText.match(/<location[^>]+>/);
+  if (locationTagMatch) {
+    const tag = locationTagMatch[0];
+    const nameMatch = tag.match(/name="([^"]+)"/);
+    const latMatch = tag.match(/\blat="([+-]?\d+\.?\d*)"/);
+    const lonMatch = tag.match(/\blon="([+-]?\d+\.?\d*)"/);
+    if (nameMatch) stationName = nameMatch[1];
+    if (latMatch && lonMatch) {
+      stationLat = parseFloat(latMatch[1]);
+      stationLng = parseFloat(lonMatch[1]);
+    }
   }
   
   // Extract waterlevel elements with high/low flags
@@ -255,6 +265,8 @@ function parseTideXML(
   return {
     events,
     stationName,
+    stationLat,
+    stationLng,
     latitude: lat,
     longitude: lng
   };
@@ -581,11 +593,13 @@ export async function getCombinedForecast(
   lng: number
 ): Promise<{
   forecasts: HourlyForecast[];
+  forecastLat: number;
+  forecastLng: number;
   metadata: Record<string, never>;
 }> {
   // Cache key uses 2 dp (≈1 km) — forecast resolution doesn't need more
   const weatherCacheKey = `weather:${lat.toFixed(2)}:${lng.toFixed(2)}`;
-  const cachedWeather = await getCached<{ forecasts: HourlyForecast[]; metadata: Record<string, never> }>(weatherCacheKey);
+  const cachedWeather = await getCached<{ forecasts: HourlyForecast[]; forecastLat: number; forecastLng: number; metadata: Record<string, never> }>(weatherCacheKey);
   if (cachedWeather) return cachedWeather;
 
   return withInflight(weatherCacheKey, async () => {
@@ -599,8 +613,14 @@ export async function getCombinedForecast(
     // Only pass tide data if real events were returned
     const realTideForecast = tideForecast && tideForecast.events.length > 0 ? tideForecast : null;
 
+    // GeoJSON coordinates are [longitude, latitude, altitude]
+    const forecastLng = locationForecast.geometry.coordinates[0];
+    const forecastLat = locationForecast.geometry.coordinates[1];
+
     const result = {
       forecasts: combineForecasts(locationForecast, oceanForecast, realTideForecast, lat, lng),
+      forecastLat,
+      forecastLng,
       metadata: {} as Record<string, never>,
     };
 

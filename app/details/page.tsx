@@ -5,6 +5,7 @@ import { getCombinedForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
 import { insertLookup, ensureTable } from '@/lib/db/lookups';
 import { getTimezone, getTimezoneLabel } from '@/lib/utils/timezone';
+import { haversineDistance, formatDistance } from '@/lib/utils/distance';
 import ForecastTable from '@/components/ForecastTable';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
@@ -29,9 +30,10 @@ export default async function DetailsPage({ searchParams }: PageProps) {
     getCombinedForecast(lat, lng),
   ]);
 
-  const { forecasts } = weatherResult;
+  const { forecasts, forecastLat, forecastLng } = weatherResult;
   const timezone = getTimezone(lat, lng);
   const timezoneLabel = getTimezoneLabel(timezone);
+  const forecastDistance = haversineDistance(lat, lng, forecastLat, forecastLng);
 
   // Capture request headers now — not available inside after()
   const reqHeaders = await headers();
@@ -100,6 +102,9 @@ export default async function DetailsPage({ searchParams }: PageProps) {
             </p>
             <p className="text-xs text-gray-400 mt-1">
               Times shown in local time · {timezoneLabel}
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Forecast point {formatDistance(forecastDistance)} from selected location
             </p>
           </div>
 
