@@ -50,9 +50,22 @@ export default function Map() {
       iconAnchor: [16, 16],
     });
 
+    let activeOceanDot: L.CircleMarker | null = null;
+    let activeOceanLine: L.Polyline | null = null;
+
+    const clearOceanLayers = () => {
+      if (activeOceanLine) { map.removeLayer(activeOceanLine); activeOceanLine = null; }
+      if (activeOceanDot)  { map.removeLayer(activeOceanDot);  activeOceanDot  = null; }
+    };
+
     const openMarkerAt = (lat: number, lng: number) => {
       // Guard: bail if the map has already been removed
       if (!map.getContainer().isConnected) return;
+
+      // Remove any dot/line left over from a previous click (handles the race
+      // where a fast second click fires before the first fetch resolved)
+      clearOceanLayers();
+
       const tempMarker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
 
       // Create popup with three navigation links
@@ -93,8 +106,6 @@ export default function Map() {
       }).openPopup();
 
       // Fetch location name and ocean forecast grid point in parallel
-      let oceanDot: L.CircleMarker | null = null;
-      let oceanLine: L.Polyline | null = null;
       (async () => {
         try {
           const [geoResponse, weatherResponse] = await Promise.all([
@@ -120,20 +131,20 @@ export default function Map() {
             const oLat: number | undefined = weatherResult.oceanForecastLat;
             const oLng: number | undefined = weatherResult.oceanForecastLng;
             if (oLat !== undefined && oLng !== undefined && map.getContainer().isConnected) {
-              oceanLine = L.polyline([[lat, lng], [oLat, oLng]], {
+              activeOceanLine = L.polyline([[lat, lng], [oLat, oLng]], {
                 color: '#38bdf8',
                 weight: 2,
                 dashArray: '5, 6',
                 opacity: 0.85,
               }).addTo(map);
-              oceanDot = L.circleMarker([oLat, oLng], {
+              activeOceanDot = L.circleMarker([oLat, oLng], {
                 radius: 6,
                 color: '#0284c7',
                 fillColor: '#38bdf8',
                 fillOpacity: 0.9,
                 weight: 2,
               }).addTo(map);
-              oceanDot.bindTooltip(
+              activeOceanDot.bindTooltip(
                 `Ocean forecast point (${oLat.toFixed(4)}°N, ${oLng.toFixed(4)}°E)`,
                 { direction: 'top', offset: [0, -4] }
               );
@@ -148,8 +159,7 @@ export default function Map() {
 
       const navigate = (path: string) => {
         map.removeLayer(tempMarker);
-        if (oceanLine) map.removeLayer(oceanLine);
-        if (oceanDot) map.removeLayer(oceanDot);
+        clearOceanLayers();
         map.closePopup();
         router.push(path);
       };
@@ -168,8 +178,7 @@ export default function Map() {
       // Clean up marker, line and ocean dot when popup closes
       tempMarker.on('popupclose', () => {
         map.removeLayer(tempMarker);
-        if (oceanLine) map.removeLayer(oceanLine);
-        if (oceanDot) map.removeLayer(oceanDot);
+        clearOceanLayers();
       });
 
       return tempMarker;
