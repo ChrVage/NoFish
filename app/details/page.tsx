@@ -82,12 +82,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
       <header className="bg-ocean-900 text-white px-6 py-4 shadow-lg">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <BackButton
-              extraParams={oceanForecastLat !== undefined && oceanForecastLng !== undefined
-                ? { oceanLat: oceanForecastLat, oceanLng: oceanForecastLng }
-                : undefined
-              }
-            />
+            <BackButton />
             <span className="text-3xl">🎣</span>
             <h1 className="text-2xl font-bold">NoFish</h1>
           </div>

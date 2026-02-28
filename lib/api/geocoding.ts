@@ -16,8 +16,8 @@ export async function reverseGeocode(
   lat: number,
   lng: number
 ): Promise<GeocodingResult | null> {
-  // v2 prefix invalidates old entries cached with zoom=10 (incorrect isWater values)
-  const cacheKey = `geo2:${lat.toFixed(2)}:${lng.toFixed(2)}`;
+  // v3 prefix invalidates old entries that lacked sea/fjord/bay fallbacks
+  const cacheKey = `geo3:${lat.toFixed(2)}:${lng.toFixed(2)}`;
 
   const cached = await getCached<GeocodingResult>(cacheKey);
   if (cached) return cached;
@@ -48,7 +48,19 @@ export async function reverseGeocode(
           address.city ||
           address.hamlet ||
           address.locality ||
+          address.suburb ||
+          address.neighbourhood ||
           address.body_of_water ||
+          address.bay ||
+          address.fjord ||
+          address.strait ||
+          address.sea ||
+          address.ocean ||
+          address.waterway ||
+          address.island ||
+          address.archipelago ||
+          // Last resort: first segment of Nominatim's display_name
+          (data.display_name ? data.display_name.split(',')[0].trim() : undefined) ||
           'Unnamed location',
         municipality:
           address.municipality || address.county || 'Unknown municipality',

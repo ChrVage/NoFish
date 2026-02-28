@@ -5,6 +5,8 @@ import type { HourlyForecast } from '@/types/weather';
 export interface WeatherApiResponse {
   success: boolean;
   data?: HourlyForecast[];
+  oceanForecastLat?: number;
+  oceanForecastLng?: number;
   error?: string;
   metadata?: Record<string, never>;
 }
@@ -45,6 +47,8 @@ export async function GET(request: NextRequest) {
       {
         success: true,
         data: result.forecasts,
+        oceanForecastLat: result.oceanForecastLat,
+        oceanForecastLng: result.oceanForecastLng,
         metadata: result.metadata,
       } as WeatherApiResponse,
       { status: 200 }

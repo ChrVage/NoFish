@@ -18,10 +18,7 @@ export default function Map() {
     const restoreLat = parseFloat(searchParams.get('lat') ?? '');
     const restoreLng = parseFloat(searchParams.get('lng') ?? '');
     const restoreZoom = parseInt(searchParams.get('zoom') ?? '', 10);
-    const restoreOceanLat = parseFloat(searchParams.get('oceanLat') ?? '');
-    const restoreOceanLng = parseFloat(searchParams.get('oceanLng') ?? '');
     const hasRestore = !isNaN(restoreLat) && !isNaN(restoreLng);
-    const hasOceanRestore = !isNaN(restoreOceanLat) && !isNaN(restoreOceanLng);
 
     const initialCenter: [number, number] = hasRestore
       ? [restoreLat, restoreLng]
@@ -95,45 +92,64 @@ export default function Map() {
         closeOnClick: false,
       }).openPopup();
 
-      // Fetch location name from geocoding API and update popup
+      // Fetch location name and ocean forecast grid point in parallel
+      let oceanDot: L.CircleMarker | null = null;
+      let oceanLine: L.Polyline | null = null;
       (async () => {
         try {
-          const response = await fetch(
-            `/api/geocoding?lat=${lat}&lon=${lng}`
-          );
+          const [geoResponse, weatherResponse] = await Promise.all([
+            fetch(`/api/geocoding?lat=${lat}&lon=${lng}`),
+            fetch(`/api/weather?lat=${lat}&lon=${lng}`),
+          ]);
 
-          if (response.ok) {
-            const result = await response.json();
+          if (geoResponse.ok) {
+            const result = await geoResponse.json();
             const name = result.data?.name ||
               result.data?.municipality ||
               result.data?.displayName ||
-              'Unknown location';
-            
-            // Update popup name
+              `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
             const nameElement = popupContent.querySelector('#location-name');
-            if (nameElement) {
-              nameElement.textContent = name;
-            }
-
-
+            if (nameElement) nameElement.textContent = name;
           } else {
-            console.error('Geocoding failed with status:', response.status);
             const nameElement = popupContent.querySelector('#location-name');
-            if (nameElement) {
-              nameElement.textContent = 'Unknown location';
+            if (nameElement) nameElement.textContent = `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
+          }
+
+          if (weatherResponse.ok) {
+            const weatherResult = await weatherResponse.json();
+            const oLat: number | undefined = weatherResult.oceanForecastLat;
+            const oLng: number | undefined = weatherResult.oceanForecastLng;
+            if (oLat !== undefined && oLng !== undefined && map.getContainer().isConnected) {
+              oceanLine = L.polyline([[lat, lng], [oLat, oLng]], {
+                color: '#38bdf8',
+                weight: 2,
+                dashArray: '5, 6',
+                opacity: 0.85,
+              }).addTo(map);
+              oceanDot = L.circleMarker([oLat, oLng], {
+                radius: 6,
+                color: '#0284c7',
+                fillColor: '#38bdf8',
+                fillOpacity: 0.9,
+                weight: 2,
+              }).addTo(map);
+              oceanDot.bindTooltip(
+                `Ocean forecast point (${oLat.toFixed(4)}°N, ${oLng.toFixed(4)}°E)`,
+                { direction: 'top', offset: [0, -4] }
+              );
             }
           }
         } catch (error) {
-          console.error('Geocoding error:', error);
+          console.error('Map fetch error:', error);
           const nameElement = popupContent.querySelector('#location-name');
-          if (nameElement) {
-            nameElement.textContent = 'Unknown location';
-          }
+          if (nameElement) nameElement.textContent = `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
         }
       })();
 
       const navigate = (path: string) => {
         map.removeLayer(tempMarker);
+        if (oceanLine) map.removeLayer(oceanLine);
+        if (oceanDot) map.removeLayer(oceanDot);
         map.closePopup();
         router.push(path);
       };
@@ -149,9 +165,11 @@ export default function Map() {
         navigate(`/tide?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}`)
       );
 
-      // Clean up when popup closes
+      // Clean up marker, line and ocean dot when popup closes
       tempMarker.on('popupclose', () => {
         map.removeLayer(tempMarker);
+        if (oceanLine) map.removeLayer(oceanLine);
+        if (oceanDot) map.removeLayer(oceanDot);
       });
 
       return tempMarker;
@@ -163,21 +181,6 @@ export default function Map() {
       // Small delay so the map tiles have a chance to start loading
       restoreTimer = setTimeout(() => {
         openMarkerAt(restoreLat, restoreLng);
-
-        // Show the ocean forecast grid point as a small red dot
-        if (hasOceanRestore) {
-          const oceanDot = L.circleMarker([restoreOceanLat, restoreOceanLng], {
-            radius: 6,
-            color: '#dc2626',
-            fillColor: '#ef4444',
-            fillOpacity: 0.85,
-            weight: 2,
-          }).addTo(map);
-          oceanDot.bindTooltip(
-            `Ocean forecast point (${restoreOceanLat.toFixed(4)}°N, ${restoreOceanLng.toFixed(4)}°E)`,
-            { direction: 'top', offset: [0, -4] }
-          );
-        }
       }, 150);
     }
 
