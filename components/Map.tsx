@@ -114,9 +114,9 @@ export default function Map() {
       // Fetch location name and ocean forecast grid point in parallel
       (async () => {
         try {
-          const [geoResponse, weatherResponse] = await Promise.all([
+          const [geoResponse, oceanResponse] = await Promise.all([
             fetch(`/api/geocoding?lat=${lat}&lon=${lng}`, { signal }),
-            fetch(`/api/weather?lat=${lat}&lon=${lng}`, { signal }),
+            fetch(`/api/ocean-point?lat=${lat}&lon=${lng}`, { signal }),
           ]);
 
           if (geoResponse.ok) {
@@ -132,10 +132,10 @@ export default function Map() {
             if (nameElement) nameElement.textContent = `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
           }
 
-          if (weatherResponse.ok) {
-            const weatherResult = await weatherResponse.json();
-            const oLat: number | undefined = weatherResult.oceanForecastLat;
-            const oLng: number | undefined = weatherResult.oceanForecastLng;
+          if (oceanResponse.ok) {
+            const oceanResult = await oceanResponse.json();
+            const oLat: number | undefined = oceanResult.oceanForecastLat;
+            const oLng: number | undefined = oceanResult.oceanForecastLng;
             if (oLat !== undefined && oLng !== undefined && map.getContainer().isConnected) {
               activeOceanLine = L.polyline([[lat, lng], [oLat, oLng]], {
                 color: '#38bdf8',
