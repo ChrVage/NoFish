@@ -40,6 +40,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Coordinates out of range: lat must be −90–90, lon must be −180–180',
+        } as WeatherApiResponse,
+        { status: 400 }
+      );
+    }
+
     // Fetch combined weather, ocean, and tide forecast
     const result = await getCombinedForecast(latitude, longitude);
 

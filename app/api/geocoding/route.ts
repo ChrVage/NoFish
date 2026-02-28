@@ -17,6 +17,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Invalid coordinates' }, { status: 400 });
   }
 
+  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+    return NextResponse.json(
+      { success: false, error: 'Coordinates out of range: lat must be −90–90, lon must be −180–180' },
+      { status: 400 }
+    );
+  }
+
   try {
     const data = await reverseGeocode(latitude, longitude);
     return NextResponse.json({ success: true, data });
