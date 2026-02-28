@@ -1,38 +1,79 @@
 # NoFish — Technical Documentation
 
+---
+
 ## Tech Stack
 
 | Area | Technology |
 |---|---|
-| Framework | Next.js 16.1.6 (App Router) |
-| Language | TypeScript |
+| Framework | Next.js 16.1.6 (App Router, server components, `after()`) |
+| Language | TypeScript 5 |
 | Runtime | React 19.2.3 |
-| Styling | Tailwind CSS v4 |
-| Map | Leaflet.js (vanilla, via `useEffect`) with OpenStreetMap tiles |
-| Database | Neon (serverless Postgres) via `@neondatabase/serverless` |
-| Timezone lookup | `tz-lookup` — pure-JS IANA timezone from coordinates (no file I/O, works on Vercel) |
+| Styling | Tailwind CSS v4 (light-mode only — dark-mode OS preference intentionally ignored) |
+| Map | Leaflet.js 1.9.4 (loaded client-side via `useEffect`; SSR-disabled with `next/dynamic`) with OpenStreetMap tiles |
+| Database | Neon serverless Postgres via `@neondatabase/serverless` |
+| Timezone | `tz-lookup` 6.1.25 — pure-JS IANA timezone from coordinates; no file I/O; works on Vercel Edge |
+| Deployment | Vercel (auto-deploy on push to `main`) |
 
 ---
 
 ## External APIs
 
-| API | Purpose | Auth |
+| API | Purpose | Format | Auth |
+|---|---|---|---|
+| [MET Norway Locationforecast 2.0](https://api.met.no/weatherapi/locationforecast/2.0/documentation) | Wind, temperature, precipitation, pressure, cloud cover | JSON | None |
+| [MET Norway Oceanforecast 2.0](https://api.met.no/weatherapi/oceanforecast/2.0/documentation) | Wave height/direction, sea temperature, surface currents | JSON | None |
+| [Kartverket Tide API](https://api.kartverket.no/sehavniva/) | High/low tide event times and heights | XML | None |
+| [Nominatim (OpenStreetMap)](https://nominatim.org/release-docs/develop/api/Reverse/) | Reverse geocoding — coordinates → place name | JSON | None |
+
+All external calls are made **server-side** to avoid CORS issues and comply with MET Norway’s rate-limiting policy. A `User-Agent: NoFish/1.0 github.com/ChrVage/NoFish` header is sent with every request.
+
+The `/api/weather` route additionally returns the ocean forecast grid point coordinates (`oceanForecastLat`, `oceanForecastLng`) so the browser can render the blue map indicator without an extra round-trip.
+
+---
+
+## Key Interfaces
+
+### `CombinedForecastResult` (`lib/api/weather.ts`)
+
+```typescript
+interface CombinedForecastResult {
+  forecasts: HourlyForecast[];       // merged hourly array
+  forecastLat: number;               // Locationforecast grid point
+  forecastLng: number;
+  oceanForecastLat?: number;         // Oceanforecast grid point (undefined if inland)
+  oceanForecastLng?: number;
+  tideStationName?: string;          // Nearest Kartverket station
+  tideStationLat?: number;
+  tideStationLng?: number;
+  metadata: Record<string, never>;
+}
+```
+
+### `HourlyForecast` (`types/weather.ts`)
+
+Merged per-hour record combining Locationforecast, Oceanforecast, tide phase, and sun phase fields. Ocean fields (`waveHeight`, `waveDirection`, `seaTemperature`, `currentSpeed`, `currentDirection`) are `undefined` for inland points.
+
+---
+
+## Utilities
+
+| Utility | File | Description |
 |---|---|---|
-| [MET Norway Locationforecast 2.0](https://api.met.no/weatherapi/locationforecast/2.0/documentation) | Weather data | None |
-| [MET Norway Oceanforecast 2.0](https://api.met.no/weatherapi/oceanforecast/2.0/documentation) | Ocean/marine data | None |
-| [Nominatim (OpenStreetMap)](https://nominatim.org/release-docs/develop/api/Reverse/) | Reverse geocoding | None |
-| [Kartverket Tide API](https://api.kartverket.no/sehavniva/) | Tide high/low event data (XML, server-side) | None |
-
-All external calls are made server-side to avoid CORS issues and comply with MET Norway’s rate-limiting requirements. A `User-Agent` header is sent with every request.
-
+| `haversineDistance(lat1,lng1,lat2,lng2)` | `lib/utils/distance.ts` | Great-circle distance in km |
+| `formatDistance(km)` | `lib/utils/distance.ts` | Human-readable: `"1.2 km"` or `"350 m"` |
+| `getTimezone(lat,lng)` | `lib/utils/timezone.ts` | IANA timezone string via tz-lookup, falls back to `UTC` |
+| `getTimezoneLabel(tz)` | `lib/utils/timezone.ts` | `"Europe/Oslo (GMT+2)"` — uses `Intl` for correct DST |
 
 ---
 
 ## Database (Neon)
 
-Lookups are logged to Neon serverless Postgres **in production only** (`NODE_ENV === 'production'`).
+Two tables share the same Neon project. Both are created automatically on first use.
 
-### Schema
+### `lookups` — usage log
+
+Logged **in production only** (`NODE_ENV === 'production'`), after the response is sent (`after()`), so it never adds latency.
 
 | Column | Type | Description |
 |---|---|---|
@@ -45,18 +86,25 @@ Lookups are logged to Neon serverless Postgres **in production only** (`NODE_ENV
 | `geo_country` / `geo_region` / `geo_city` | text | Vercel geo headers |
 | `created_at` | timestamptz | UTC timestamp (auto-set) |
 
+### `forecast_cache` — API response cache
+
+| Column | Description |
+|---|---|
+| `cache_key` | Text primary key — e.g. `geo3:59.91:10.75`, `weather:59.91:10.75`, `tide:60:11` |
+| `data` | JSONB — full serialised API response |
+| `cached_at` | Write timestamp |
+| `expires_at` | Expiry timestamp; stale rows are overwritten on next miss |
+
 ### Setup
 
-1. Create a project at [neon.com](https://neon.com) or connect via **Vercel → Storage → Neon** (adds `DATABASE_URL` automatically).
-2. Add to your environment:
-   ```bash
-   # .env.local
+1. Create a Neon project at [neon.com](https://neon.com) or connect via **Vercel → Storage → Neon** (auto-adds `DATABASE_URL`).
+2. Add to `.env.local`:
+   ```
    DATABASE_URL=postgres://user:password@host/dbname?sslmode=require
    ```
-3. `ensureTable()` in `lib/db/lookups.ts` auto-creates the table on first cold start.
-   The DDL round-trip is memoized — it fires at most once per process lifetime, not on every request.
+3. Both tables are created automatically on first cold start via `ensureTable()` (DDL is memoized per process — runs at most once).
 
-> **Without `DATABASE_URL`** the app throws on startup. To run without a DB, make `insertLookup` a no-op.
+> **Without `DATABASE_URL`** the app throws on startup. To run without a database, stub `insertLookup` as a no-op and remove the cache calls.
 
 ---
 
@@ -102,3 +150,4 @@ vercel --prod
 ---
 
 > See [readme-architecture.md](readme-architecture.md) for project structure and data flow.
+> See [readme-dataquality.md](readme-dataquality.md) for data source accuracy ratings.

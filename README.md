@@ -10,10 +10,15 @@ NoFish gives small boat fishers precise wind, wave, and tide forecasts for any p
 
 ## What it does
 
-- Click anywhere on the map to get a forecast for that spot
-- **Details** — 10-day hourly weather and ocean conditions
-- **Tides** — high/low tide table with min/max highlighted
+Click anywhere on the map to place a marker. A popup shows the location name (reverse-geocoded), coordinates, and three navigation buttons:
+
 - **Score** — combined fishing suitability rating *(coming soon)*
+- **Details** — 10-day hourly forecast table: weather (MET Norway), ocean conditions (MET Norway), tides (Kartverket), and calculated sun phase. Columns are grouped by data source. The distance from your clicked point to each API's actual forecast grid/station is shown in the header.
+- **Tides** — high/low tide event table for the next 10 days, with peak high and lowest low highlighted.
+
+When the weather API responds, a sky-blue dot and dashed line appear on the map showing the ocean forecast grid point relative to your click.
+
+Navigating back to the map restores the previous zoom level, map position, and reopens the popup at the original click point.
 
 ---
 
@@ -36,5 +41,6 @@ NoFish gives small boat fishers precise wind, wave, and tide forecasts for any p
 ---
 
 ## Feedback and issues
-Did you find an issue, or do you have a wish for new functionality? 
-[Create a new issue on GitHub here](https://github.com/ChrVage/NoFish/issues/new)
+
+Did you find an issue, or do you have a wish for new functionality?
+[Create a new issue on GitHub](https://github.com/ChrVage/NoFish/issues/new/choose)
