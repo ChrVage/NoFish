@@ -30,6 +30,7 @@ export default function Map() {
       center: initialCenter,
       zoom: initialZoom,
       zoomControl: true,
+      doubleClickZoom: true,
     });
 
     // Add OpenStreetMap tiles
@@ -203,15 +204,30 @@ export default function Map() {
       }, 150);
     }
 
-    // Handle map clicks
+    // Handle map clicks (debounced to avoid firing on double-click zoom)
+    let singleClickTimer: ReturnType<typeof setTimeout> | null = null;
+
     map.on('click', (e: L.LeafletMouseEvent) => {
-      openMarkerAt(e.latlng.lat, e.latlng.lng);
+      if (singleClickTimer !== null) clearTimeout(singleClickTimer);
+      singleClickTimer = setTimeout(() => {
+        singleClickTimer = null;
+        openMarkerAt(e.latlng.lat, e.latlng.lng);
+      }, 250);
+    });
+
+    // Cancel pending single-click when the user double-clicks to zoom
+    map.on('dblclick', () => {
+      if (singleClickTimer !== null) {
+        clearTimeout(singleClickTimer);
+        singleClickTimer = null;
+      }
     });
 
     mapRef.current = map;
 
     return () => {
       if (restoreTimer !== null) clearTimeout(restoreTimer);
+      if (singleClickTimer !== null) clearTimeout(singleClickTimer);
       if (activeFetchController) activeFetchController.abort();
       if (mapRef.current) {
         mapRef.current.remove();
@@ -228,7 +244,7 @@ export default function Map() {
       <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 max-w-xs z-[1000]">
         <h3 className="text-ocean-700 font-semibold mb-2">🎣 Select your fishing spot</h3>
         <p className="text-sm text-gray-700">
-          Click anywhere on the Norwegian coast to analyze fishing conditions.
+          Click to analyze a location, or double-click to zoom in.
         </p>
       </div>
     </div>
