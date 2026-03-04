@@ -56,6 +56,7 @@ Row background colour indicates **forecast confidence** (also shown in the legen
 - **Content Security Policy** (CSP) enforced as an HTTP response header via `next.config.ts`
 - `X-Content-Type-Options: nosniff` and `X-Frame-Options: DENY` headers on all responses
 - `no-referrer-when-downgrade` referrer policy
+- `Strict-Transport-Security` (HSTS) with `max-age=63072000; includeSubDomains` — enforces HTTPS for 2 years
 - No cookies, no tracking, no third-party scripts
 - Lookup logging (production only) stores coordinates and anonymised request metadata in a private Neon database
 
