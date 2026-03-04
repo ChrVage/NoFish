@@ -134,9 +134,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
               <span className="text-[10px] text-gray-300 select-none">›</span>
               <span className="text-xs font-semibold px-2.5 py-1 rounded-full border" style={{ backgroundColor: '#fffbeb', color: '#92400e', borderColor: '#fde68a' }}>Medium</span>
               <span className="text-[10px] text-gray-300 select-none">›</span>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full border" style={{ backgroundColor: '#f0f9ff', color: '#075985', borderColor: '#bae6fd' }}>Fair</span>
-              <span className="text-[10px] text-gray-300 select-none">›</span>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full border" style={{ backgroundColor: '#fff7ed', color: '#9a3412', borderColor: '#fed7aa' }}>Low</span>
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full border" style={{ backgroundColor: '#fed7aa', color: '#9a3412', borderColor: '#fb923c' }}>Low</span>
             </div>
             <ForecastTable forecasts={forecasts} timezone={timezone} />
           </div>

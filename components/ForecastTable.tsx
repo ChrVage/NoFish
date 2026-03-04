@@ -84,18 +84,19 @@ const DirectionArrow = ({
 };
 
 // ── Accuracy colour helpers (inline styles – safe from Tailwind purging) ────────
-// MET Norway Locationforecast: excellent ≤3 days · good 3–5 days · fair >5 days
+// Three confidence tiers: High (green) · Medium (amber) · Low (orange)
+// MET Norway Locationforecast: high ≤3 days · medium 3–5 days · low >5 days
 function getLocStyle(daysAhead: number): React.CSSProperties {
-  if (daysAhead <= 3) return { backgroundColor: '#f0fdf4' }; // green-50
-  if (daysAhead <= 5) return { backgroundColor: '#fffbeb' }; // amber-50
-  return { backgroundColor: '#fff7ed' };                     // orange-50
+  if (daysAhead <= 3) return { backgroundColor: '#f0fdf4' }; // green-50  — High
+  if (daysAhead <= 5) return { backgroundColor: '#fffbeb' }; // amber-50  — Medium
+  return { backgroundColor: '#fed7aa' };                     // orange-200 — Low
 }
 
-// MET Norway Oceanforecast: good ≤2 days · fair 2–4 days · degrading >4 days
+// MET Norway Oceanforecast: high ≤2 days · medium 2–4 days · low >4 days
 function getOceanStyle(daysAhead: number): React.CSSProperties {
-  if (daysAhead <= 2) return { backgroundColor: '#f0fdf4' }; // green-50
-  if (daysAhead <= 4) return { backgroundColor: '#f0f9ff' }; // sky-50
-  return { backgroundColor: '#fff7ed' };                     // orange-50
+  if (daysAhead <= 2) return { backgroundColor: '#f0fdf4' }; // green-50  — High
+  if (daysAhead <= 4) return { backgroundColor: '#fffbeb' }; // amber-50  — Medium
+  return { backgroundColor: '#fed7aa' };                     // orange-200 — Low
 }
 
 export default function ForecastTable({ forecasts, timezone }: ForecastTableProps) {
