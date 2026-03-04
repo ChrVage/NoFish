@@ -160,5 +160,18 @@ vercel --prod
 
 ---
 
+## SSL Certificate
+
+Vercel automatically provisions and renews a Let's Encrypt TLS certificate for every custom domain. If the site shows `NET::ERR_CERT_AUTHORITY_INVALID` or a browser HSTS warning:
+
+1. Go to [vercel.com](https://vercel.com) → your project → **Settings → Domains**
+2. Check that `nofish.no` shows a green **Valid Configuration** status
+3. If the domain shows a warning, follow the steps shown to re-verify DNS ownership
+4. Once DNS is correct, Vercel will automatically re-issue the certificate (usually within minutes)
+
+> **⚠️ Important:** The app sets `Strict-Transport-Security: max-age=63072000; includeSubDomains` on every response. This means browsers will enforce HTTPS for 2 years after the first visit. **Always verify that a valid certificate is in place (step 1–3 above) before deploying changes that affect security headers.**
+
+---
+
 > See [readme-architecture.md](readme-architecture.md) for project structure and data flow.
 > See [readme-dataquality.md](readme-dataquality.md) for data source accuracy ratings.
