@@ -22,15 +22,15 @@ export default function Map() {
 
     const initialCenter: [number, number] = hasRestore
       ? [restoreLat, restoreLng]
-      : [62.0, 6.5];
-    const initialZoom = hasRestore && !isNaN(restoreZoom) ? restoreZoom : 6;
+      : [65.0, 14.0];
+    const initialZoom = hasRestore && !isNaN(restoreZoom) ? restoreZoom : 5;
 
     // Initialize map centered on Norwegian coast
     const map = L.map(mapContainerRef.current, {
       center: initialCenter,
       zoom: initialZoom,
       zoomControl: true,
-      doubleClickZoom: true,
+      doubleClickZoom: false,
     });
 
     // Add OpenStreetMap tiles
@@ -215,12 +215,13 @@ export default function Map() {
       }, 250);
     });
 
-    // Cancel pending single-click when the user double-clicks to zoom
-    map.on('dblclick', () => {
+    // Cancel pending single-click and zoom in by 2 levels on double-click
+    map.on('dblclick', (e: L.LeafletMouseEvent) => {
       if (singleClickTimer !== null) {
         clearTimeout(singleClickTimer);
         singleClickTimer = null;
       }
+      map.setView(e.latlng, map.getZoom() + 4, { animate: true });
     });
 
     mapRef.current = map;
