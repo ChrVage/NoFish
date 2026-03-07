@@ -22,7 +22,11 @@ export default function BackButton({
     const zoom = searchParams.get('zoom');
     if (lat && lng) {
       const params = new URLSearchParams({ lat, lng });
-      if (zoom) params.set('zoom', zoom);
+      if (zoom) {
+        params.set('zoom', zoom);
+      } else {
+        params.set('zoom', '10');
+      }
       if (extraParams) {
         for (const [key, value] of Object.entries(extraParams)) {
           if (value !== undefined) params.set(key, String(value));
