@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -8,8 +8,11 @@ import 'leaflet/dist/leaflet.css';
 export default function Map() {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const openMarkerAtRef = useRef<((lat: number, lng: number) => void) | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -195,6 +198,9 @@ export default function Map() {
       return tempMarker;
     };
 
+    // Expose openMarkerAt so the location button (rendered in JSX) can call it
+    openMarkerAtRef.current = openMarkerAt;
+
     // If returning from a detail page, restore the marker + popup
     let restoreTimer: ReturnType<typeof setTimeout> | null = null;
     if (hasRestore) {
@@ -227,6 +233,7 @@ export default function Map() {
     mapRef.current = map;
 
     return () => {
+      openMarkerAtRef.current = null;
       if (restoreTimer !== null) clearTimeout(restoreTimer);
       if (singleClickTimer !== null) clearTimeout(singleClickTimer);
       if (activeFetchController) activeFetchController.abort();
@@ -236,6 +243,38 @@ export default function Map() {
       }
     };
   }, [router]);
+
+  const handleMyLocation = () => {
+    const MIN_LOCATION_ZOOM = 10;
+    const GEOLOCATION_TIMEOUT_MS = 10000;
+
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser.');
+      return;
+    }
+    setLocating(true);
+    setLocationError(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocating(false);
+        const { latitude, longitude } = position.coords;
+        const map = mapRef.current;
+        if (map) {
+          map.setView([latitude, longitude], Math.max(map.getZoom(), MIN_LOCATION_ZOOM), { animate: true });
+          openMarkerAtRef.current?.(latitude, longitude);
+        }
+      },
+      (err) => {
+        setLocating(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          setLocationError('Location permission denied.');
+        } else {
+          setLocationError('Unable to retrieve your location.');
+        }
+      },
+      { timeout: GEOLOCATION_TIMEOUT_MS }
+    );
+  };
 
   return (
     <div className="relative w-full h-full">
@@ -247,6 +286,41 @@ export default function Map() {
         <p className="text-sm text-gray-700">
           Click to analyze a location, or double-click to zoom in.
         </p>
+      </div>
+
+      {/* My Location button */}
+      <div className="absolute bottom-8 right-4 z-[1000] flex flex-col items-end gap-2">
+        {locationError && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 max-w-[200px] text-right shadow">
+            {locationError}
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={handleMyLocation}
+          disabled={locating}
+          aria-label="Use my current location"
+          className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-lg shadow-lg p-3 flex items-center gap-2 text-sm font-medium text-ocean-700 hover:bg-ocean-50 active:bg-ocean-100 transition-colors disabled:opacity-60 disabled:cursor-wait"
+        >
+          {locating ? (
+            <>
+              <svg className="w-5 h-5 animate-spin text-ocean-500" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+              </svg>
+              Locating…
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5 text-ocean-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="3" strokeWidth="2"/>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+                <circle cx="12" cy="12" r="8" strokeWidth="2" strokeDasharray="4 3"/>
+              </svg>
+              My Location
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
