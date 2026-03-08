@@ -14,6 +14,11 @@ import type {
 } from '@/types/weather';
 import { getCached, setCached, withInflight } from '@/lib/db/cache';
 import { getTimezone } from '@/lib/utils/timezone';
+import { haversineDistance } from '@/lib/utils/distance';
+
+/** Maximum distance (km) between the requested point and the ocean forecast grid point.
+ *  Beyond this threshold the wave data is considered inaccurate and is suppressed. */
+const MAX_OCEAN_FORECAST_DISTANCE_KM = 50;
 
 const USER_AGENT = 'NoFish/1.0 github.com/ChrVage/NoFish';
 
@@ -622,12 +627,23 @@ export async function getCombinedForecast(
     const oceanForecastLng = oceanForecast?.geometry.coordinates[0];
     const oceanForecastLat = oceanForecast?.geometry.coordinates[1];
 
+    // Suppress ocean (wave) data when the grid point is too far from the requested location —
+    // a distant grid point means the wave forecast is not representative of the actual spot.
+    const oceanForecastDistance =
+      oceanForecastLat !== undefined && oceanForecastLng !== undefined
+        ? haversineDistance(lat, lng, oceanForecastLat, oceanForecastLng)
+        : null;
+    const nearbyOceanForecast =
+      oceanForecastDistance !== null && oceanForecastDistance <= MAX_OCEAN_FORECAST_DISTANCE_KM
+        ? oceanForecast
+        : null;
+
     const result: CombinedForecastResult = {
-      forecasts: combineForecasts(locationForecast, oceanForecast, realTideForecast, lat, lng),
+      forecasts: combineForecasts(locationForecast, nearbyOceanForecast, realTideForecast, lat, lng),
       forecastLat,
       forecastLng,
-      oceanForecastLat,
-      oceanForecastLng,
+      oceanForecastLat: nearbyOceanForecast ? oceanForecastLat : undefined,
+      oceanForecastLng: nearbyOceanForecast ? oceanForecastLng : undefined,
       tideStationName: realTideForecast?.stationName,
       tideStationLat: realTideForecast?.stationLat,
       tideStationLng: realTideForecast?.stationLng,
