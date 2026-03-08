@@ -6,19 +6,21 @@ import { reverseGeocode } from '@/lib/api/geocoding';
 import { insertLookup, ensureTable } from '@/lib/db/lookups';
 import { getTimezone, getTimezoneLabel } from '@/lib/utils/timezone';
 import { haversineDistance, formatDistance } from '@/lib/utils/distance';
+import { parseZoomParam } from '@/lib/utils/params';
 import ForecastTable from '@/components/ForecastTable';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
 import Footer from '@/components/Footer';
 
 interface PageProps {
-  searchParams: Promise<{ lat?: string; lng?: string }>;
+  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string }>;
 }
 
 export default async function DetailsPage({ searchParams }: PageProps) {
-  const { lat: latStr, lng: lngStr } = await searchParams;
+  const { lat: latStr, lng: lngStr, zoom: zoomStr } = await searchParams;
   const lat = parseFloat(latStr ?? '');
   const lng = parseFloat(lngStr ?? '');
+  const validZoom = parseZoomParam(zoomStr);
 
   if (!latStr || !lngStr || isNaN(lat) || isNaN(lng)) {
     notFound();
@@ -84,7 +86,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton label="← 🎣 NoFish" className="text-sm font-normal text-white hover:text-ocean-200 transition-colors" />
           </div>
-          <PageNav lat={lat} lng={lng} current="details" />
+          <PageNav lat={lat} lng={lng} zoom={validZoom} current="details" />
         </div>
       </header>
 
