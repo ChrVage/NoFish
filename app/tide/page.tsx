@@ -8,13 +8,14 @@ import PageNav from '@/components/PageNav';
 import Footer from '@/components/Footer';
 
 interface PageProps {
-  searchParams: Promise<{ lat?: string; lng?: string }>;
+  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string }>;
 }
 
 export default async function TidePage({ searchParams }: PageProps) {
-  const { lat: latStr, lng: lngStr } = await searchParams;
+  const { lat: latStr, lng: lngStr, zoom: zoomStr } = await searchParams;
   const lat = parseFloat(latStr ?? '');
   const lng = parseFloat(lngStr ?? '');
+  const zoom = zoomStr !== undefined ? parseInt(zoomStr, 10) : undefined;
 
   if (!latStr || !lngStr || isNaN(lat) || isNaN(lng)) {
     notFound();
@@ -50,7 +51,7 @@ export default async function TidePage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton label="← 🎣 NoFish" className="text-sm font-normal text-white hover:text-ocean-200 transition-colors" />
           </div>
-          <PageNav lat={lat} lng={lng} current="tide" />
+          <PageNav lat={lat} lng={lng} zoom={zoom !== undefined && !isNaN(zoom) ? zoom : undefined} current="tide" />
         </div>
       </header>
 
