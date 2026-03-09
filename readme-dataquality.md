@@ -33,7 +33,7 @@ Beyond the Low tier the underlying NWP models are essentially providing climatol
 ## Key Limitations
 
 **Ocean data is coastal only.**
-MET Norway’s Oceanforecast model covers Norwegian coastal waters. Points more than roughly 50 km offshore, or any inland location, return no ocean data. The app detects this automatically: wave, current, sea temperature, and tide columns are hidden from the forecast table when \waveHeight\ is absent for all rows.
+MET Norway's Oceanforecast model covers Norwegian coastal waters. The app suppresses ocean data when the nearest grid point is more than 1 km from the clicked location — this catches both inland points and locations at the edge of the model domain. When ocean data is suppressed, tide and score pages are also hidden. The forecast table shows only weather columns.
 
 **Tides are astronomical predictions only.**
 Kartverket’s tide API returns the predicted astronomical tide — the component driven by the moon and sun. Storm surge (meteorological tide) is not included. During strong onshore winds or low-pressure systems, actual water levels can differ significantly from the prediction. Skippers must account for local conditions themselves.
@@ -42,7 +42,7 @@ Kartverket’s tide API returns the predicted astronomical tide — the componen
 All NWP (numerical weather prediction) models lose skill rapidly beyond 3–4 days. The 10-day forecast should be treated as a rough planning guide from day 5 onward regardless of the resolution or quality of the underlying model. NoFish data is one input — local knowledge, VHF weather broadcasts, and personal judgment matter equally.
 
 **Forecast grid points vs. clicked point.**
-Both MET APIs snap the requested coordinates to their nearest internal grid point. The Details page shows the distance from your clicked point to the actual ocean forecast grid point used. On the map, a sky-blue dot and dashed line indicate the ocean grid point location.
+Both MET APIs snap the requested coordinates to their nearest internal grid point. The Details page shows the distance from your clicked point to the actual ocean forecast grid point used (when within 1 km). On the map, a sky-blue dot and dashed line indicate the ocean grid point location. If the grid point is more than 1 km away, the ocean forecast is considered unrepresentative and is dropped entirely.
 
 **Nominatim coverage at sea.**
 OpenStreetMap’s reverse geocoder has variable coverage for open-water locations. The app uses a wide fallback chain (village → town → city → hamlet → bay → fjord → strait → sea → ocean → first segment of display name) before falling back to raw coordinates.

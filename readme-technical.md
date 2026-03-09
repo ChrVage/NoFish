@@ -37,7 +37,7 @@ All external calls are made **server-side** to avoid CORS issues and comply with
 |---|---|
 | `GET /api/geocoding?lat=&lon=` | Reverse geocodes coordinates via Nominatim. Returns place name with multi-level fallback. |
 | `GET /api/weather?lat=&lon=` | Returns the full 10-day merged `HourlyForecast[]` array plus ocean grid coordinates. Used by the Details and Tide pages via server-side direct lib calls; this route is exposed for external consumers. |
-| `GET /api/ocean-point?lat=&lon=` | Returns only `{ oceanForecastLat, oceanForecastLng }`. Used by the map to place the blue dot without fetching 240+ forecast rows. Cache-backed — usually a hit when the Details page has already been visited. |
+| `GET /api/ocean-point?lat=&lon=` | Returns only `{ oceanForecastLat, oceanForecastLng }`. Used by the map to place the blue dot and determine whether Score/Tide buttons should be shown. Returns `undefined` coordinates when the grid point is more than 1 km away. Cache-backed \u2014 usually a hit when the Details page has already been visited. |
 
 All three routes validate coordinate bounds (`lat` ∈ [−90, 90], `lon` ∈ [−180, 180]) and return `400` for out-of-range or non-numeric inputs.
 
@@ -52,9 +52,9 @@ interface CombinedForecastResult {
   forecasts: HourlyForecast[];       // merged hourly array
   forecastLat: number;               // Locationforecast grid point
   forecastLng: number;
-  oceanForecastLat?: number;         // Oceanforecast grid point (undefined if inland)
+  oceanForecastLat?: number;         // Oceanforecast grid point (undefined if inland or > 1 km away)
   oceanForecastLng?: number;
-  tideStationName?: string;          // Nearest Kartverket station
+  tideStationName?: string;          // Nearest Kartverket station (undefined when ocean data suppressed)
   tideStationLat?: number;
   tideStationLng?: number;
   metadata: Record<string, never>;
@@ -63,7 +63,7 @@ interface CombinedForecastResult {
 
 ### `HourlyForecast` (`types/weather.ts`)
 
-Merged per-hour record combining Locationforecast, Oceanforecast, tide phase, and sun phase fields. Ocean fields (`waveHeight`, `waveDirection`, `seaTemperature`, `currentSpeed`, `currentDirection`) are `undefined` for inland points.
+Merged per-hour record combining Locationforecast, Oceanforecast, tide phase, and sun phase fields. Ocean fields (`waveHeight`, `waveDirection`, `seaTemperature`, `currentSpeed`, `currentDirection`) and tide fields (`tideHeight`, `tidePhase`) are `undefined` when the ocean forecast grid point is more than 1 km from the requested location.
 
 ---
 

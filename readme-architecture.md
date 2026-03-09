@@ -35,17 +35,23 @@ components/
                         # Rain/Snow label derived from first-row air temperature;
                         # row confidence colour coded with legend above table
   Map.tsx               # Leaflet map; click → marker + popup with large touch-friendly buttons;
-                        # parallel geo+ocean-point fetch; blue dot + dashed line to ocean grid point
-  PageNav.tsx           # Header nav buttons (Score / Details / Tides); current page button is hidden
+                        # parallel geo+ocean-point fetch; blue dot + dashed line to ocean grid point;
+                        # Score/Tide buttons hidden when ocean data unavailable;
+                        # crosshair location button below zoom controls → navigates directly to Details
+  PageNav.tsx           # Header nav buttons (Score / Details / Tides); current page button is hidden;
+                        # accepts optional availablePages prop to hide buttons when ocean data is absent
 
 lib/
   api/
     weather.ts          # getCombinedForecast() — fetches and merges Locationforecast + Oceanforecast + Kartverket tides;
                         # exports CombinedForecastResult with ocean grid coords and tide station metadata;
+                        # ocean data suppressed when grid point > 1 km from requested location;
+                        # tide data also suppressed when ocean data is unavailable;
                         # getTideForecast() for the tide-only page;
                         # solar elevation / sun phase calculation; tide phase labelling;
                         # XML parsed via fast-xml-parser
-    geocoding.ts        # reverseGeocode() — Nominatim with rich name fallback chain (village, bay, fjord, sea…)
+    geocoding.ts        # reverseGeocode() — Nominatim with rich name fallback chain (village, bay, fjord, sea…);
+                        # returns name, municipality, county used consistently across popup and all pages
   db/
     index.ts            # Neon SQL client (reads DATABASE_URL)
     lookups.ts          # insertLookup() + ensureTable() — DDL memoized per process lifetime
@@ -67,15 +73,19 @@ All coordinate state lives in URL search params (`?lat=…&lng=…`). No global 
 
 ### Map popup buttons and PageNav
 
-Both the Leaflet popup and the in-page header share the same three buttons:
+Both the Leaflet popup and the in-page header share the same navigation targets:
 
-| Button | Background | Route |
-|---|---|---|
-| Score | Green text / grey bg | `/score?lat=…&lng=…&zoom=…` |
-| Details | White / ocean-blue | `/details?lat=…&lng=…&zoom=…` |
-| Tides | White / blue | `/tide?lat=…&lng=…&zoom=…` |
+| Button | Background | Route | Condition |
+|---|---|---|---|
+| Score | Green text / grey bg | `/score?lat=…&lng=…&zoom=…` | Ocean data available (grid point ≤ 1 km) |
+| Details | White / ocean-blue | `/details?lat=…&lng=…&zoom=…` | Always shown |
+| Tides | White / blue | `/tide?lat=…&lng=…&zoom=…` | Ocean data available (grid point ≤ 1 km) |
 
-The **current page's button is hidden** in `PageNav`. The `zoom` param is appended by the map popup so the map zoom level can be restored when navigating back.
+The **current page's button is hidden** in `PageNav`. Score and Tides are hidden both in the popup and in `PageNav` when the ocean forecast grid point is more than 1 km away. The `zoom` param is appended by the map popup so the map zoom level can be restored when navigating back.
+
+### My Location
+
+A crosshair-icon button below the Leaflet zoom controls calls `navigator.geolocation.getCurrentPosition()` and navigates directly to `/details?lat=…&lng=…&zoom=…` — bypassing the popup.
 
 ### Back navigation
 
@@ -85,6 +95,10 @@ The **current page's button is hidden** in `PageNav`. The `zoom` param is append
 1. Initialises the map at the saved center and zoom
 2. After 150 ms (tiles loading), calls `openMarkerAt()` to place the marker and open the popup
 3. `openMarkerAt()` also fires the parallel geo+ocean-point fetch, so the blue ocean dot appears as normal
+
+### Location Names
+
+All pages and the map popup use a consistent `"name, municipality, county"` format from `reverseGeocode()`. When name equals municipality, it is not repeated.
 
 ---
 
@@ -145,7 +159,9 @@ The table has a two-row header. The top row spans columns by API source:
 | Kartverket | Tide phase | Hidden if no ocean data |
 | Calculated | Sun phase | Always shown |
 
-`hasOceanData` is derived client-side: `forecasts.some(f => f.waveHeight !== undefined)`. Inland points get a clean 5-column table.
+`hasOceanData` is derived client-side: `forecasts.some(f => f.waveHeight !== undefined)`. Inland points and locations where the ocean grid point is more than 1 km away get a clean weather-only table.
+
+When ocean data is suppressed, tide data is also suppressed. `PageNav` receives an `availablePages` prop to hide Score and Tides from the header navigation.
 
 Row background tinting indicates forecast confidence. A legend (High → Medium → Fair → Low) is shown above the table using the same colours as the rows.
 

@@ -12,13 +12,17 @@ This is not powered by AI. Every skipper needs to use their own judgment, experi
 
 ## What it does
 
-Click anywhere on the map to place a marker. A popup shows the location name (reverse-geocoded), coordinates, and three navigation buttons:
+Click anywhere on the map to place a marker. A popup shows the location name (reverse-geocoded), coordinates, and navigation buttons:
 
 - **Score** — combined fishing suitability rating *(coming soon)*
 - **Details** — 10-day hourly forecast table with columns grouped by data source. Wind speed (bold) and wave height (bold) are the primary safety numbers. A confidence legend above the table shows how reliability degrades beyond day 3.
 - **Tides** — high/low tide events for the next 10 days, with peak high and lowest low highlighted.
 
+Score and Tides buttons are only shown when the ocean forecast grid point is within 1 km of the clicked location. Inland points show only the Details button.
+
 When the forecast responds, a sky-blue dot and dashed line appear on the map showing the ocean forecast grid point closest to your click.
+
+A **location button** (crosshair icon) sits below the zoom controls. Tapping it uses the browser's geolocation API and navigates directly to the Details page for your current position.
 
 The **🎣 NoFish** logo in the top-left of every page is also a back button — tap it to return to the map at your last position and zoom.
 
@@ -37,7 +41,7 @@ Columns are grouped by API source:
 | Kartverket | Tide | High/low phase label |
 | Calculated | Sun | Sunrise/sunset/civil twilight phase |
 
-Zero precipitation is not shown. Ocean columns are hidden for inland points.
+Zero precipitation is not shown. Ocean columns are hidden when the ocean forecast grid point is more than 1 km from the clicked location. Tide and score pages are also suppressed in this case.
 
 Row background colour indicates **forecast confidence** (also shown in the legend above the table):
 
