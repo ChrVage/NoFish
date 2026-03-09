@@ -18,7 +18,7 @@ import { haversineDistance } from '@/lib/utils/distance';
 
 /** Maximum distance (km) between the requested point and the ocean forecast grid point.
  *  Beyond this threshold the wave data is considered inaccurate and is suppressed. */
-const MAX_OCEAN_FORECAST_DISTANCE_KM = 50;
+const MAX_OCEAN_FORECAST_DISTANCE_KM = 1;
 
 const USER_AGENT = 'NoFish/1.0 github.com/ChrVage/NoFish';
 
@@ -629,24 +629,31 @@ export async function getCombinedForecast(
 
     // Suppress ocean (wave) data when the grid point is too far from the requested location —
     // a distant grid point means the wave forecast is not representative of the actual spot.
+    // Also suppress when the API returns coordinates but no actual timeseries data
+    // (e.g. inland locations where the API echoes back the request coords).
+    const hasOceanTimeseries = (oceanForecast?.properties.timeseries.length ?? 0) > 0;
     const oceanForecastDistance =
       oceanForecastLat !== undefined && oceanForecastLng !== undefined
         ? haversineDistance(lat, lng, oceanForecastLat, oceanForecastLng)
         : null;
     const nearbyOceanForecast =
-      oceanForecastDistance !== null && oceanForecastDistance <= MAX_OCEAN_FORECAST_DISTANCE_KM
+      hasOceanTimeseries && oceanForecastDistance !== null && oceanForecastDistance <= MAX_OCEAN_FORECAST_DISTANCE_KM
         ? oceanForecast
         : null;
 
+    // Suppress tide data when ocean data is unavailable — without ocean context
+    // the tide and score pages aren't meaningful for this location.
+    const usableTideForecast = nearbyOceanForecast ? realTideForecast : null;
+
     const result: CombinedForecastResult = {
-      forecasts: combineForecasts(locationForecast, nearbyOceanForecast, realTideForecast, lat, lng),
+      forecasts: combineForecasts(locationForecast, nearbyOceanForecast, usableTideForecast, lat, lng),
       forecastLat,
       forecastLng,
       oceanForecastLat: nearbyOceanForecast ? oceanForecastLat : undefined,
       oceanForecastLng: nearbyOceanForecast ? oceanForecastLng : undefined,
-      tideStationName: realTideForecast?.stationName,
-      tideStationLat: realTideForecast?.stationLat,
-      tideStationLng: realTideForecast?.stationLng,
+      tideStationName: usableTideForecast?.stationName,
+      tideStationLat: usableTideForecast?.stationLat,
+      tideStationLng: usableTideForecast?.stationLng,
       metadata: {} as Record<string, never>,
     };
 

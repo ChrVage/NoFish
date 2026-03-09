@@ -33,6 +33,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
   ]);
 
   const { forecasts, oceanForecastLat, oceanForecastLng, tideStationName, tideStationLat, tideStationLng } = weatherResult;
+  const hasOceanData = oceanForecastLat !== undefined && oceanForecastLng !== undefined;
   const timezone = getTimezone(lat, lng);
   const timezoneLabel = getTimezoneLabel(timezone);
   const oceanForecastDistance = oceanForecastLat !== undefined && oceanForecastLng !== undefined
@@ -86,7 +87,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton label="← 🎣 NoFish" className="text-sm font-normal text-white hover:text-ocean-200 transition-colors" />
           </div>
-          <PageNav lat={lat} lng={lng} zoom={validZoom} current="details" />
+          <PageNav lat={lat} lng={lng} zoom={validZoom} current="details" availablePages={hasOceanData ? undefined : ['details']} />
         </div>
       </header>
 
@@ -96,10 +97,14 @@ export default async function DetailsPage({ searchParams }: PageProps) {
           {/* Location header */}
           <div className="mb-6 border-b border-gray-200 pb-4">
             {locationData && (
-              <h2 className="text-2xl font-bold text-ocean-900 mb-2">
-                {locationData.municipality}
-                {locationData.county && `, ${locationData.county}`}
-              </h2>
+              <>
+                <h2 className="text-2xl font-bold text-ocean-900 mb-1">
+                  {locationData.name !== locationData.municipality
+                    ? `${locationData.name}, ${locationData.municipality}`
+                    : locationData.municipality}
+                  {locationData.county && `, ${locationData.county}`}
+                </h2>
+              </>
             )}
             <p className="text-sm text-gray-500">
               {Math.abs(lat).toFixed(4)}°{lat >= 0 ? 'N' : 'S'},{' '}

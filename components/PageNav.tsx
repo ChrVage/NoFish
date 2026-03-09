@@ -5,6 +5,8 @@ interface PageNavProps {
   lng: number;
   zoom?: number;
   current: 'score' | 'details' | 'tide';
+  /** When set, only pages whose key is in this array are shown. */
+  availablePages?: ('score' | 'details' | 'tide')[];
 }
 
 const pages = [
@@ -43,11 +45,12 @@ const pages = [
   },
 ] as const;
 
-export default function PageNav({ lat, lng, zoom, current }: PageNavProps) {
+export default function PageNav({ lat, lng, zoom, current, availablePages }: PageNavProps) {
   return (
     <div className="flex gap-2">
       {pages
         .filter((p) => p.key !== current)
+        .filter((p) => !availablePages || availablePages.includes(p.key))
         .map((p) => (
           <Link
             key={p.key}

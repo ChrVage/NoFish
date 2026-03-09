@@ -125,12 +125,13 @@ export default function Map() {
 
           if (geoResponse.ok) {
             const result = await geoResponse.json();
-            const name = result.data?.name ||
-              result.data?.municipality ||
-              result.data?.displayName ||
-              `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
+            const d = result.data;
+            const placeName = d?.name || d?.municipality || d?.displayName || `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
+            const label = d?.municipality && d.name && d.name !== d.municipality
+              ? `${d.name}, ${d.municipality}`
+              : placeName;
             const nameElement = popupContent.querySelector('#location-name');
-            if (nameElement) nameElement.textContent = name;
+            if (nameElement) nameElement.textContent = label;
           } else {
             const nameElement = popupContent.querySelector('#location-name');
             if (nameElement) nameElement.textContent = `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
@@ -158,6 +159,13 @@ export default function Map() {
                 `Ocean forecast point (${oLat.toFixed(4)}°N, ${oLng.toFixed(4)}°E)`,
                 { direction: 'top', offset: [0, -4] }
               );
+            } else {
+              // No ocean data nearby — hide Score and Tide buttons
+              const scoreBtn = popupContent.querySelector('#go-score') as HTMLElement | null;
+              const tideBtn = popupContent.querySelector('#go-tide') as HTMLElement | null;
+              scoreBtn?.remove();
+              tideBtn?.remove();
+              tempMarker.getPopup()?.update();
             }
           }
         } catch (error) {

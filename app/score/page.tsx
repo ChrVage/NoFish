@@ -48,10 +48,14 @@ export default async function ScorePage({ searchParams }: PageProps) {
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="mb-6 border-b border-gray-200 pb-4">
             {locationData && (
-              <h2 className="text-2xl font-bold text-ocean-900 mb-2">
-                {locationData.municipality}
-                {locationData.county && `, ${locationData.county}`}
-              </h2>
+              <>
+                <h2 className="text-2xl font-bold text-ocean-900 mb-1">
+                  {locationData.name !== locationData.municipality
+                    ? `${locationData.name}, ${locationData.municipality}`
+                    : locationData.municipality}
+                  {locationData.county && `, ${locationData.county}`}
+                </h2>
+              </>
             )}
             <p className="text-sm text-gray-500">
               {Math.abs(lat).toFixed(4)}°{lat >= 0 ? 'N' : 'S'},{' '}
