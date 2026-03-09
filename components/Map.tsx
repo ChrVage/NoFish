@@ -285,39 +285,33 @@ export default function Map() {
         </p>
       </div>
 
-      {/* My Location button */}
-      <div className="absolute bottom-8 right-4 z-[1000] flex flex-col items-end gap-2">
-        {locationError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 max-w-[200px] text-right shadow">
-            {locationError}
-          </div>
-        )}
+      {/* My Location button — below zoom controls */}
+      <div className="absolute top-[120px] left-[10px] z-[1000] flex flex-col items-start gap-2">
         <button
           type="button"
           onClick={handleMyLocation}
           disabled={locating}
           aria-label="Use my current location"
-          className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-lg shadow-lg p-3 flex items-center gap-2 text-sm font-medium text-ocean-700 hover:bg-ocean-50 active:bg-ocean-100 transition-colors disabled:opacity-60 disabled:cursor-wait"
+          title="My Location"
+          className="w-[30px] h-[30px] bg-white border-2 border-gray-400/60 rounded-sm shadow flex items-center justify-center text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition-colors disabled:opacity-60 disabled:cursor-wait"
         >
           {locating ? (
-            <>
-              <svg className="w-5 h-5 animate-spin text-ocean-500" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-              </svg>
-              Locating…
-            </>
+            <svg className="w-4 h-4 animate-spin text-ocean-500" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+            </svg>
           ) : (
-            <>
-              <svg className="w-5 h-5 text-ocean-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="3" strokeWidth="2"/>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
-                <circle cx="12" cy="12" r="8" strokeWidth="2" strokeDasharray="4 3"/>
-              </svg>
-              My Location
-            </>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3"/>
+              <path strokeLinecap="round" d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+            </svg>
           )}
         </button>
+        {locationError && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 max-w-[200px] shadow">
+            {locationError}
+          </div>
+        )}
       </div>
     </div>
   );
