@@ -258,11 +258,8 @@ export default function Map() {
       (position) => {
         setLocating(false);
         const { latitude, longitude } = position.coords;
-        const map = mapRef.current;
-        if (map) {
-          map.setView([latitude, longitude], Math.max(map.getZoom(), MIN_LOCATION_ZOOM), { animate: true });
-          openMarkerAtRef.current?.(latitude, longitude);
-        }
+        const zoom = Math.max(mapRef.current?.getZoom() ?? MIN_LOCATION_ZOOM, MIN_LOCATION_ZOOM);
+        router.push(`/details?lat=${latitude.toFixed(4)}&lng=${longitude.toFixed(4)}&zoom=${zoom}`);
       },
       (err) => {
         setLocating(false);
