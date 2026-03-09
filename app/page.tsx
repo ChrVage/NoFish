@@ -18,9 +18,9 @@ const Map = dynamic(() => import('@/components/Map'), {
 
 export default function Home() {
   return (
-    <div className="flex flex-col h-screen bg-ocean-50">
+    <div className="flex flex-col h-dvh bg-ocean-50">
       {/* Header */}
-      <header className="bg-ocean-900 text-white px-6 py-4 shadow-lg z-10">
+      <header className="bg-ocean-900 text-white px-6 py-4 shadow-lg z-10 shrink-0">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-lg">🎣</span>
@@ -35,11 +35,13 @@ export default function Home() {
       </header>
 
       {/* Main content */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative overflow-hidden">
         <Map />
       </div>
 
-      <Footer />
+      <div className="shrink-0">
+        <Footer />
+      </div>
     </div>
   );
 }
