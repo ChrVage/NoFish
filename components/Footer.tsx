@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <footer className="bg-ocean-900 text-center py-3 px-4 flex flex-row gap-6 items-center justify-center">
+    <footer className="bg-ocean-900 text-center py-4 px-6 flex flex-row gap-10 items-center justify-center">
       <a
         href="https://github.com/ChrVage/NoFish/blob/main/README.md"
         target="_blank"
