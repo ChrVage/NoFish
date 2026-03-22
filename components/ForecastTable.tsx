@@ -299,10 +299,41 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
               const daysAhead = (new Date(forecast.time).getTime() - now) / 86_400_000;
               const locStyle = getLocStyle(daysAhead);
               const oceanStyle = getOceanStyle(daysAhead);
-              return (
+
+              // Detect the last hourly row (gap to next row jumps from ~1 h to ~6 h)
+              const isLastHourly = index < forecasts.length - 1 && (() => {
+                const thisGap = new Date(forecasts[index + 1].time).getTime() - new Date(forecast.time).getTime();
+                const prevGap = index > 0
+                  ? new Date(forecast.time).getTime() - new Date(forecasts[index - 1].time).getTime()
+                  : thisGap;
+                return prevGap <= 90 * 60_000 && thisGap > 90 * 60_000;
+              })();
+
+              // Detect midnight boundary (local date changed since previous row)
+              const isMidnight = index > 0 && !isLastHourly && (() => {
+                const dateFmt = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' });
+                return dateFmt.format(new Date(forecast.time)) !== dateFmt.format(new Date(forecasts[index - 1].time));
+              })();
+
+              // Count total columns for separator rows
+              const totalCols = 6 + (hasOceanData ? 6 : 0) + 1;
+
+              const rows: React.ReactNode[] = [];
+
+              // Insert a thin separator row before midnight rows
+              if (isMidnight) {
+                rows.push(
+                  <tr key={`midnight-${forecast.time}`} aria-hidden="true">
+                    <td colSpan={totalCols} style={{ height: '3px', padding: 0, backgroundColor: '#d1d5db' }} />
+                  </tr>
+                );
+              }
+
+              rows.push(
               <tr
                 key={forecast.time}
                 className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                style={isLastHourly ? { boxShadow: '0 3px 0 -1px #9ca3af, 0 6px 0 -1px #9ca3af' } : undefined}
               >
                 <td
                   className="px-4 py-3 text-sm font-medium sticky left-0 z-10"
@@ -372,6 +403,8 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
                 </td>
               </tr>
               );
+
+              return rows;
             })}
           </tbody>
         </table>
