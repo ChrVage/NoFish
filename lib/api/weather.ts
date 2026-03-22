@@ -10,6 +10,8 @@ import type {
   OceanForecastTimeseries,
   HourlyForecast,
   TideEvent,
+  TidePrediction,
+  TidePageData,
   TideXMLResponse,
 } from '@/types/weather';
 import { getCached, setCached, withInflight } from '@/lib/db/cache';
@@ -141,6 +143,143 @@ export async function getTideForecast(
       return null;
     }
   });
+}
+
+/**
+ * Fetch all tide data for the tide page from a single Kartverket API call (datatype=all).
+ * Returns high/low events (from prediction peaks) and forecast water levels.
+ * @param lat Latitude
+ * @param lng Longitude
+ * @returns Combined tide page data or null if unavailable
+ */
+export async function getTidePageData(
+  lat: number,
+  lng: number
+): Promise<TidePageData | null> {
+  const cacheKey = `tideall:${lat.toFixed(0)}:${lng.toFixed(0)}`;
+  const cached = await getCached<TidePageData>(cacheKey);
+  if (cached) return cached;
+
+  return withInflight<TidePageData | null>(cacheKey, async () => {
+    try {
+      const fromTime = new Date();
+      const toTime = new Date(fromTime.getTime() + 10 * 24 * 60 * 60 * 1000); // 10 days ahead
+
+      const fromTimeStr = fromTime.toISOString().replace(/\.\d{3}Z$/, '');
+      const toTimeStr = toTime.toISOString().replace(/\.\d{3}Z$/, '');
+
+      const url = `https://vannstand.kartverket.no/tideapi.php?` +
+          `lat=${lat.toFixed(0)}&lon=${lng.toFixed(0)}` +
+          `&fromtime=${encodeURIComponent(fromTimeStr)}&totime=${encodeURIComponent(toTimeStr)}` +
+          `&datatype=all&refcode=cd&lang=en&interval=10&dst=0&tide_request=locationdata`;
+
+      const response = await fetch(url, {
+        headers: { 'User-Agent': USER_AGENT },
+      });
+
+      if (!response.ok) {
+        console.warn(`Kartverket Tide API (all) returned ${response.status}`);
+        return null;
+      }
+
+      const text = await response.text();
+      const result = parseTideAllXML(text);
+      await setCached(cacheKey, result, 6);
+      return result;
+    } catch (error) {
+      console.error('Tide API (all) error:', error);
+      return null;
+    }
+  });
+}
+
+/**
+ * Parse datatype=all XML from Kartverket.
+ * Extracts high/low events from the prediction block (local maxima/minima)
+ * and forecast water levels from the forecast block.
+ */
+function parseTideAllXML(xmlText: string): TidePageData {
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: '',
+    isArray: (name) => name === 'data' || name === 'waterlevel',
+  });
+
+  type WaterLevelAttr = { value: string; time: string; flag?: string };
+  type DataBlock = { type?: string; waterlevel?: WaterLevelAttr[] };
+  type LocationAttr = { name?: string; lat?: string | number; lon?: string | number };
+  type LocationData = { location?: LocationAttr; data?: DataBlock[] };
+  type TideDoc = { tide?: { locationdata?: LocationData } };
+
+  const doc = parser.parse(xmlText) as TideDoc;
+  const locationdata = doc?.tide?.locationdata;
+
+  let stationName: string | undefined;
+  let stationLat: number | undefined;
+  let stationLng: number | undefined;
+
+  const location = locationdata?.location;
+  if (location) {
+    stationName = location.name;
+    if (location.lat != null) stationLat = parseFloat(String(location.lat));
+    if (location.lon != null) stationLng = parseFloat(String(location.lon));
+  }
+
+  // Extract prediction data, forecast data, and observation data
+  const predictions: { time: string; value: number }[] = [];
+  const forecasts: TidePrediction[] = [];
+  let currentLevel: number | undefined;
+  let currentLevelTime: string | undefined;
+
+  for (const block of locationdata?.data ?? []) {
+    if (block.type === 'prediction') {
+      for (const wl of block.waterlevel ?? []) {
+        predictions.push({ time: wl.time, value: parseFloat(wl.value) });
+      }
+    } else if (block.type === 'forecast') {
+      for (const wl of block.waterlevel ?? []) {
+        forecasts.push({ time: wl.time, value: parseFloat(wl.value) });
+      }
+    } else if (block.type === 'observation') {
+      // Take the last (most recent) observation
+      const levels = block.waterlevel ?? [];
+      if (levels.length > 0) {
+        const last = levels[levels.length - 1];
+        currentLevel = parseFloat(last.value);
+        currentLevelTime = last.time;
+      }
+    }
+  }
+
+  // Fallback: if no observation, use the closest forecast value to now
+  if (currentLevel == null && forecasts.length > 0) {
+    const nowMs = Date.now();
+    let bestIdx = 0;
+    let bestDiff = Math.abs(new Date(forecasts[0].time).getTime() - nowMs);
+    for (let i = 1; i < forecasts.length; i++) {
+      const diff = Math.abs(new Date(forecasts[i].time).getTime() - nowMs);
+      if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+    }
+    if (bestDiff < 15 * 60 * 1000) {
+      currentLevel = forecasts[bestIdx].value;
+      currentLevelTime = forecasts[bestIdx].time;
+    }
+  }
+
+  // Derive high/low events from local maxima/minima in prediction data
+  const events: TideEvent[] = [];
+  for (let i = 1; i < predictions.length - 1; i++) {
+    const prev = predictions[i - 1].value;
+    const curr = predictions[i].value;
+    const next = predictions[i + 1].value;
+    if (curr > prev && curr >= next) {
+      events.push({ time: predictions[i].time, value: curr, flag: 'high' });
+    } else if (curr < prev && curr <= next) {
+      events.push({ time: predictions[i].time, value: curr, flag: 'low' });
+    }
+  }
+
+  return { events, forecasts, currentLevel, currentLevelTime, stationName, stationLat, stationLng };
 }
 
 /**

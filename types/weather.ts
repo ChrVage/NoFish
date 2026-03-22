@@ -139,6 +139,11 @@ export interface TideEvent {
   flag: 'high' | 'low';
 }
 
+export interface TidePrediction {
+  time: string; // ISO timestamp
+  value: number; // Water level in cm
+}
+
 export interface TideXMLResponse {
   events: TideEvent[]; // High and low tide events
   stationName?: string;
@@ -146,4 +151,15 @@ export interface TideXMLResponse {
   stationLng?: number;
   latitude: number;
   longitude: number;
+}
+
+/** Combined result from a single datatype=all Kartverket call for the tide page */
+export interface TidePageData {
+  events: TideEvent[];       // High/low peaks derived from the prediction block
+  forecasts: TidePrediction[]; // 10-min forecast water levels (includes weather effects)
+  currentLevel?: number;     // Latest observed water level (cm)
+  currentLevelTime?: string; // Time of the latest observation
+  stationName?: string;
+  stationLat?: number;
+  stationLng?: number;
 }
