@@ -210,7 +210,9 @@ export function combineForecasts(
     }
 
     // Add sun data
-    hourlyForecast.sunPhase = calculateSunPhase(entryDate, windowEnd, lat, lng, timezone);
+    const sunResult = calculateSunPhase(entryDate, windowEnd, lat, lng, timezone);
+    hourlyForecast.sunPhase = sunResult.label;
+    hourlyForecast.sunPhaseSegments = sunResult.segments;
 
     hourlyForecasts.push(hourlyForecast);
   });
@@ -514,6 +516,8 @@ function findSolarNoon(
  *   "Daylight (17:45) → Civil (18:12) → Nautical"
  * For a pure daylight window the solar-noon time is shown:
  *   "Daylight (12:34)"
+ *
+ * Also returns phase segments with fractional durations for background colouring.
  */
 function calculateSunPhase(
   windowStart: Date,
@@ -521,9 +525,10 @@ function calculateSunPhase(
   lat: number,
   lng: number,
   timezone: string
-): string {
+): { label: string; segments: { phase: SunPhaseName; fraction: number }[] } {
   const startPhase = getSunPhaseName(solarPosition(windowStart, lat, lng).elevation);
-  const windowMinutes = Math.ceil((windowEnd.getTime() - windowStart.getTime()) / 60_000);
+  const windowMs = windowEnd.getTime() - windowStart.getTime();
+  const windowMinutes = Math.ceil(windowMs / 60_000);
 
   // Collect every phase transition within the window
   const transitions: { time: Date; to: SunPhaseName }[] = [];
@@ -546,6 +551,22 @@ function calculateSunPhase(
     }
   }
 
+  // Build segments with fractional durations
+  const segments: { phase: SunPhaseName; fraction: number }[] = [];
+  if (transitions.length === 0) {
+    segments.push({ phase: startPhase, fraction: 1 });
+  } else {
+    let segStart = windowStart.getTime();
+    let currentPhase = startPhase;
+    for (const tr of transitions) {
+      const segEnd = tr.time.getTime();
+      segments.push({ phase: currentPhase, fraction: (segEnd - segStart) / windowMs });
+      segStart = segEnd;
+      currentPhase = tr.to;
+    }
+    segments.push({ phase: currentPhase, fraction: (windowEnd.getTime() - segStart) / windowMs });
+  }
+
   if (transitions.length === 0) {
     let label = sunPhaseLabels[startPhase];
     if (startPhase === 'day') {
@@ -555,7 +576,7 @@ function calculateSunPhase(
         label = `Daylight (${formatTimeHHMM(noon, timezone)}, ${noonElevation.toFixed(1)}°)`;
       }
     }
-    return label;
+    return { label, segments };
   }
 
   // Build compound label: "Phase1 (T1) → Phase2 (T2) → Phase3 ..."
@@ -563,7 +584,7 @@ function calculateSunPhase(
   for (const tr of transitions) {
     label += ` (${formatTimeHHMM(tr.time, timezone)}) → ${sunPhaseLabels[tr.to]}`;
   }
-  return label;
+  return { label, segments };
 }
 
 /**

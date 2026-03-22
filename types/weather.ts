@@ -128,6 +128,7 @@ export interface HourlyForecast {
   tideHeight?: number;
   tidePhase?: string; // e.g., "Hi (13:18)", "Hi+1", "Falling", "Lo-2", etc.
   sunPhase?: string;  // e.g., "Daylight (06:23)", "Civil (17:45)", "Nautical (18:12)", "—"
+  sunPhaseSegments?: { phase: 'day' | 'civil' | 'nautical' | 'night'; fraction: number }[];
   windGust?: number;
 }
 
