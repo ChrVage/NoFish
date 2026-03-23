@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTidePageData } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
-import { getTimezone, getTimezoneLabel } from '@/lib/utils/timezone';
+import { getTimezone } from '@/lib/utils/timezone';
 import { haversineDistance, formatDistance } from '@/lib/utils/distance';
 import { parseZoomParam } from '@/lib/utils/params';
 import BackButton from '@/components/BackButton';
@@ -29,7 +29,6 @@ export default async function TidePage({ searchParams }: PageProps) {
   ]);
 
   const timezone = getTimezone(lat, lng);
-  const timezoneLabel = getTimezoneLabel(timezone);
   const timeFormatter = new Intl.DateTimeFormat('en-GB', {
     weekday: 'short',
     day: 'numeric',
@@ -47,7 +46,6 @@ export default async function TidePage({ searchParams }: PageProps) {
     const eventMs = new Date(eventTime).getTime();
     const MAX_GAP_MS = 15 * 60 * 1000; // must be within 15 min
 
-    // Find the closest forecast point
     let bestIdx = 0;
     let bestDiff = Math.abs(new Date(predictions[0].time).getTime() - eventMs);
     for (let i = 1; i < predictions.length; i++) {
@@ -58,10 +56,8 @@ export default async function TidePage({ searchParams }: PageProps) {
       }
     }
 
-    // No forecast available near this event time
     if (bestDiff > MAX_GAP_MS) return null;
 
-    // Get the two closest (the best and its neighbor closer to the event)
     const bestMs = new Date(predictions[bestIdx].time).getTime();
     let neighborIdx: number;
     if (bestMs <= eventMs && bestIdx + 1 < predictions.length) {
@@ -74,31 +70,31 @@ export default async function TidePage({ searchParams }: PageProps) {
 
     const a = predictions[bestIdx].value;
     const b = predictions[neighborIdx].value;
-    // For high tide pick the higher value; for low tide pick the lower value
     return flag === 'high' ? Math.max(a, b) : Math.min(a, b);
   }
 
   const predictions = tidePageData?.forecasts ?? [];
 
-  // Only show events up to the last available forecast time
-  const lastForecastMs = predictions.length
-    ? new Date(predictions[predictions.length - 1].time).getTime()
-    : null;
-  const visibleEvents = lastForecastMs != null
-    ? events.filter((e) => new Date(e.time).getTime() <= lastForecastMs)
-    : events;
+  const nowMs = Date.now();
+  const futureEvents = events.filter((e) => new Date(e.time).getTime() > nowMs);
 
-  const eventPredictions = visibleEvents.map((e) => findForecast(e.time, e.flag, predictions));
+  // Only show events that have a matching forecast value
+  const paired = futureEvents
+    .map((e) => ({ event: e, pred: findForecast(e.time, e.flag, predictions) }))
+    .filter((p): p is { event: typeof p.event; pred: number } => p.pred != null);
 
-  // Compute extremes for forecast column
+  const visibleEvents = paired.map((p) => p.event);
+  const eventPredictions = paired.map((p) => p.pred);
+
+  // Compute extremes for highlighting
   const highForecasts = visibleEvents
     .map((e, i) => (e.flag === 'high' ? eventPredictions[i] : null))
     .filter((v): v is number => v != null);
   const lowForecasts = visibleEvents
     .map((e, i) => (e.flag === 'low' ? eventPredictions[i] : null))
     .filter((v): v is number => v != null);
-  const maxHighForecast = highForecasts.length ? Math.max(...highForecasts) : null;
-  const minLowForecast  = lowForecasts.length  ? Math.min(...lowForecasts)  : null;
+  const maxHigh = highForecasts.length ? Math.max(...highForecasts) : null;
+  const minLow  = lowForecasts.length  ? Math.min(...lowForecasts)  : null;
 
   return (
     <div className="min-h-screen bg-ocean-50">
@@ -117,7 +113,7 @@ export default async function TidePage({ searchParams }: PageProps) {
             {locationData && (
               <>
                 <h2 className="text-2xl font-bold text-ocean-900 mb-1">
-                  {locationData.name !== locationData.municipality
+                  Forecast for: {locationData.name !== locationData.municipality
                     ? `${locationData.name}, ${locationData.municipality}`
                     : locationData.municipality}
                   {locationData.county && `, ${locationData.county}`}
@@ -128,23 +124,7 @@ export default async function TidePage({ searchParams }: PageProps) {
               {Math.abs(lat).toFixed(4)}°{lat >= 0 ? 'N' : 'S'},{' '}
               {Math.abs(lng).toFixed(4)}°{lng >= 0 ? 'E' : 'W'}
             </p>
-            {(() => {
-              const level = tidePageData?.currentLevel;
-              const levelTime = tidePageData?.currentLevelTime;
-              if (level == null || !levelTime) return null;
-              const hhmm = new Intl.DateTimeFormat('en-GB', {
-                hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone,
-              }).format(new Date(levelTime));
-              return (
-                <p className="text-sm text-gray-600 mt-1">
-                  Current level: {level.toFixed(1)} cm{' '}
-                  <span className="text-gray-400">({hhmm})</span>
-                </p>
-              );
-            })()}
-            <p className="text-xs text-gray-400 mt-1">
-              Times shown in local time · {timezoneLabel}
-            </p>
+
             {tidePageData?.stationName && (() => {
               const hasCoords = tidePageData.stationLat != null && tidePageData.stationLng != null;
               return (
@@ -153,6 +133,7 @@ export default async function TidePage({ searchParams }: PageProps) {
                   {hasCoords && (
                     <> · {formatDistance(haversineDistance(lat, lng, tidePageData.stationLat!, tidePageData.stationLng!))} from selected location</>
                   )}
+                  {' '}· Levels relative to chart datum (CD)
                 </p>
               );
             })()}
@@ -161,20 +142,40 @@ export default async function TidePage({ searchParams }: PageProps) {
           {visibleEvents.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No tide data available for this location.</p>
           ) : (
-            <table className="text-sm">
+            <table className="text-sm" style={{ borderSpacing: '1rem 0', borderCollapse: 'separate' }}>
               <thead>
                 <tr className="border-b border-gray-200 text-left text-xs text-gray-400">
-                  <th className="pb-2 pr-8">Time</th>
-                  <th className="pb-2 pr-8 text-right">Tide forecast</th>
-                  <th className="pb-2 pl-6 text-right">Type</th>
+                  <th className="pb-2">Time</th>
+                  <th className="pb-2 text-right">Level</th>
+                  <th className="pb-2 text-left">Type</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
+                {(() => {
+                  const level = tidePageData?.currentLevel;
+                  const levelTime = tidePageData?.currentLevelTime;
+                  if (level == null || !levelTime) return null;
+                  const hhmm = new Intl.DateTimeFormat('en-GB', {
+                    weekday: 'short', day: 'numeric', month: 'short',
+                    hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone,
+                  }).format(new Date(levelTime));
+                  const nextEvent = visibleEvents[0];
+                  const trend = nextEvent ? (nextEvent.flag === 'high' ? 'Rising' : 'Falling') : null;
+                  const isLowest = minLow == null || level <= minLow;
+                  return (
+                    <tr className="text-gray-700 bg-gray-50">
+                      <td className="py-2 tabular-nums">{hhmm}</td>
+                      <td className="py-2 text-right tabular-nums whitespace-nowrap"
+                          style={isLowest ? { fontWeight: 700 } : undefined}>{level.toFixed(1)} cm</td>
+                      <td className="py-2 text-xs text-gray-400">Last observation{trend && ` – ${trend}`}</td>
+                    </tr>
+                  );
+                })()}
                 {visibleEvents.map((event, i) => {
                   const pred = eventPredictions[i];
-                  const isExtremeForecast = pred != null
-                    && ((event.flag === 'high' && pred === maxHighForecast)
-                      || (event.flag === 'low' && pred === minLowForecast));
+                  const isExtreme = pred != null
+                    && ((event.flag === 'high' && pred === maxHigh)
+                      || (event.flag === 'low' && pred === minLow));
                   return (
                     <tr
                       key={i}
@@ -184,14 +185,14 @@ export default async function TidePage({ searchParams }: PageProps) {
                           : 'text-teal-700'
                       }
                     >
-                      <td className="py-2 pr-8 tabular-nums">
+                      <td className="py-2 tabular-nums">
                         {timeFormatter.format(new Date(event.time))}
                       </td>
-                      <td className="py-2 pr-8 text-right tabular-nums whitespace-nowrap"
-                          style={isExtremeForecast ? { fontWeight: 700 } : undefined}>
+                      <td className="py-2 text-right tabular-nums whitespace-nowrap"
+                          style={isExtreme ? { fontWeight: 700 } : undefined}>
                         {pred != null ? `${pred.toFixed(1)} cm` : '—'}
                       </td>
-                      <td className="py-2 text-right pl-6 font-semibold">
+                      <td className="py-2 font-semibold">
                         {event.flag === 'high' ? 'High' : 'Low'}
                       </td>
                     </tr>

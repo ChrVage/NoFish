@@ -168,22 +168,36 @@ export async function getTidePageData(
       const fromTimeStr = fromTime.toISOString().replace(/\.\d{3}Z$/, '');
       const toTimeStr = toTime.toISOString().replace(/\.\d{3}Z$/, '');
 
-      const url = `https://vannstand.kartverket.no/tideapi.php?` +
+      const baseParams =
           `lat=${lat.toFixed(0)}&lon=${lng.toFixed(0)}` +
           `&fromtime=${encodeURIComponent(fromTimeStr)}&totime=${encodeURIComponent(toTimeStr)}` +
-          `&datatype=all&refcode=cd&lang=en&interval=10&dst=0&tide_request=locationdata`;
+          `&refcode=cd&lang=en&dst=0&tide_request=locationdata`;
 
-      const response = await fetch(url, {
-        headers: { 'User-Agent': USER_AGENT },
-      });
+      const allUrl = `https://vannstand.kartverket.no/tideapi.php?${baseParams}&datatype=all&interval=10`;
+      const tabUrl = `https://vannstand.kartverket.no/tideapi.php?${baseParams}&datatype=tab`;
 
-      if (!response.ok) {
-        console.warn(`Kartverket Tide API (all) returned ${response.status}`);
+      const [allResponse, tabResponse] = await Promise.all([
+        fetch(allUrl, { headers: { 'User-Agent': USER_AGENT } }),
+        fetch(tabUrl, { headers: { 'User-Agent': USER_AGENT } }),
+      ]);
+
+      if (!allResponse.ok) {
+        console.warn(`Kartverket Tide API (all) returned ${allResponse.status}`);
         return null;
       }
 
-      const text = await response.text();
-      const result = parseTideAllXML(text);
+      const allText = await allResponse.text();
+      const result = parseTideAllXML(allText);
+
+      // Use exact high/low event times from the tab API when available
+      if (tabResponse.ok) {
+        const tabText = await tabResponse.text();
+        const tabResult = parseTideXML(tabText, lat, lng);
+        if (tabResult.events.length > 0) {
+          result.events = tabResult.events;
+        }
+      }
+
       await setCached(cacheKey, result, 6);
       return result;
     } catch (error) {

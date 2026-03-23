@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 import { getCombinedForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
 import { insertLookup, ensureTable } from '@/lib/db/lookups';
-import { getTimezone, getTimezoneLabel } from '@/lib/utils/timezone';
+import { getTimezone } from '@/lib/utils/timezone';
 import { haversineDistance, formatDistance } from '@/lib/utils/distance';
 import { parseZoomParam } from '@/lib/utils/params';
 import ForecastTable from '@/components/ForecastTable';
@@ -35,7 +35,6 @@ export default async function DetailsPage({ searchParams }: PageProps) {
   const { forecasts, oceanForecastLat, oceanForecastLng, tideStationName, tideStationLat, tideStationLng } = weatherResult;
   const hasOceanData = oceanForecastLat !== undefined && oceanForecastLng !== undefined;
   const timezone = getTimezone(lat, lng);
-  const timezoneLabel = getTimezoneLabel(timezone);
   const oceanForecastDistance = oceanForecastLat !== undefined && oceanForecastLng !== undefined
     ? haversineDistance(lat, lng, oceanForecastLat, oceanForecastLng)
     : null;
@@ -110,9 +109,6 @@ export default async function DetailsPage({ searchParams }: PageProps) {
               {Math.abs(lat).toFixed(4)}°{lat >= 0 ? 'N' : 'S'},{' '}
               {Math.abs(lng).toFixed(4)}°{lng >= 0 ? 'E' : 'W'}
             </p>
-            <p className="text-xs text-gray-400 mt-1">
-              Times shown in local time · {timezoneLabel}
-            </p>
             <div className="mt-2 space-y-0.5">
               {oceanForecastDistance !== null && oceanForecastLat !== undefined && oceanForecastLng !== undefined && (
                 <p className="text-xs text-gray-400">
@@ -146,6 +142,17 @@ export default async function DetailsPage({ searchParams }: PageProps) {
             <ForecastTable forecasts={forecasts} timezone={timezone} />
           </div>
 
+          <p className="text-xs text-gray-400 mt-6">
+            Source:{' '}
+            <a
+              href="https://www.met.no/en"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-gray-600"
+            >
+              MET Norway
+            </a>
+          </p>
 
         </div>
       </main>

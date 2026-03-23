@@ -398,7 +398,7 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
                 )}
 
                 {/* ── Calculated cell ── */}
-                <td className="px-4 py-3 text-sm text-gray-700 border-l-2 border-yellow-200" style={{ backgroundColor: '#f0fdf4' }}>
+                <td className="px-4 py-3 text-sm text-gray-700 border-l-2 border-yellow-200" style={getTimeColumnStyle(forecast.sunPhaseSegments)}>
                   {forecast.sunPhase || '—'}
                 </td>
               </tr>
