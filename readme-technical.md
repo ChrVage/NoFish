@@ -24,7 +24,7 @@
 |---|---|---|---|
 | [MET Norway Locationforecast 2.0](https://api.met.no/weatherapi/locationforecast/2.0/documentation) | Wind, temperature, precipitation, pressure, cloud cover | JSON | None |
 | [MET Norway Oceanforecast 2.0](https://api.met.no/weatherapi/oceanforecast/2.0/documentation) | Wave height/direction, sea temperature, surface currents | JSON | None |
-| [Kartverket Tide API](https://api.kartverket.no/sehavniva/) | High/low tide event times and heights | XML | None |
+| [Kartverket Tide API](https://api.kartverket.no/sehavniva/) | High/low tide event times and heights; 10-minute water level forecasts and observations | XML | None |
 | [Nominatim (OpenStreetMap)](https://nominatim.org/release-docs/develop/api/Reverse/) | Reverse geocoding — coordinates → place name | JSON | None |
 
 All external calls are made **server-side** to avoid CORS issues and comply with MET Norway's rate-limiting policy. A `User-Agent: NoFish/1.0 github.com/ChrVage/NoFish` header is sent with every request.
@@ -36,7 +36,7 @@ All external calls are made **server-side** to avoid CORS issues and comply with
 | Route | Purpose |
 |---|---|
 | `GET /api/geocoding?lat=&lon=` | Reverse geocodes coordinates via Nominatim. Returns place name with multi-level fallback. |
-| `GET /api/weather?lat=&lon=` | Returns the full 10-day merged `HourlyForecast[]` array plus ocean grid coordinates. Used by the Details and Tide pages via server-side direct lib calls; this route is exposed for external consumers. |
+| `GET /api/weather?lat=&lon=` | Returns the full 10-day merged `HourlyForecast[]` array plus ocean grid coordinates. Used by the Details, Score, and Tide pages via server-side direct lib calls; this route is exposed for external consumers. |
 | `GET /api/ocean-point?lat=&lon=` | Returns only `{ oceanForecastLat, oceanForecastLng }`. Used by the map to place the blue dot and determine whether Score/Tide buttons should be shown. Returns `undefined` coordinates when the grid point is more than 1 km away. Cache-backed \u2014 usually a hit when the Details page has already been visited. |
 
 All three routes validate coordinate bounds (`lat` ∈ [−90, 90], `lon` ∈ [−180, 180]) and return `400` for out-of-range or non-numeric inputs.
@@ -101,7 +101,7 @@ Logged **in production only** (`NODE_ENV === 'production'`), after the response 
 
 | Column | Description |
 |---|---|
-| `cache_key` | Text primary key — e.g. `geo3:59.91:10.75`, `weather:59.91:10.75`, `tide:60:11` |
+| `cache_key` | Text primary key — e.g. `geo3:59.91:10.75`, `weather:59.91:10.75`, `tide:60:11`, `tideall:60:11` |
 | `data` | JSONB — full serialised API response |
 | `cached_at` | Write timestamp |
 | `expires_at` | Expiry timestamp; stale rows are overwritten on next miss |

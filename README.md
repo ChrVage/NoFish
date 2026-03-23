@@ -48,8 +48,7 @@ Row background colour indicates **forecast confidence** (also shown in the legen
 | Colour | Confidence | Locationforecast | Oceanforecast |
 |---|---|---|---|
 | Green | High | ≤ 3 days | ≤ 2 days |
-| Amber | Medium | 3–5 days | — |
-| Sky | Fair | — | 2–4 days |
+| Amber | Medium | 3–5 days | 2–4 days |
 | Orange | Low | > 5 days | > 4 days |
 
 ---

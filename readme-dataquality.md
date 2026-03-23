@@ -22,8 +22,7 @@ The Details table colour-codes rows by confidence tier. A legend above the table
 | Colour | Label | Locationforecast | Oceanforecast |
 |---|---|---|---|
 | Green | High | ≤ 3 days ahead | ≤ 2 days ahead |
-| Amber | Medium | 3–5 days ahead | — |
-| Sky blue | Fair | — | 2–4 days ahead |
+| Amber | Medium | 3–5 days ahead | 2–4 days ahead |
 | Orange | Low | > 5 days ahead | > 4 days ahead |
 
 Beyond the Low tier the underlying NWP models are essentially providing climatological averages rather than genuine forecasts. Treat those rows as rough planning indicators only.

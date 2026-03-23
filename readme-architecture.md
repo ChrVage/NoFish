@@ -15,7 +15,7 @@ app/
     page.tsx            # Server component — 10-day hourly forecast table
     loading.tsx         # Streaming skeleton shown while server fetches data
   score/
-    page.tsx            # Placeholder — fishing score coming soon
+    page.tsx            # Server component — fishing score table (0–100%) with per-hour ratings
   tide/
     page.tsx            # Server component — high/low tide event table (10 days)
   api/
@@ -38,7 +38,8 @@ components/
                         # parallel geo+ocean-point fetch; blue dot + dashed line to ocean grid point;
                         # Score/Tide buttons hidden when ocean data unavailable;
                         # crosshair location button below zoom controls → navigates directly to Details
-  PageNav.tsx           # Header nav buttons (Score / Details / Tides); current page button is hidden;
+  PageNav.tsx           # Header nav buttons (Score / Details / Tides); current page button is shown as
+                        # a non-clickable span with grey background; other pages as blue links;
                         # accepts optional availablePages prop to hide buttons when ocean data is absent
 
 lib/
@@ -47,7 +48,8 @@ lib/
                         # exports CombinedForecastResult with ocean grid coords and tide station metadata;
                         # ocean data suppressed when grid point > 1 km from requested location;
                         # tide data also suppressed when ocean data is unavailable;
-                        # getTideForecast() for the tide-only page;
+                        # getTidePageData() for the tide page (parallel datatype=all + datatype=tab calls);
+                        # getTideForecast() for tide events used in the combined forecast;
                         # solar elevation / sun phase calculation; tide phase labelling;
                         # XML parsed via fast-xml-parser
     geocoding.ts        # reverseGeocode() — Nominatim with rich name fallback chain (village, bay, fjord, sea…);
@@ -81,7 +83,7 @@ Both the Leaflet popup and the in-page header share the same navigation targets:
 | Details | White / ocean-blue | `/details?lat=…&lng=…&zoom=…` | Always shown |
 | Tides | White / blue | `/tide?lat=…&lng=…&zoom=…` | Ocean data available (grid point ≤ 1 km) |
 
-The **current page's button is hidden** in `PageNav`. Score and Tides are hidden both in the popup and in `PageNav` when the ocean forecast grid point is more than 1 km away. The `zoom` param is appended by the map popup so the map zoom level can be restored when navigating back.
+The **current page's button is shown as a non-clickable grey span** in `PageNav`. Score and Tides are hidden both in the popup and in `PageNav` when the ocean forecast grid point is more than 1 km away. The `zoom` param is appended by the map popup so the map zoom level can be restored when navigating back.
 
 ### My Location
 
@@ -163,7 +165,7 @@ The table has a two-row header. The top row spans columns by API source:
 
 When ocean data is suppressed, tide data is also suppressed. `PageNav` receives an `availablePages` prop to hide Score and Tides from the header navigation.
 
-Row background tinting indicates forecast confidence. A legend (High → Medium → Fair → Low) is shown above the table using the same colours as the rows.
+Row background tinting indicates forecast confidence. A legend (High → Medium → Low) is shown above the table using the same colours as the rows.
 
 ---
 
@@ -173,7 +175,8 @@ Row background tinting indicates forecast confidence. A legend (High → Medium 
 |---|---|---|---|
 | Geocoding | `geo3:{lat.2dp}:{lng.2dp}` | ≈1 km | 30 days |
 | Weather + ocean | `weather:{lat.2dp}:{lng.2dp}` | ≈1 km | 1 hour |
-| Tides | `tide:{lat.0dp}:{lng.0dp}` | Integer (Kartverket's own precision) | 6 hours |
+| Tides (events) | `tide:{lat.0dp}:{lng.0dp}` | Integer (Kartverket’s own precision) | 6 hours |
+| Tides (page data) | `tideall:{lat.0dp}:{lng.0dp}` | Integer | 6 hours |
 
 The `geo3:` prefix replaced earlier `geo2:` and `geo:` prefixes to invalidate stale entries that lacked water-body name fallbacks.
 
@@ -196,7 +199,6 @@ JSON-LD (`WebApplication` + `WeatherApplication` schema, genre `Fishing`) is inj
 
 ## Future Work
 
-- [ ] Fishing Score algorithm (weather + tide + seasonal weighting)
 - [ ] `error.tsx` boundary pages for `/details` and `/tide`
 - [ ] `loading.tsx` streaming state for `/tide`
 - [ ] Sitemap and `robots.txt`
