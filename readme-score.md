@@ -4,27 +4,80 @@ The Score page shows a per-hour fishing suitability rating from **0 %** (worst) 
 
 The table only includes **hourly forecast rows** — it stops where MET Norway switches from 1-hour to 6-hour intervals (typically after ~2.5 days).
 
+The algorithm is tuned for a **21-foot boat**. Safety is the primary concern — dangerous conditions hard-cap the score regardless of how good the fishing factors are.
+
 ---
 
-## How the score is calculated
+## Two-layer scoring
 
-Every hour starts at a **base score of 50** and is adjusted up or down by several independent factors. The final result is clamped to the 0–100 range.
+### 1. Safety caps (hard ceilings)
+
+Safety caps impose a **maximum possible score**. When multiple caps apply the lowest one wins. These cannot be overridden by good fishing conditions.
+
+Rows that trigger a safety cap show a ⚠️ prefix in the *Why* column.
+
+### 2. Fishing-quality factors (base ± adjustments)
+
+Every hour starts at a **base score of 50** and is adjusted up or down by independent comfort and fishing-quality factors. The result is clamped to 0–100 and then capped by the safety ceiling.
+
+---
+
+## Safety caps
+
+### Darkness
+
+A 21-ft boat at night risks hitting ropes, crab-pot lines, debris, and unlit objects. No radar, limited navigation lights.
+
+| Condition | Phase | Cap |
+|---|---|---|
+| ⚠️ Night — unsafe | Astronomical night (dominant) | 5 % |
+| ⚠️ Dark — poor visibility | Nautical twilight (dominant) | 15 % |
+
+### Wave height (21-ft boat limits)
+
+| Condition | Waves | Gusts | Cap |
+|---|---|---|---|
+| ⚠️ Dangerous seas | > 2.0 m | any | 5 % |
+| ⚠️ High waves + wind | > 1.5 m | > 5 m/s | 10 % |
+| ⚠️ High waves | > 1.5 m | ≤ 5 m/s (pure swell) | 25 % |
+| ⚠️ Waves + gusts | > 1.0 m | > 10 m/s | 15 % |
+
+The interaction between waves and gusts is critical: gusts create steep, breaking waves on top of swell which are far more dangerous than smooth swell alone.
+
+### Gusts
+
+| Condition | Gust speed | Cap |
+|---|---|---|
+| ⚠️ Dangerous gusts | > 20 m/s | 5 % |
+| ⚠️ Strong gusts | > 15 m/s | 15 % |
+
+### Sustained wind
+
+| Condition | Wind speed | Cap |
+|---|---|---|
+| ⚠️ Storm wind | > 15 m/s | 10 % |
+| ⚠️ Strong wind | > 12 m/s | 25 % |
+
+---
+
+## Fishing-quality factors
+
+These only fire when the corresponding metric is **below** its safety threshold.
 
 ### Wind speed
 
 | Condition | Wind speed | Effect |
 |---|---|---|
 | Calm wind | ≤ 1 m/s | +5 |
-| Light wind | 1–6 m/s | +10 |
-| Moderate wind | 6–10 m/s | −5 |
-| Strong wind | 10–15 m/s | −15 |
-| Very strong wind | > 15 m/s | −25 |
+| Light wind | 1–5 m/s | +10 |
+| Moderate breeze | 5–8 m/s | +3 |
+| Moderate wind | 8–12 m/s | −8 |
 
 ### Gusts
 
 | Condition | Gust speed | Effect |
 |---|---|---|
-| Gusty | > 12 m/s | −5 |
+| Gusty | 10–15 m/s | −5 |
 
 ### Precipitation
 
@@ -35,15 +88,14 @@ Every hour starts at a **base score of 50** and is adjusted up or down by severa
 | Light rain | 0.5–2 mm | −5 |
 | Heavy rain | > 2 mm | −15 |
 
-### Wave height
+### Wave height (comfort)
 
 | Condition | Height | Effect |
 |---|---|---|
-| Calm seas | ≤ 0.5 m | +10 |
-| Low waves | 0.5–1.0 m | +5 |
-| Moderate | 1.0–1.5 m | 0 |
-| Choppy | 1.5–2.5 m | −10 |
-| Rough seas | > 2.5 m | −20 |
+| Calm seas | ≤ 0.3 m | +10 |
+| Low waves | 0.3–0.7 m | +5 |
+| Neutral | 0.7–1.0 m | 0 |
+| Choppy | 1.0–1.5 m | −10 |
 
 ### Cloud cover
 
@@ -66,15 +118,13 @@ Moving water carries bait and activates fish. Slack water at the peak of a high 
 
 ### Sun phase
 
+Only applied when the hour is **not** already safety-capped for darkness.
+
 | Condition | Phase | Effect |
 |---|---|---|
 | Dawn / dusk | Daylight hour with civil twilight fraction > 10 % | +10 |
 | Twilight | Dominant civil twilight | +10 |
 | Daylight | Full daylight | +5 |
-| Dark | Nautical twilight | −5 |
-| Night | Astronomical night | −10 |
-
-The Time column background colour reflects the sun phase — matching the Details page.
 
 ### Atmospheric pressure
 
@@ -100,6 +150,7 @@ The Time column background colour reflects the sun phase — matching the Detail
 ## Limitations
 
 - The score is a **rough heuristic** — it does not account for species, bait, local topography, or seasonal migration.
+- Boat size is fixed at 21 ft; larger vessels may tolerate higher seas and night operation.
 - Pressure trend (rising/falling) is not currently tracked; only the absolute value is used.
 - Wave height data is only available for coastal locations where the ocean forecast grid point is within 1 km.
 - The algorithm may be revised as real-world feedback is gathered.

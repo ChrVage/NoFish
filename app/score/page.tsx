@@ -37,90 +37,175 @@ function getTimeColumnStyle(
   return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: textColor };
 }
 
-// ── Fishing score calculation ───────────────────────────────────────────────
-function computeFishingScore(f: HourlyForecast): { score: number; reasons: string[] } {
-  let score = 50; // start at midpoint
-  const reasons: string[] = [];
+// ── Fishing score — safety-first for a 21-ft boat ──────────────────────────
+//
+// The score starts at a base of 50 and is adjusted by comfort / fishing-quality
+// factors.  On top of that, **safety caps** impose hard ceilings: no matter how
+// good the other factors are, the score can never exceed the cap.  Multiple caps
+// can apply; the lowest one wins.
+//
+// Safety caps address:
+//   • Darkness  — ropes, debris, unlit objects in the water
+//   • Waves     — a 21-ft boat cannot handle steep seas
+//   • Gusts     — sudden wind shifts capsize small boats
+//   • Wave+gust — the most dangerous interaction (wind-driven breaking waves)
+//   • Sustained wind — small-craft advisory territory
+//
+type Reason = { text: string; tone: 'good' | 'bad' | 'danger' };
 
-  // Wind (0–25 m/s range). Ideal: 2–6 m/s. Calm is okay, strong is bad.
+function computeFishingScore(f: HourlyForecast): { score: number; reasons: Reason[] } {
+  let score = 50;
+  const reasons: Reason[] = [];
+  const good = (text: string) => reasons.push({ text, tone: 'good' });
+  const bad  = (text: string) => reasons.push({ text, tone: 'bad' });
+  const danger = (text: string) => reasons.push({ text, tone: 'danger' });
+  let safetyCap = 100;
+
+  const waves = f.waveHeight;
+  const gusts = f.windGust;
+
+  // ═══ SAFETY CAPS ═══════════════════════════════════════════════════════
+
+  // ── Darkness: ropes, debris, unlit objects ─────────────────────────────
+  let darkSafety = false;
+  if (f.sunPhaseSegments && f.sunPhaseSegments.length > 0) {
+    const dominant = f.sunPhaseSegments.reduce((a, b) => b.fraction > a.fraction ? b : a);
+    if (dominant.phase === 'night') {
+      safetyCap = Math.min(safetyCap, 5);
+      danger('⚠️ Night — unsafe');
+      darkSafety = true;
+    } else if (dominant.phase === 'nautical') {
+      safetyCap = Math.min(safetyCap, 15);
+      danger('⚠️ Dark — poor visibility');
+      darkSafety = true;
+    }
+  }
+
+  // ── Wave height (21-ft boat limits) ───────────────────────────────────
+  let waveSafety = false;
+  if (waves !== undefined) {
+    if (waves > 2.0) {
+      safetyCap = Math.min(safetyCap, 5);
+      danger('⚠️ Dangerous seas');
+      waveSafety = true;
+    } else if (waves > 1.5) {
+      // Tolerable only in dead-calm wind (pure swell, no chop)
+      if (gusts === undefined || gusts <= 5) {
+        safetyCap = Math.min(safetyCap, 25);
+        danger('⚠️ High waves');
+      } else {
+        safetyCap = Math.min(safetyCap, 10);
+        danger('⚠️ High waves + wind');
+      }
+      waveSafety = true;
+    } else if (waves > 1.0 && gusts !== undefined && gusts > 10) {
+      safetyCap = Math.min(safetyCap, 15);
+      danger('⚠️ Waves + gusts');
+      waveSafety = true;
+    }
+  }
+
+  // ── Extreme gusts — small-craft advisory ──────────────────────────────
+  let gustSafety = false;
+  if (gusts !== undefined) {
+    if (gusts > 20) {
+      safetyCap = Math.min(safetyCap, 5);
+      danger('⚠️ Dangerous gusts');
+      gustSafety = true;
+    } else if (gusts > 15) {
+      safetyCap = Math.min(safetyCap, 15);
+      danger('⚠️ Strong gusts');
+      gustSafety = true;
+    }
+  }
+
+  // ── Sustained wind ────────────────────────────────────────────────────
+  let windSafety = false;
   if (f.windSpeed !== undefined) {
-    if (f.windSpeed <= 1) { score += 5; reasons.push('Calm wind'); }
-    else if (f.windSpeed <= 6) { score += 10; reasons.push('Light wind'); }
-    else if (f.windSpeed <= 10) { score -= 5; reasons.push('Moderate wind'); }
-    else if (f.windSpeed <= 15) { score -= 15; reasons.push('Strong wind'); }
-    else { score -= 25; reasons.push('Very strong wind'); }
+    if (f.windSpeed > 15) {
+      safetyCap = Math.min(safetyCap, 10);
+      danger('⚠️ Storm wind');
+      windSafety = true;
+    } else if (f.windSpeed > 12) {
+      safetyCap = Math.min(safetyCap, 25);
+      danger('⚠️ Strong wind');
+      windSafety = true;
+    }
   }
 
-  // Gusts
-  if (f.windGust !== undefined && f.windGust > 12) {
-    score -= 5;
-    reasons.push('Gusty');
+  // ═══ FISHING QUALITY FACTORS ═══════════════════════════════════════════
+  // Adjust the base score.  Safety caps will clamp the final result.
+
+  // Wind (only when not already flagged as a safety issue)
+  if (f.windSpeed !== undefined && !windSafety) {
+    if (f.windSpeed <= 1) { score += 5; good('Calm wind'); }
+    else if (f.windSpeed <= 5) { score += 10; good('Light wind'); }
+    else if (f.windSpeed <= 8) { score += 3; good('Moderate breeze'); }
+    else { score -= 8; bad('Moderate wind'); }
   }
 
-  // Precipitation — less is better
+  // Gusts (moderate — below safety threshold)
+  if (gusts !== undefined && !gustSafety && gusts > 10) {
+    score -= 5; bad('Gusty');
+  }
+
+  // Precipitation
   if (f.precipitation !== undefined) {
-    if (f.precipitation === 0) { score += 5; reasons.push('Dry'); }
-    else if (f.precipitation <= 0.5) { /* neutral */ }
-    else if (f.precipitation <= 2) { score -= 5; reasons.push('Light rain'); }
-    else { score -= 15; reasons.push('Heavy rain'); }
+    if (f.precipitation === 0) { score += 5; good('Dry'); }
+    else if (f.precipitation <= 0.5) { /* trace — neutral */ }
+    else if (f.precipitation <= 2) { score -= 5; bad('Light rain'); }
+    else { score -= 15; bad('Heavy rain'); }
   }
 
-  // Wave height — calm to moderate is best
-  if (f.waveHeight !== undefined) {
-    if (f.waveHeight <= 0.5) { score += 10; reasons.push('Calm seas'); }
-    else if (f.waveHeight <= 1.0) { score += 5; reasons.push('Low waves'); }
-    else if (f.waveHeight <= 1.5) { /* neutral */ }
-    else if (f.waveHeight <= 2.5) { score -= 10; reasons.push('Choppy'); }
-    else { score -= 20; reasons.push('Rough seas'); }
+  // Wave comfort (only when not already flagged)
+  if (waves !== undefined && !waveSafety) {
+    if (waves <= 0.3) { score += 10; good('Calm seas'); }
+    else if (waves <= 0.7) { score += 5; good('Low waves'); }
+    else if (waves <= 1.0) { /* neutral */ }
+    else { score -= 10; bad('Choppy'); }
   }
 
-  // Cloud cover — overcast / partly cloudy is slightly good
+  // Cloud cover
   if (f.cloudCover !== undefined) {
-    if (f.cloudCover >= 50 && f.cloudCover <= 90) { score += 5; reasons.push('Overcast'); }
-    else if (f.cloudCover < 20) { score -= 3; reasons.push('Clear sky'); }
+    if (f.cloudCover >= 50 && f.cloudCover <= 90) { score += 5; good('Overcast'); }
+    else if (f.cloudCover < 20) { score -= 3; bad('Clear sky'); }
   }
 
-  // Tide phase — changing tide is best for fishing
+  // Tide phase
   if (f.tidePhase) {
     const tp = f.tidePhase.toLowerCase();
     if (tp.includes('hi') || tp.includes('lo')) {
-      // At the turn — slack water
       if (tp.match(/^(hi|lo)$/i) || tp.includes('(')) {
-        score -= 5; reasons.push('Slack tide');
+        score -= 5; bad('Slack tide');
       } else {
-        // Near a turn (e.g. Hi-1, Lo+1) — good current starting/ending
-        score += 8; reasons.push('Tide turning');
+        score += 8; good('Tide turning');
       }
     } else if (tp.includes('rising') || tp.includes('falling')) {
-      score += 10; reasons.push('Moving tide');
+      score += 10; good('Moving tide');
     }
   }
 
-  // Sun phase — daylight best, dawn/dusk excellent, night poor
-  if (f.sunPhaseSegments && f.sunPhaseSegments.length > 0) {
+  // Sun phase — fishing quality (darkness already capped above)
+  if (f.sunPhaseSegments && f.sunPhaseSegments.length > 0 && !darkSafety) {
     const dominant = f.sunPhaseSegments.reduce((a, b) => b.fraction > a.fraction ? b : a);
     if (dominant.phase === 'day') {
-      // Check if it's dawn or dusk (civil fraction present)
       const hasCivil = f.sunPhaseSegments.some(s => s.phase === 'civil' && s.fraction > 0.1);
-      if (hasCivil) { score += 10; reasons.push('Dawn/dusk'); }
-      else { score += 5; reasons.push('Daylight'); }
+      if (hasCivil) { score += 10; good('Dawn/dusk'); }
+      else { score += 5; good('Daylight'); }
     } else if (dominant.phase === 'civil') {
-      score += 10; reasons.push('Twilight');
-    } else if (dominant.phase === 'nautical') {
-      score -= 5; reasons.push('Dark');
-    } else {
-      score -= 10; reasons.push('Night');
+      score += 10; good('Twilight');
     }
   }
 
-  // Pressure trend not available per-row, but stable high pressure is generally good
+  // Pressure
   if (f.pressure !== undefined) {
     if (f.pressure >= 1015 && f.pressure <= 1030) { score += 3; }
-    else if (f.pressure < 1000) { score -= 5; reasons.push('Low pressure'); }
+    else if (f.pressure < 1000) { score -= 5; bad('Low pressure'); }
   }
 
-  // Clamp to 0–100
+  // Clamp base score, then apply safety cap
   score = Math.max(0, Math.min(100, score));
+  score = Math.min(score, safetyCap);
 
   return { score, reasons };
 }
@@ -254,8 +339,15 @@ export default async function ScorePage({ searchParams }: PageProps) {
                         <td className="py-2 text-center font-bold tabular-nums" style={{ color: getScoreColor(score), backgroundColor: getScoreBg(score) }}>
                           {score}%
                         </td>
-                        <td className="py-2 text-xs text-gray-500">
-                          {reasons.join(' · ') || '—'}
+                        <td className="py-2 text-xs">
+                          {reasons.length === 0 ? '—' : reasons.map((r, j) => (
+                            <span key={j}>
+                              {j > 0 && <span className="text-gray-300"> · </span>}
+                              <span style={{ color: r.tone === 'danger' ? '#991b1b' : r.tone === 'bad' ? '#c2410c' : '#15803d' }}>
+                                {r.text}
+                              </span>
+                            </span>
+                          ))}
                         </td>
                       </tr>
                     );
@@ -276,6 +368,15 @@ export default async function ScorePage({ searchParams }: PageProps) {
               className="underline hover:text-gray-600"
             >
               MET Norway
+            </a>
+            {' · '}
+            <a
+              href="https://github.com/ChrVage/NoFish/blob/main/readme-score.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-gray-600"
+            >
+              How the score works
             </a>
           </p>
 
