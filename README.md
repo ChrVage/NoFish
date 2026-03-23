@@ -14,7 +14,7 @@ This is not powered by AI. Every skipper needs to use their own judgment, experi
 
 Click anywhere on the map to place a marker. A popup shows the location name (reverse-geocoded), coordinates, and navigation buttons:
 
-- **Score** — combined fishing suitability rating *(coming soon)*
+- **Score** — combined fishing suitability rating (0–100 %) based on wind, waves, tide, light, and weather. See [readme-score.md](readme-score.md) for details.
 - **Details** — 10-day hourly forecast table with columns grouped by data source. Wind speed (bold) and wave height (bold) are the primary safety numbers. A confidence legend above the table shows how reliability degrades beyond day 3.
 - **Tides** — high/low tide events for the next 10 days, with peak high and lowest low highlighted.
 
@@ -68,6 +68,7 @@ Row background colour indicates **forecast confidence** (also shown in the legen
 
 ## Docs
 
+- [readme-score.md](readme-score.md) — fishing score algorithm and factor weights
 - [readme-technical.md](readme-technical.md) — tech stack, APIs, database, and deployment
 - [readme-architecture.md](readme-architecture.md) — project structure and data flow
 - [readme-dataquality.md](readme-dataquality.md) — data source ratings and limitations
