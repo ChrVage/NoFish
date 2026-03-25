@@ -15,8 +15,8 @@ This is not powered by AI. Every skipper needs to use their own judgment, experi
 Click anywhere on the map to place a marker. A popup shows the location name (reverse-geocoded), coordinates, and navigation buttons:
 
 - **Score** — combined fishing suitability rating (0–100 %) based on wind, waves, tide, light, and weather. See [readme-score.md](readme-score.md) for details.
-- **Details** — 10-day hourly forecast table with columns grouped by data source. Wind speed (bold) and wave height (bold) are the primary safety numbers. A confidence legend above the table shows how reliability degrades beyond day 3.
-- **Tides** — high/low tide events for the next 10 days, with peak high and lowest low highlighted.
+- **Details** — 10-day hourly forecast table with columns grouped by data source. Wind speed (bold) and wave height (bold) are the primary safety numbers. A confidence legend above the table shows how reliability degrades beyond day 3. Source links to [Yr coast forecast](https://www.yr.no/en/coast/forecast/) and [Kartverket havnivå](https://kartverket.no/til-sjos/se-havniva/) use the selected coordinates.
+- **Tides** — high/low tide events for the next 10 days, with peak high and lowest low highlighted. Source links to [Kartverket havnivå](https://kartverket.no/til-sjos/se-havniva/) with coordinates.
 
 Score and Tides buttons are only shown when the ocean forecast grid point is within 1 km of the clicked location. Inland points show only the Details button.
 
@@ -25,6 +25,8 @@ When the forecast responds, a sky-blue dot and dashed line appear on the map sho
 A **location button** (crosshair icon) sits below the zoom controls. Tapping it uses the browser's geolocation API and navigates directly to the Details page for your current position.
 
 The **🎣 NoFish** logo in the top-left of every page is also a back button — tap it to return to the map at your last position and zoom.
+
+Every sub-page has a footer bar with **About NoFish** and **Feedback** buttons styled like the header navigation. The Score page adds an **About Fishing Score** button linking to the score algorithm documentation.
 
 Navigating back restores the previous zoom level, map position, and reopens the popup at the original click point.
 

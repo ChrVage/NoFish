@@ -15,7 +15,9 @@ app/
     page.tsx            # Server component — 10-day hourly forecast table
     loading.tsx         # Streaming skeleton shown while server fetches data
   score/
-    page.tsx            # Server component — fishing score table (0–100%) with per-hour ratings
+    page.tsx            # Server component — fishing score table (0–100%) with per-hour ratings;
+                        # source links removed; replaced by a 3-button footer bar
+                        # (About Fishing Score + About NoFish + Feedback)
   tide/
     page.tsx            # Server component — high/low tide event table (10 days)
   api/
@@ -29,7 +31,9 @@ app/
 components/
   BackButton.tsx        # Client component — reads lat/lng/zoom from search params, navigates back to /?lat=&lng=&zoom=
                         # Also used as the clickable 🎣 NoFish logo on all detail pages
-  Footer.tsx            # "About NoFish" and "Feedback" links
+  Footer.tsx            # Inline button bar on sub-pages — "About NoFish" and "Feedback" links styled like PageNav;
+                        # Score page replaces Footer with its own 3-button bar adding "About Fishing Score";
+                        # main map page uses the default export HeaderMenu (hamburger dropdown) instead
   ForecastTable.tsx     # Hourly forecast table; columns grouped by API source; ocean columns hidden for inland points
                         # Wind speed and wave height numbers are bold; zero precipitation hidden;
                         # Rain/Snow label derived from first-row air temperature;
