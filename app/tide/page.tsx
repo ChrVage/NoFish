@@ -6,7 +6,7 @@ import { haversineDistance, formatDistance } from '@/lib/utils/distance';
 import { parseZoomParam } from '@/lib/utils/params';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
-import Footer from '@/components/Footer';
+import { Footer } from '@/components/Footer';
 import type { TidePrediction } from '@/types/weather';
 
 interface PageProps {
@@ -214,10 +214,10 @@ export default async function TidePage({ searchParams }: PageProps) {
             </a>
           </p>
 
+          <Footer />
+
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

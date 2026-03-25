@@ -10,7 +10,7 @@ import { parseZoomParam } from '@/lib/utils/params';
 import ForecastTable from '@/components/ForecastTable';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
-import Footer from '@/components/Footer';
+import { Footer } from '@/components/Footer';
 
 interface PageProps {
   searchParams: Promise<{ lat?: string; lng?: string; zoom?: string }>;
@@ -145,19 +145,28 @@ export default async function DetailsPage({ searchParams }: PageProps) {
           <p className="text-xs text-gray-400 mt-6">
             Source:{' '}
             <a
-              href="https://www.met.no/en"
+              href={`https://www.yr.no/en/coast/forecast/${lat},${lng}`}
               target="_blank"
               rel="noopener noreferrer"
               className="underline hover:text-gray-600"
             >
-              MET Norway
+              Yr / MET Norway
+            </a>
+            {' · '}
+            <a
+              href={`https://kartverket.no/til-sjos/se-havniva/resultat?latitude=${lat}&longitude=${lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-gray-600"
+            >
+              Kartverket – Se havnivå
             </a>
           </p>
 
+          <Footer />
+
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }
