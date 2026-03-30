@@ -5,6 +5,7 @@ import { getTimezone } from '@/lib/utils/timezone';
 import { parseZoomParam } from '@/lib/utils/params';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
+import { enrichForecasts } from '@/lib/utils/enrichForecasts';
 import type { HourlyForecast } from '@/types/weather';
 
 interface PageProps {
@@ -240,7 +241,8 @@ export default async function ScorePage({ searchParams }: PageProps) {
     getCombinedForecast(lat, lng),
   ]);
 
-  const { forecasts } = weatherResult;
+  const { forecasts: rawForecasts } = weatherResult;
+  const forecasts = enrichForecasts(rawForecasts);
   const hasOceanData = forecasts.some(f => f.waveHeight !== undefined);
   const timezone = getTimezone(lat, lng);
 
@@ -261,15 +263,6 @@ export default async function ScorePage({ searchParams }: PageProps) {
     const minute = parts.find(p => p.type === 'minute')?.value || '00';
     return `${weekday}. ${day}. ${hour}:${minute}`;
   };
-
-  // Only keep hourly rows (gap between consecutive rows ≤ ~90 min)
-  const hourlyForecasts: HourlyForecast[] = [];
-  for (let i = 0; i < forecasts.length; i++) {
-    if (i === 0) { hourlyForecasts.push(forecasts[i]); continue; }
-    const gap = new Date(forecasts[i].time).getTime() - new Date(forecasts[i - 1].time).getTime();
-    if (gap > 90 * 60_000) break;
-    hourlyForecasts.push(forecasts[i]);
-  }
 
   return (
     <div className="min-h-screen bg-ocean-50">
@@ -301,7 +294,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
             </p>
           </div>
 
-          {hourlyForecasts.length === 0 ? (
+          {forecasts.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No forecast data available.</p>
           ) : (
             <div className="overflow-x-auto">
@@ -314,11 +307,11 @@ export default async function ScorePage({ searchParams }: PageProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {hourlyForecasts.map((forecast, i) => {
+                  {forecasts.map((forecast, i) => {
                     const { score, reasons } = computeFishingScore(forecast);
                     const isMidnight = i > 0 && (() => {
                       const dateFmt = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' });
-                      return dateFmt.format(new Date(forecast.time)) !== dateFmt.format(new Date(hourlyForecasts[i - 1].time));
+                      return dateFmt.format(new Date(forecast.time)) !== dateFmt.format(new Date(forecasts[i - 1].time));
                     })();
 
                     const rows: React.ReactNode[] = [];

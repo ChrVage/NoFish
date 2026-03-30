@@ -12,6 +12,7 @@ export interface BarentswatchSeaCurrentEntry {
 
 /** The response from GET /v1/seacurrent/nearest/all is an array of BwRasterCurrentPoint */
 export type BarentswatchSeaCurrentResponse = BarentswatchSeaCurrentEntry[];
+
 /**
  * Type definitions for MET.no Locationforecast 2.0, Barentswatch Waveforecast,
  * and Kartverket Tide APIs

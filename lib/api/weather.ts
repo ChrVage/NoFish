@@ -13,6 +13,7 @@ import type {
   TidePageData,
   TideXMLResponse,
   BarentswatchWaveEntry,
+  BarentswatchSeaCurrentEntry,
 } from '@/types/weather';
 import { getWaveForecast, getSeaCurrentForecast } from '@/lib/api/barentswatch';
 import { getCached, setCached, withInflight } from '@/lib/db/cache';
@@ -293,6 +294,25 @@ function parseTideAllXML(xmlText: string): TidePageData {
   return { events, forecasts, currentLevel, currentLevelTime, stationName, stationLat, stationLng };
 }
 
+/** Find the closest entry (by forecastTime) within a tolerance window. */
+function findClosestEntry<T extends { forecastTime?: string | null }>(
+  entries: T[],
+  targetMs: number,
+  toleranceMs: number = 30 * 60_000,
+): T | undefined {
+  let best: T | undefined;
+  let bestDiff = toleranceMs;
+  for (const e of entries) {
+    if (!e?.forecastTime) continue;
+    const diff = Math.abs(new Date(e.forecastTime).getTime() - targetMs);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      best = e;
+    }
+  }
+  return best;
+}
+
 /**
  * Combine location, wave (Barentswatch), and tide forecast data into hourly forecast
  * @param locationForecast Location forecast data (MET Norway)
@@ -302,8 +322,6 @@ function parseTideAllXML(xmlText: string): TidePageData {
  * @param lng Longitude for sun calculations
  * @returns Array of hourly forecasts
  */
-import type { BarentswatchSeaCurrentEntry } from '@/types/weather';
-
 export function combineForecasts(
   locationForecast: LocationForecastResponse,
   waveEntries: BarentswatchWaveEntry[] | null,
@@ -320,7 +338,7 @@ export function combineForecasts(
   const waveDataMap = new Map<string, BarentswatchWaveEntry>();
   if (waveEntries) {
     for (const entry of waveEntries) {
-      if (entry.forecastTime) {
+      if (entry?.forecastTime) {
         waveDataMap.set(entry.forecastTime, entry);
       }
     }
@@ -330,7 +348,7 @@ export function combineForecasts(
   const currentDataMap = new Map<string, BarentswatchSeaCurrentEntry>();
   if (seaCurrentEntries) {
     for (const entry of seaCurrentEntries) {
-      if (entry.forecastTime) {
+      if (entry?.forecastTime) {
         currentDataMap.set(entry.forecastTime, entry);
       }
     }
@@ -373,19 +391,8 @@ export function combineForecasts(
 
     // Add Barentswatch wave data if available
     // Try exact time match first, then find the closest entry within 30 min
-    let waveData = waveDataMap.get(entry.time);
-    if (!waveData && waveEntries && waveEntries.length > 0) {
-      const entryMs = entryDate.getTime();
-      let bestDiff = 30 * 60_000; // max 30 min tolerance
-      for (const w of waveEntries) {
-        if (!w.forecastTime) continue;
-        const diff = Math.abs(new Date(w.forecastTime).getTime() - entryMs);
-        if (diff < bestDiff) {
-          bestDiff = diff;
-          waveData = w;
-        }
-      }
-    }
+    const waveData = waveDataMap.get(entry.time)
+      ?? (waveEntries?.length ? findClosestEntry(waveEntries, entryDate.getTime()) : undefined);
 
     if (waveData) {
       hourlyForecast.waveHeight = waveData.totalSignificantWaveHeight ?? undefined;
@@ -403,19 +410,8 @@ export function combineForecasts(
     hourlyForecast.sunPhaseSegments = sunResult.segments;
 
     // Add Barentswatch sea current data if available
-    let currentData = currentDataMap.get(entry.time);
-    if (!currentData && seaCurrentEntries && seaCurrentEntries.length > 0) {
-      const entryMs = entryDate.getTime();
-      let bestDiff = 30 * 60_000; // max 30 min tolerance
-      for (const c of seaCurrentEntries) {
-        if (!c.forecastTime) continue;
-        const diff = Math.abs(new Date(c.forecastTime).getTime() - entryMs);
-        if (diff < bestDiff) {
-          bestDiff = diff;
-          currentData = c;
-        }
-      }
-    }
+    const currentData = currentDataMap.get(entry.time)
+      ?? (seaCurrentEntries?.length ? findClosestEntry(seaCurrentEntries, entryDate.getTime()) : undefined);
     if (currentData) {
       hourlyForecast.currentSpeed = currentData.current ?? undefined;
       hourlyForecast.currentDirection = currentData.direction ?? undefined;

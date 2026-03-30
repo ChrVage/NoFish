@@ -2,6 +2,7 @@
 
 import React from 'react';
 import type { HourlyForecast } from '@/types/weather';
+import { enrichForecasts, type EnrichedForecast } from '@/lib/utils/enrichForecasts';
 
 interface ForecastTableProps {
   forecasts: HourlyForecast[];
@@ -116,70 +117,6 @@ function getTimeColumnStyle(
   return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: textColor };
 }
 
-// ── Wave data enrichment: interpolation + trimming ──────────────────────────────
-type EnrichedForecast = HourlyForecast & { isInterpolatedWave?: boolean };
-
-/**
- * Trim forecasts at the last row with real wave data and linearly interpolate
- * gaps in wave height / direction so every row within the wave range has a value.
- */
-function enrichForecasts(forecasts: HourlyForecast[]): EnrichedForecast[] {
-  // Guarantee one row per hour (fill gaps)
-  if (!forecasts.length) return [];
-  // Find last index with real wave data
-  let lastWaveIndex = -1;
-  for (let i = forecasts.length - 1; i >= 0; i--) {
-    if (forecasts[i].waveHeight !== undefined) { lastWaveIndex = i; break; }
-  }
-  if (lastWaveIndex < 0) return forecasts;
-
-  // Build a map of time → forecast for fast lookup
-  const timeMap = new Map(forecasts.map(f => [f.time, f]));
-  const firstTime = new Date(forecasts[0].time);
-  const lastTime = new Date(forecasts[lastWaveIndex].time);
-  const result: EnrichedForecast[] = [];
-  for (let t = new Date(firstTime); t <= lastTime; t.setHours(t.getHours() + 1)) {
-    const iso = t.toISOString();
-    const base = timeMap.get(iso);
-    result.push(base ? { ...base } : { time: iso });
-  }
-
-  // Collect indices with real wave data
-  const realIndices: number[] = [];
-  for (let i = 0; i < result.length; i++) {
-    if (result[i].waveHeight !== undefined) realIndices.push(i);
-  }
-
-  // Interpolate between each pair of adjacent real-data points
-  for (let k = 0; k < realIndices.length - 1; k++) {
-    const a = realIndices[k];
-    const b = realIndices[k + 1];
-    if (b - a <= 1) continue;
-
-    const tA = new Date(result[a].time).getTime();
-    const tB = new Date(result[b].time).getTime();
-    const hA = result[a].waveHeight!;
-    const hB = result[b].waveHeight!;
-    const dA = result[a].waveDirection;
-    const dB = result[b].waveDirection;
-
-    for (let i = a + 1; i < b; i++) {
-      const t = (new Date(result[i].time).getTime() - tA) / (tB - tA);
-      result[i].waveHeight = hA + t * (hB - hA);
-
-      if (dA !== undefined && dB !== undefined) {
-        let diff = dB - dA;
-        if (diff > 180) diff -= 360;
-        if (diff < -180) diff += 360;
-        result[i].waveDirection = ((dA + t * diff) % 360 + 360) % 360;
-      }
-      result[i].isInterpolatedWave = true;
-    }
-  }
-
-  return result;
-}
-
 export default function ForecastTable({ forecasts, timezone }: ForecastTableProps) {
   if (!forecasts || forecasts.length === 0) {
     return (
@@ -193,8 +130,8 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
   const hasOceanData = forecasts.some(f => f.waveHeight !== undefined);
   const precipLabel = (forecasts[0]?.temperature ?? 2) > 1 ? 'Rain' : 'Snow';
 
-  // Interpolate missing wave heights and trim at last wave entry
-  const displayForecasts: EnrichedForecast[] = hasOceanData ? enrichForecasts(forecasts) : forecasts;
+  // Interpolate missing wave heights and trim at last hourly MET row
+  const displayForecasts: EnrichedForecast[] = enrichForecasts(forecasts);
 
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
@@ -281,7 +218,7 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
                   scope="colgroup"
                   className="px-4 py-1 text-center font-semibold border-l border-cyan-400/20 border-r border-cyan-400/20"
                 >
-                  Sea Temp
+                  MET Sea Temp
                 </th>
               )}
               {/* Kartverket — astronomical tides */}
