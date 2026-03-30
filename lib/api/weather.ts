@@ -7,13 +7,14 @@ import { XMLParser } from 'fast-xml-parser';
 import type {
   LocationForecastResponse,
   OceanForecastResponse,
-  OceanForecastTimeseries,
   HourlyForecast,
   TideEvent,
   TidePrediction,
   TidePageData,
   TideXMLResponse,
+  BarentswatchWaveEntry,
 } from '@/types/weather';
+import { getWaveForecast, getSeaCurrentForecast } from '@/lib/api/barentswatch';
 import { getCached, setCached, withInflight } from '@/lib/db/cache';
 import { getTimezone } from '@/lib/utils/timezone';
 import { haversineDistance } from '@/lib/utils/distance';
@@ -57,10 +58,8 @@ export async function getLocationForecast(
 }
 
 /**
- * Fetch Oceanforecast data from MET.no
- * @param lat Latitude
- * @param lng Longitude
- * @returns Ocean forecast data
+ * Fetch Oceanforecast data from MET.no (kept for potential future use).
+ * Currently unused — wave data now comes from Barentswatch.
  */
 export async function getOceanForecast(
   lat: number,
@@ -78,7 +77,6 @@ export async function getOceanForecast(
     );
 
     if (!response.ok) {
-      // Ocean forecast might not be available for all locations
       console.warn(`Oceanforecast API returned ${response.status}`);
       return null;
     }
@@ -86,7 +84,6 @@ export async function getOceanForecast(
     return await response.json();
   } catch (error) {
     console.error('Oceanforecast fetch error:', error);
-    // Don't throw - ocean data is optional
     return null;
   }
 }
@@ -297,36 +294,62 @@ function parseTideAllXML(xmlText: string): TidePageData {
 }
 
 /**
- * Combine location, ocean, and tide forecast data into hourly forecast
- * @param locationForecast Location forecast data
- * @param oceanForecast Ocean forecast data (optional)
+ * Combine location, wave (Barentswatch), and tide forecast data into hourly forecast
+ * @param locationForecast Location forecast data (MET Norway)
+ * @param waveEntries Barentswatch wave forecast entries (optional)
  * @param tideForecast Tide forecast data with high/low events (optional)
  * @param lat Latitude for sun calculations
  * @param lng Longitude for sun calculations
  * @returns Array of hourly forecasts
  */
+import type { BarentswatchSeaCurrentEntry } from '@/types/weather';
+
 export function combineForecasts(
   locationForecast: LocationForecastResponse,
-  oceanForecast: OceanForecastResponse | null,
+  waveEntries: BarentswatchWaveEntry[] | null,
   tideForecast: TideXMLResponse | null,
   lat: number,
-  lng: number
+  lng: number,
+  seaCurrentEntries?: BarentswatchSeaCurrentEntry[] | null,
+  oceanForecast?: OceanForecastResponse | null
 ): HourlyForecast[] {
   const timezone = getTimezone(lat, lng);
   const hourlyForecasts: HourlyForecast[] = [];
 
-  // Create a map of ocean data by time for quick lookup
-  const oceanDataMap = new Map<string, OceanForecastTimeseries>();
+  // Create a map of wave data by time for quick lookup
+  const waveDataMap = new Map<string, BarentswatchWaveEntry>();
+  if (waveEntries) {
+    for (const entry of waveEntries) {
+      if (entry.forecastTime) {
+        waveDataMap.set(entry.forecastTime, entry);
+      }
+    }
+  }
+
+  // Create a map of sea current data by time for quick lookup
+  const currentDataMap = new Map<string, BarentswatchSeaCurrentEntry>();
+  if (seaCurrentEntries) {
+    for (const entry of seaCurrentEntries) {
+      if (entry.forecastTime) {
+        currentDataMap.set(entry.forecastTime, entry);
+      }
+    }
+  }
+
+  // Create a map of sea temperature by time if oceanForecast is provided
+  let seaTempMap: Map<string, number> | undefined;
   if (oceanForecast) {
-    oceanForecast.properties.timeseries.forEach((entry) => {
-      oceanDataMap.set(entry.time, entry);
-    });
+    seaTempMap = new Map();
+    for (const ts of oceanForecast.properties.timeseries) {
+      const temp = ts.data.instant.details.sea_water_temperature;
+      if (temp !== undefined) {
+        seaTempMap.set(ts.time, temp);
+      }
+    }
   }
 
   // Process location forecast timeseries
   locationForecast.properties.timeseries.forEach((entry, index) => {
-    const oceanData = oceanDataMap.get(entry.time);
-    
     const entryDate = new Date(entry.time);
     // Window runs from this entry to the next (1 h or 6 h); fall back to +1 h for the last entry
     const nextEntry = locationForecast.properties.timeseries[index + 1];
@@ -348,13 +371,25 @@ export function combineForecasts(
                   entry.data.next_6_hours?.summary.symbol_code,
     };
 
-    // Add ocean data if available
-    if (oceanData) {
-      hourlyForecast.waveHeight = oceanData.data.instant.details.sea_surface_wave_height;
-      hourlyForecast.waveDirection = oceanData.data.instant.details.sea_surface_wave_from_direction;
-      hourlyForecast.seaTemperature = oceanData.data.instant.details.sea_water_temperature;
-      hourlyForecast.currentSpeed = oceanData.data.instant.details.sea_water_speed;
-      hourlyForecast.currentDirection = oceanData.data.instant.details.sea_water_to_direction;
+    // Add Barentswatch wave data if available
+    // Try exact time match first, then find the closest entry within 30 min
+    let waveData = waveDataMap.get(entry.time);
+    if (!waveData && waveEntries && waveEntries.length > 0) {
+      const entryMs = entryDate.getTime();
+      let bestDiff = 30 * 60_000; // max 30 min tolerance
+      for (const w of waveEntries) {
+        if (!w.forecastTime) continue;
+        const diff = Math.abs(new Date(w.forecastTime).getTime() - entryMs);
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          waveData = w;
+        }
+      }
+    }
+
+    if (waveData) {
+      hourlyForecast.waveHeight = waveData.totalSignificantWaveHeight ?? undefined;
+      hourlyForecast.waveDirection = waveData.totalMeanWaveDirection ?? undefined;
     }
 
     // Add tide phase if tide data is available
@@ -366,6 +401,33 @@ export function combineForecasts(
     const sunResult = calculateSunPhase(entryDate, windowEnd, lat, lng, timezone);
     hourlyForecast.sunPhase = sunResult.label;
     hourlyForecast.sunPhaseSegments = sunResult.segments;
+
+    // Add Barentswatch sea current data if available
+    let currentData = currentDataMap.get(entry.time);
+    if (!currentData && seaCurrentEntries && seaCurrentEntries.length > 0) {
+      const entryMs = entryDate.getTime();
+      let bestDiff = 30 * 60_000; // max 30 min tolerance
+      for (const c of seaCurrentEntries) {
+        if (!c.forecastTime) continue;
+        const diff = Math.abs(new Date(c.forecastTime).getTime() - entryMs);
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          currentData = c;
+        }
+      }
+    }
+    if (currentData) {
+      hourlyForecast.currentSpeed = currentData.current ?? undefined;
+      hourlyForecast.currentDirection = currentData.direction ?? undefined;
+    }
+
+    // Add sea temperature from MET.no Oceanforecast if available
+    if (seaTempMap) {
+      const temp = seaTempMap.get(entry.time);
+      if (temp !== undefined) {
+        hourlyForecast.seaTemperature = temp;
+      }
+    }
 
     hourlyForecasts.push(hourlyForecast);
   });
@@ -763,9 +825,10 @@ export interface CombinedForecastResult {
   // MET Norway Locationforecast grid point
   forecastLat: number;
   forecastLng: number;
-  // MET Norway Oceanforecast grid point (undefined if ocean data unavailable)
+  // Barentswatch Waveforecast grid point (undefined if wave data unavailable)
   oceanForecastLat?: number;
   oceanForecastLng?: number;
+  waveForecastSource?: 'barentswatch';
   // Kartverket tide station (undefined if tide data unavailable)
   tideStationName?: string;
   tideStationLat?: number;
@@ -784,10 +847,12 @@ export async function getCombinedForecast(
 
   return withInflight(weatherCacheKey, async () => {
     // Fetch all forecasts in parallel
-    const [locationForecast, oceanForecast, tideForecast] = await Promise.all([
+    const [locationForecast, waveForecast, seaCurrentForecast, tideForecast, oceanForecast] = await Promise.all([
       getLocationForecast(lat, lng),
-      getOceanForecast(lat, lng),
+      getWaveForecast(lat, lng),
+      getSeaCurrentForecast(lat, lng),
       getTideForecast(lat, lng),
+      getOceanForecast(lat, lng),
     ]);
 
     // Only pass tide data if real events were returned
@@ -797,34 +862,40 @@ export async function getCombinedForecast(
     const forecastLng = locationForecast.geometry.coordinates[0];
     const forecastLat = locationForecast.geometry.coordinates[1];
 
-    // Ocean forecast grid point (only when data is available)
-    const oceanForecastLng = oceanForecast?.geometry.coordinates[0];
-    const oceanForecastLat = oceanForecast?.geometry.coordinates[1];
+    // Barentswatch wave forecast grid point (from the first entry with coordinates)
+    let waveForecastLat: number | undefined;
+    let waveForecastLng: number | undefined;
+    let usableWaveEntries: BarentswatchWaveEntry[] | null = null;
 
-    // Suppress ocean (wave) data when the grid point is too far from the requested location —
-    // a distant grid point means the wave forecast is not representative of the actual spot.
-    // Also suppress when the API returns coordinates but no actual timeseries data
-    // (e.g. inland locations where the API echoes back the request coords).
-    const hasOceanTimeseries = (oceanForecast?.properties.timeseries.length ?? 0) > 0;
-    const oceanForecastDistance =
-      oceanForecastLat !== undefined && oceanForecastLng !== undefined
-        ? haversineDistance(lat, lng, oceanForecastLat, oceanForecastLng)
-        : null;
-    const nearbyOceanForecast =
-      hasOceanTimeseries && oceanForecastDistance !== null && oceanForecastDistance <= MAX_OCEAN_FORECAST_DISTANCE_KM
-        ? oceanForecast
+    if (waveForecast && waveForecast.length > 0) {
+      const firstEntry = waveForecast[0];
+      waveForecastLat = firstEntry.latitude;
+      waveForecastLng = firstEntry.longitude;
+
+      // Suppress wave data when the grid point is too far from the requested location
+      const waveDistance = waveForecastLat !== undefined && waveForecastLng !== undefined
+        ? haversineDistance(lat, lng, waveForecastLat, waveForecastLng)
         : null;
 
-    // Suppress tide data when ocean data is unavailable — without ocean context
+      if (waveDistance === null || waveDistance <= MAX_OCEAN_FORECAST_DISTANCE_KM) {
+        usableWaveEntries = waveForecast;
+      } else {
+        waveForecastLat = undefined;
+        waveForecastLng = undefined;
+      }
+    }
+
+    // Suppress tide data when wave data is unavailable — without wave context
     // the tide and score pages aren't meaningful for this location.
-    const usableTideForecast = nearbyOceanForecast ? realTideForecast : null;
+    const usableTideForecast = usableWaveEntries ? realTideForecast : null;
 
     const result: CombinedForecastResult = {
-      forecasts: combineForecasts(locationForecast, nearbyOceanForecast, usableTideForecast, lat, lng),
+      forecasts: combineForecasts(locationForecast, usableWaveEntries, usableTideForecast, lat, lng, seaCurrentForecast, oceanForecast),
       forecastLat,
       forecastLng,
-      oceanForecastLat: nearbyOceanForecast ? oceanForecastLat : undefined,
-      oceanForecastLng: nearbyOceanForecast ? oceanForecastLng : undefined,
+      oceanForecastLat: waveForecastLat,
+      oceanForecastLng: waveForecastLng,
+      waveForecastSource: usableWaveEntries ? 'barentswatch' : undefined,
       tideStationName: usableTideForecast?.stationName,
       tideStationLat: usableTideForecast?.stationLat,
       tideStationLng: usableTideForecast?.stationLng,

@@ -156,7 +156,7 @@ export default function Map() {
                 weight: 2,
               }).addTo(map);
               activeOceanDot.bindTooltip(
-                `Ocean forecast point (${oLat.toFixed(4)}°N, ${oLng.toFixed(4)}°E)`,
+                `Wave forecast point — Barentswatch (${oLat.toFixed(4)}°N, ${oLng.toFixed(4)}°E)`,
                 { direction: 'top', offset: [0, -4] }
               );
             } else {

@@ -45,26 +45,27 @@ const getWeatherLabel = (symbolCode: string | undefined): string => {
 };
 
 // Arrow component for direction visualization
-// For "from" directions (wind, waves), adds 180° to point toward where it's going
+// For "from" directions (wind), adds 180° to point toward where it's going
 // For "to" directions (current), uses the value as-is
-const DirectionArrow = ({ 
-  degrees, 
+// For waves, do NOT add 180° (Barentswatch is already 'from' direction, but arrow should point FROM)
+const DirectionArrow = ({
+  degrees,
   isFromDirection = false,
-  className = '' 
-}: { 
-  degrees: number | undefined; 
+  className = ''
+}: {
+  degrees: number | undefined;
   isFromDirection?: boolean;
-  className?: string 
+  className?: string
 }) => {
   if (degrees === undefined) return <span aria-hidden="true">—</span>;
-  
+
   const cardinals = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   const cardinal = cardinals[Math.round(degrees / 45) % 8];
   const label = isFromDirection ? `From ${cardinal}` : `To ${cardinal}`;
 
-  // If it's a "from" direction, add 180° to point toward where it's going
+  // Only wind gets 180° rotation. Waves: show as-is. Currents: show as-is.
   const displayDegrees = isFromDirection ? (degrees + 180) % 360 : degrees;
-  
+
   return (
     <svg
       role="img"
@@ -115,20 +116,68 @@ function getTimeColumnStyle(
   return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: textColor };
 }
 
-// ── Accuracy colour helpers (inline styles – safe from Tailwind purging) ────────
-// Three confidence tiers: High (green) · Medium (amber) · Low (orange)
-// MET Norway Locationforecast: high ≤3 days · medium 3–5 days · low >5 days
-function getLocStyle(daysAhead: number): React.CSSProperties {
-  if (daysAhead <= 3) return { backgroundColor: '#f0fdf4' }; // green-50  — High
-  if (daysAhead <= 5) return { backgroundColor: '#fffbeb' }; // amber-50  — Medium
-  return { backgroundColor: '#fed7aa' };                     // orange-200 — Low
-}
+// ── Wave data enrichment: interpolation + trimming ──────────────────────────────
+type EnrichedForecast = HourlyForecast & { isInterpolatedWave?: boolean };
 
-// MET Norway Oceanforecast: high ≤2 days · medium 2–4 days · low >4 days
-function getOceanStyle(daysAhead: number): React.CSSProperties {
-  if (daysAhead <= 2) return { backgroundColor: '#f0fdf4' }; // green-50  — High
-  if (daysAhead <= 4) return { backgroundColor: '#fffbeb' }; // amber-50  — Medium
-  return { backgroundColor: '#fed7aa' };                     // orange-200 — Low
+/**
+ * Trim forecasts at the last row with real wave data and linearly interpolate
+ * gaps in wave height / direction so every row within the wave range has a value.
+ */
+function enrichForecasts(forecasts: HourlyForecast[]): EnrichedForecast[] {
+  // Guarantee one row per hour (fill gaps)
+  if (!forecasts.length) return [];
+  // Find last index with real wave data
+  let lastWaveIndex = -1;
+  for (let i = forecasts.length - 1; i >= 0; i--) {
+    if (forecasts[i].waveHeight !== undefined) { lastWaveIndex = i; break; }
+  }
+  if (lastWaveIndex < 0) return forecasts;
+
+  // Build a map of time → forecast for fast lookup
+  const timeMap = new Map(forecasts.map(f => [f.time, f]));
+  const firstTime = new Date(forecasts[0].time);
+  const lastTime = new Date(forecasts[lastWaveIndex].time);
+  const result: EnrichedForecast[] = [];
+  for (let t = new Date(firstTime); t <= lastTime; t.setHours(t.getHours() + 1)) {
+    const iso = t.toISOString();
+    const base = timeMap.get(iso);
+    result.push(base ? { ...base } : { time: iso });
+  }
+
+  // Collect indices with real wave data
+  const realIndices: number[] = [];
+  for (let i = 0; i < result.length; i++) {
+    if (result[i].waveHeight !== undefined) realIndices.push(i);
+  }
+
+  // Interpolate between each pair of adjacent real-data points
+  for (let k = 0; k < realIndices.length - 1; k++) {
+    const a = realIndices[k];
+    const b = realIndices[k + 1];
+    if (b - a <= 1) continue;
+
+    const tA = new Date(result[a].time).getTime();
+    const tB = new Date(result[b].time).getTime();
+    const hA = result[a].waveHeight!;
+    const hB = result[b].waveHeight!;
+    const dA = result[a].waveDirection;
+    const dB = result[b].waveDirection;
+
+    for (let i = a + 1; i < b; i++) {
+      const t = (new Date(result[i].time).getTime() - tA) / (tB - tA);
+      result[i].waveHeight = hA + t * (hB - hA);
+
+      if (dA !== undefined && dB !== undefined) {
+        let diff = dB - dA;
+        if (diff > 180) diff -= 360;
+        if (diff < -180) diff += 360;
+        result[i].waveDirection = ((dA + t * diff) % 360 + 360) % 360;
+      }
+      result[i].isInterpolatedWave = true;
+    }
+  }
+
+  return result;
 }
 
 export default function ForecastTable({ forecasts, timezone }: ForecastTableProps) {
@@ -143,6 +192,9 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
   // If no row has wave data the point is inland — hide ocean-specific columns
   const hasOceanData = forecasts.some(f => f.waveHeight !== undefined);
   const precipLabel = (forecasts[0]?.temperature ?? 2) > 1 ? 'Rain' : 'Snow';
+
+  // Interpolate missing wave heights and trim at last wave entry
+  const displayForecasts: EnrichedForecast[] = hasOceanData ? enrichForecasts(forecasts) : forecasts;
 
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
@@ -186,8 +238,6 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
     return isToDirection ? `to ${direction}` : direction;
   };
 
-  const now = Date.now();
-
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
       <div className="overflow-x-auto">
@@ -204,14 +254,34 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
               >
                 MET Norway Locationforecast
               </th>
-              {/* MET Norway Oceanforecast — coastal only */}
+              {/* Barentswatch Waveforecast — coastal only */}
               {hasOceanData && (
                 <th
-                  colSpan={5}
+                  colSpan={2}
                   scope="colgroup"
                   className="px-4 py-1 text-center font-semibold border-l border-ocean-400/20 border-r border-ocean-400/20"
                 >
-                  MET Norway Oceanforecast
+                  Barentswatch Waveforecast
+                </th>
+              )}
+              {/* Barentswatch Sea Current */}
+              {hasOceanData && (
+                <th
+                  colSpan={2}
+                  scope="colgroup"
+                  className="px-4 py-1 text-center font-semibold border-l border-blue-400/20 border-r border-blue-400/20"
+                >
+                  Barentswatch Sea Current
+                </th>
+              )}
+              {/* MET.no Oceanforecast Sea Temp */}
+              {hasOceanData && (
+                <th
+                  colSpan={1}
+                  scope="colgroup"
+                  className="px-4 py-1 text-center font-semibold border-l border-cyan-400/20 border-r border-cyan-400/20"
+                >
+                  Sea Temp
                 </th>
               )}
               {/* Kartverket — astronomical tides */}
@@ -255,38 +325,40 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
                 Air Temp
               </th>
 
-              {/* ── MET Norway Oceanforecast columns ── */}
+              {/* ── Barentswatch Waveforecast columns ── */}
               {hasOceanData && (
                 <th scope="col" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30 border-l-2 border-ocean-400/50">
                   Wave Height
                 </th>
               )}
               {hasOceanData && (
-                <th scope="col" aria-label="Wave direction" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30">
+                <th scope="col" aria-label="Wave direction" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30 border-r-2 border-ocean-400/30">
+                  Wave Dir
+                </th>
+              )}
+              {/* ── Barentswatch Sea Current columns ── */}
+              {hasOceanData && (
+                <th scope="col" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-blue-800/30 border-l-2 border-blue-400/50">
+                  Current Speed
                 </th>
               )}
               {hasOceanData && (
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-ocean-800/30">
+                <th scope="col" aria-label="Current direction" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-blue-800/30 border-r-2 border-blue-400/30">
+                  Curr Dir
+                </th>
+              )}
+              {/* ── MET.no Oceanforecast Sea Temp column ── */}
+              {hasOceanData && (
+                <th scope="col" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-cyan-800/30 border-l-2 border-cyan-400/50 border-r-2 border-cyan-400/30">
                   Sea Temp
                 </th>
               )}
-              {hasOceanData && (
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-ocean-800/30">
-                  Current
-                </th>
-              )}
-              {hasOceanData && (
-                <th scope="col" aria-label="Current direction" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30 border-r-2 border-ocean-400/30">
-                </th>
-              )}
-
               {/* ── Kartverket column ── */}
               {hasOceanData && (
                 <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-purple-900/20 border-l-2 border-purple-400/50 border-r-2 border-r-purple-400/30">
                   Tide
                 </th>
               )}
-
               {/* ── Calculated column ── */}
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-yellow-900/20 border-l-2 border-yellow-400/50">
                 Sun
@@ -295,16 +367,12 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
           </thead>
 
           <tbody className="bg-white divide-y divide-gray-200">
-            {forecasts.map((forecast, index) => {
-              const daysAhead = (new Date(forecast.time).getTime() - now) / 86_400_000;
-              const locStyle = getLocStyle(daysAhead);
-              const oceanStyle = getOceanStyle(daysAhead);
-
+            {displayForecasts.map((forecast, index) => {
               // Detect the last hourly row (gap to next row jumps from ~1 h to ~6 h)
-              const isLastHourly = index < forecasts.length - 1 && (() => {
-                const thisGap = new Date(forecasts[index + 1].time).getTime() - new Date(forecast.time).getTime();
+              const isLastHourly = index < displayForecasts.length - 1 && (() => {
+                const thisGap = new Date(displayForecasts[index + 1].time).getTime() - new Date(forecast.time).getTime();
                 const prevGap = index > 0
-                  ? new Date(forecast.time).getTime() - new Date(forecasts[index - 1].time).getTime()
+                  ? new Date(forecast.time).getTime() - new Date(displayForecasts[index - 1].time).getTime()
                   : thisGap;
                 return prevGap <= 90 * 60_000 && thisGap > 90 * 60_000;
               })();
@@ -312,7 +380,7 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
               // Detect midnight boundary (local date changed since previous row)
               const isMidnight = index > 0 && !isLastHourly && (() => {
                 const dateFmt = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' });
-                return dateFmt.format(new Date(forecast.time)) !== dateFmt.format(new Date(forecasts[index - 1].time));
+                return dateFmt.format(new Date(forecast.time)) !== dateFmt.format(new Date(displayForecasts[index - 1].time));
               })();
 
               // Count total columns for separator rows
@@ -343,60 +411,68 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
                 </td>
 
                 {/* ── MET Norway Locationforecast cells ── */}
-                <td className="px-4 py-3 text-sm text-gray-700 border-l-2 border-amber-300/50" style={locStyle}>
+                <td className="px-4 py-3 text-sm text-gray-700 border-l-2 border-amber-300/50">
                   {formatWind(forecast.windSpeed, forecast.windGust)}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700 text-center" style={locStyle}>
+                <td className="px-4 py-3 text-sm text-gray-700 text-center">
                   <DirectionArrow degrees={forecast.windDirection} isFromDirection={true} className="text-amber-700" />
                 </td>
-                <td className="px-4 py-3 text-2xl text-center" style={locStyle}>
+                <td className="px-4 py-3 text-2xl text-center">
                   <span role="img" aria-label={getWeatherLabel(forecast.symbolCode)}>
                     {getWeatherSymbol(forecast.symbolCode)}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700" style={locStyle}>
+                <td className="px-4 py-3 text-sm text-gray-700">
                   {forecast.precipitation ? formatValue(forecast.precipitation, 1, ' mm') : '—'}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700 border-r-2 border-amber-200" style={locStyle}>
+                <td className="px-4 py-3 text-sm text-gray-700 border-r-2 border-amber-200">
                   {formatValue(forecast.temperature, 1, '°C')}
                 </td>
 
-                {/* ── MET Norway Oceanforecast cells ── */}
+                {/* ── Barentswatch Waveforecast cells ── */}
                 {hasOceanData && (
-                  <td className="px-4 py-3 text-sm text-gray-700 text-center border-l-2 border-ocean-300/50" style={oceanStyle}>
+                  <td className="px-4 py-3 text-sm text-gray-700 text-center border-l-2 border-ocean-300/50">
                     {forecast.waveHeight !== undefined
-                      ? <><strong>{forecast.waveHeight.toFixed(1)}</strong>{' m'}</>
+                      ? forecast.isInterpolatedWave
+                        ? <span className="text-gray-400 italic">{forecast.waveHeight.toFixed(1)} m</span>
+                        : <><strong>{forecast.waveHeight.toFixed(1)}</strong>{' m'}</>
                       : '—'}
                   </td>
                 )}
                 {hasOceanData && (
-                  <td className="px-4 py-3 text-sm text-gray-700 text-center" style={oceanStyle}>
-                    <DirectionArrow degrees={forecast.waveDirection} isFromDirection={true} className="text-ocean-600" />
+                  <td className="px-4 py-3 text-sm text-gray-700 text-center border-r-2 border-ocean-200">
+                    {/* Wave direction: do NOT add 180° (show as-is) */}
+                    <DirectionArrow degrees={forecast.waveDirection} isFromDirection={false} className={forecast.isInterpolatedWave ? 'text-gray-400' : 'text-ocean-600'} />
+                  </td>
+                )}
+                {/* ── Barentswatch Sea Current cells ── */}
+                {hasOceanData && (
+                  <td className="px-4 py-3 text-sm text-gray-700 text-center border-l-2 border-blue-300/50">
+                    {forecast.currentSpeed !== undefined
+                      ? <><strong>{forecast.currentSpeed.toFixed(2)}</strong>{' m/s'}</>
+                      : '—'}
                   </td>
                 )}
                 {hasOceanData && (
-                  <td className="px-4 py-3 text-sm text-gray-700" style={oceanStyle}>
-                    {formatValue(forecast.seaTemperature, 1, '°C')}
+                  <td className="px-4 py-3 text-sm text-gray-700 text-center border-r-2 border-blue-200">
+                    {/* Current direction: to-direction */}
+                    <DirectionArrow degrees={forecast.currentDirection} isFromDirection={false} className="text-blue-600" />
                   </td>
                 )}
+                {/* ── MET.no Oceanforecast Sea Temp cell ── */}
                 {hasOceanData && (
-                  <td className="px-4 py-3 text-sm text-gray-700" style={oceanStyle}>
-                    {formatValue(forecast.currentSpeed, 2, ' m/s')}
+                  <td className="px-4 py-3 text-sm text-gray-700 text-center border-l-2 border-cyan-300/50 border-r-2 border-cyan-200">
+                    {forecast.seaTemperature !== undefined
+                      ? <><strong>{forecast.seaTemperature.toFixed(1)}</strong>{'°C'}</>
+                      : '—'}
                   </td>
                 )}
-                {hasOceanData && (
-                  <td className="px-4 py-3 text-sm text-gray-700 text-center border-r-2 border-ocean-200" style={oceanStyle}>
-                    <DirectionArrow degrees={forecast.currentDirection} className="text-teal-600" />
-                  </td>
-                )}
-
                 {/* ── Kartverket cell ── */}
                 {hasOceanData && (
                   <td className="px-4 py-3 text-sm text-gray-700 border-l-2 border-purple-300/50 border-r-2 border-r-purple-200" style={{ backgroundColor: '#f0fdf4' }}>
                     {forecast.tidePhase || '—'}
                   </td>
                 )}
-
                 {/* ── Calculated cell ── */}
                 <td className="px-4 py-3 text-sm text-gray-700 border-l-2 border-yellow-200" style={getTimeColumnStyle(forecast.sunPhaseSegments)}>
                   {forecast.sunPhase || '—'}

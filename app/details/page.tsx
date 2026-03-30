@@ -32,7 +32,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
     getCombinedForecast(lat, lng),
   ]);
 
-  const { forecasts, oceanForecastLat, oceanForecastLng, tideStationName, tideStationLat, tideStationLng } = weatherResult;
+  const { forecasts, oceanForecastLat, oceanForecastLng, waveForecastSource, tideStationName, tideStationLat, tideStationLng } = weatherResult;
   const hasOceanData = oceanForecastLat !== undefined && oceanForecastLng !== undefined;
   const timezone = getTimezone(lat, lng);
   const oceanForecastDistance = oceanForecastLat !== undefined && oceanForecastLng !== undefined
@@ -112,7 +112,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
             <div className="mt-2 space-y-0.5">
               {oceanForecastDistance !== null && oceanForecastLat !== undefined && oceanForecastLng !== undefined && (
                 <p className="text-xs text-gray-400">
-                  <span className="font-medium text-ocean-600">MET Ocean</span>
+                  <span className="font-medium text-ocean-600">{waveForecastSource === 'barentswatch' ? 'Barentswatch Waves' : 'MET Ocean'}</span>
                   {' '}· forecast grid point {formatDistance(oceanForecastDistance)} away
                   {' '}({oceanForecastLat.toFixed(4)}°N, {oceanForecastLng.toFixed(4)}°E)
                 </p>
@@ -152,6 +152,19 @@ export default async function DetailsPage({ searchParams }: PageProps) {
             >
               Yr / MET Norway
             </a>
+            {hasOceanData && (
+              <>
+                {' · '}
+                <a
+                  href="https://www.barentswatch.no/bolgvarsel/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-gray-600"
+                >
+                  Barentswatch Waveforecast
+                </a>
+              </>
+            )}
             {' · '}
             <a
               href={`https://kartverket.no/til-sjos/se-havniva/resultat?latitude=${lat}&longitude=${lng}`}

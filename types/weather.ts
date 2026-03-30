@@ -1,5 +1,20 @@
+// Barentswatch Sea Current API types (BwRasterCurrentPoint schema)
+// Endpoint: GET /v1/seacurrent/nearest/all?x={lon}&y={lat}
+// Returns an array of forecast entries for each available time step.
+export interface BarentswatchSeaCurrentEntry {
+  current?: number | null; // m/s
+  direction?: number | null; // Degrees (to-direction)
+  forecastTime?: string | null; // ISO 8601
+  longitude: number;
+  latitude: number;
+  source?: string | null;
+}
+
+/** The response from GET /v1/seacurrent/nearest/all is an array of BwRasterCurrentPoint */
+export type BarentswatchSeaCurrentResponse = BarentswatchSeaCurrentEntry[];
 /**
- * Type definitions for MET.no Locationforecast 2.0 and Oceanforecast 2.0 APIs
+ * Type definitions for MET.no Locationforecast 2.0, Barentswatch Waveforecast,
+ * and Kartverket Tide APIs
  */
 
 // Locationforecast 2.0 types
@@ -103,6 +118,23 @@ export interface OceanForecastTimeseries {
     };
   };
 }
+
+// Barentswatch Waveforecast API types (BwRasterWavePoint schema)
+// Endpoint: GET /v1/waveforecastpoint/nearest/all?x={lon}&y={lat}
+// Returns an array of forecast entries for each available time step.
+export interface BarentswatchWaveEntry {
+  totalSignificantWaveHeight?: number | null;  // Hs in metres
+  expectedMaximumWaveHeight?: number | null;   // Hmax in metres
+  totalMeanWaveDirection?: number | null;      // Degrees
+  totalPeakPeriod?: number | null;             // Seconds
+  forecastTime?: string | null;                // ISO 8601
+  longitude: number;
+  latitude: number;
+  source?: string | null;
+}
+
+/** The response from GET /v1/waveforecastpoint/nearest/all is an array of BwRasterWavePoint */
+export type BarentswatchWaveResponse = BarentswatchWaveEntry[];
 
 /**
  * Combined hourly forecast representing merged weather and ocean data.
