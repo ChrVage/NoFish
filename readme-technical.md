@@ -23,7 +23,9 @@
 | API | Purpose | Format | Auth |
 |---|---|---|---|
 | [MET Norway Locationforecast 2.0](https://api.met.no/weatherapi/locationforecast/2.0/documentation) | Wind, temperature, precipitation, pressure, cloud cover | JSON | None |
-| [MET Norway Oceanforecast 2.0](https://api.met.no/weatherapi/oceanforecast/2.0/documentation) | Wave height/direction, sea temperature, surface currents | JSON | None |
+| [MET Norway Oceanforecast 2.0](https://api.met.no/weatherapi/oceanforecast/2.0/documentation) | Sea surface temperature | JSON | None |
+| [Barentswatch Waveforecast](https://developer.barentswatch.no/) | Wave height/direction | JSON | OAuth2 client credentials |
+| [Barentswatch Sea Current](https://developer.barentswatch.no/) | Current speed/direction | JSON | OAuth2 client credentials |
 | [Kartverket Tide API](https://api.kartverket.no/sehavniva/) | High/low tide event times and heights; 10-minute water level forecasts and observations | XML | None |
 | [Nominatim (OpenStreetMap)](https://nominatim.org/release-docs/develop/api/Reverse/) | Reverse geocoding — coordinates → place name | JSON | None |
 
@@ -52,8 +54,9 @@ interface CombinedForecastResult {
   forecasts: HourlyForecast[];       // merged hourly array
   forecastLat: number;               // Locationforecast grid point
   forecastLng: number;
-  oceanForecastLat?: number;         // Oceanforecast grid point (undefined if inland or > 1 km away)
+  oceanForecastLat?: number;         // Barentswatch wave grid point (undefined if inland or > 1 km away)
   oceanForecastLng?: number;
+  waveForecastSource?: 'barentswatch'; // set when wave data comes from Barentswatch
   tideStationName?: string;          // Nearest Kartverket station (undefined when ocean data suppressed)
   tideStationLat?: number;
   tideStationLng?: number;
@@ -63,7 +66,7 @@ interface CombinedForecastResult {
 
 ### `HourlyForecast` (`types/weather.ts`)
 
-Merged per-hour record combining Locationforecast, Oceanforecast, tide phase, and sun phase fields. Ocean fields (`waveHeight`, `waveDirection`, `seaTemperature`, `currentSpeed`, `currentDirection`) and tide fields (`tideHeight`, `tidePhase`) are `undefined` when the ocean forecast grid point is more than 1 km from the requested location.
+Merged per-hour record combining Locationforecast, Barentswatch wave/current, Oceanforecast (sea temp), tide phase, and sun phase fields. Ocean fields (`waveHeight`, `waveDirection`, `currentSpeed`, `currentDirection`) come from Barentswatch. `seaTemperature` comes from MET Oceanforecast. Tide fields (`tideHeight`, `tidePhase`) are `undefined` when the wave forecast grid point is more than 1 km from the requested location.
 
 ---
 
@@ -75,6 +78,7 @@ Merged per-hour record combining Locationforecast, Oceanforecast, tide phase, an
 | `formatDistance(km)` | `lib/utils/distance.ts` | Human-readable: `"1.2 km"` or `"350 m"` |
 | `getTimezone(lat,lng)` | `lib/utils/timezone.ts` | IANA timezone string via tz-lookup, falls back to `UTC` |
 | `getTimezoneLabel(tz)` | `lib/utils/timezone.ts` | `"Europe/Oslo (GMT+2)"` — uses `Intl` for correct DST |
+| `enrichForecasts(forecasts)` | `lib/utils/enrichForecasts.ts` | Trims at last hourly MET row; interpolates Barentswatch 3-h wave data to fill every hour |
 
 ---
 
