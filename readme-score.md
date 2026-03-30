@@ -2,7 +2,7 @@
 
 The Score page shows a per-hour fishing suitability rating from **0 %** (worst) to **100 %** (best). Each row includes the time, the score, and a brief explanation of the factors that contributed.
 
-The table only includes **hourly forecast rows** — it stops where MET Norway switches from 1-hour to 6-hour intervals (typically after ~2.5 days).
+The table only includes **hourly forecast rows** — it stops at the last 1-hour interval from MET Norway's Locationforecast (typically ~48 hours). Wave data from Barentswatch (3-hour intervals) is linearly interpolated to fill every hourly row.
 
 The algorithm is tuned for a **21-foot boat**. Safety is the primary concern — dangerous conditions hard-cap the score regardless of how good the fishing factors are.
 
@@ -152,5 +152,5 @@ Only applied when the hour is **not** already safety-capped for darkness.
 - The score is a **rough heuristic** — it does not account for species, bait, local topography, or seasonal migration.
 - Boat size is fixed at 21 ft; larger vessels may tolerate higher seas and night operation.
 - Pressure trend (rising/falling) is not currently tracked; only the absolute value is used.
-- Wave height data is only available for coastal locations where the ocean forecast grid point is within 1 km.
+- Wave height data comes from Barentswatch Waveforecast and is only available for coastal locations where the nearest grid point is within 1 km. Interpolated values are used for scoring but may miss sudden changes between data points.
 - The algorithm may be revised as real-world feedback is gathered.

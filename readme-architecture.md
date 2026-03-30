@@ -37,7 +37,8 @@ components/
   ForecastTable.tsx     # Hourly forecast table; columns grouped by API source; ocean columns hidden for inland points
                         # Wind speed and wave height numbers are bold; zero precipitation hidden;
                         # Rain/Snow label derived from first-row air temperature;
-                        # row confidence colour coded with legend above table
+                        # uses enrichForecasts() to interpolate wave data and trim at last hourly MET row;
+                        # interpolated wave values shown in grey italic
   Map.tsx               # Leaflet map; click → marker + popup with large touch-friendly buttons;
                         # parallel geo+ocean-point fetch; blue dot + dashed line to ocean grid point;
                         # Score/Tide buttons hidden when ocean data unavailable;
@@ -48,10 +49,13 @@ components/
 
 lib/
   api/
-    weather.ts          # getCombinedForecast() — fetches and merges Locationforecast + Oceanforecast + Kartverket tides;
-                        # exports CombinedForecastResult with ocean grid coords and tide station metadata;
-                        # ocean data suppressed when grid point > 1 km from requested location;
-                        # tide data also suppressed when ocean data is unavailable;
+    barentswatch.ts     # OAuth2 token management (client-credentials flow) + getWaveForecast() + getSeaCurrentForecast();
+                        # in-memory token cache refreshed 60 s before expiry
+    weather.ts          # getCombinedForecast() — fetches and merges Locationforecast + Barentswatch waves/current
+                        #   + MET Oceanforecast (sea temp) + Kartverket tides;
+                        # exports CombinedForecastResult with wave grid coords and tide station metadata;
+                        # wave data suppressed when grid point > 1 km from requested location;
+                        # tide data also suppressed when wave data is unavailable;
                         # getTidePageData() for the tide page (parallel datatype=all + datatype=tab calls);
                         # getTideForecast() for tide events used in the combined forecast;
                         # solar elevation / sun phase calculation; tide phase labelling;
@@ -65,6 +69,8 @@ lib/
   utils/
     distance.ts         # haversineDistance(lat1,lng1,lat2,lng2) → km; formatDistance() → "1.2 km" / "350 m"
     timezone.ts         # getTimezone(lat,lng) → IANA name via tz-lookup; getTimezoneLabel() → "Europe/Oslo (GMT+2)"
+    enrichForecasts.ts  # enrichForecasts() — trims at last hourly MET row; linearly interpolates Barentswatch
+                        # 3-hour wave data to fill every hour; shared by ForecastTable and Score page
 
 public/                 # Static assets (OG image, favicons)
 types/
@@ -136,12 +142,15 @@ User clicks map
        ├─ lib/api/weather.ts
        │    getCombinedForecast() → cache hit / miss → parallel:
        │         ├─ MET Norway Locationforecast 2.0 (weather, wind, precipitation…)
-       │         ├─ MET Norway Oceanforecast 2.0   (waves, current, sea temp…)
+       │         ├─ Barentswatch Waveforecast      (wave height, direction — OAuth2)
+       │         ├─ Barentswatch Sea Current       (current speed, direction — OAuth2)
+       │         ├─ MET Norway Oceanforecast 2.0   (sea temperature only)
        │         └─ Kartverket Tide API             (high/low events, XML parsed server-side via fast-xml-parser)
        │    Returns: CombinedForecastResult
        │         ├─ forecasts[]        — merged HourlyForecast array
        │         ├─ forecastLat/Lng    — Locationforecast grid point
-       │         ├─ oceanForecastLat/Lng — Oceanforecast grid point (undefined if inland)
+       │         ├─ oceanForecastLat/Lng — Barentswatch wave grid point (undefined if inland)
+       │         ├─ waveForecastSource — 'barentswatch' when wave data is available
        │         └─ tideStationName/Lat/Lng — nearest Kartverket station
        └─ after(): lib/db/lookups.ts → Neon (production only, non-blocking)
 ```
@@ -161,15 +170,17 @@ The table has a two-row header. The top row spans columns by API source:
 | Group | Columns | Condition |
 |---|---|---|
 | MET Norway Locationforecast | Wind (bold speed + gust), Wind dir ↑, Weather icon, Rain/Snow, Air temp | Always shown |
-| MET Norway Oceanforecast | Wave height (bold), Wave dir ↑, Sea temp, Current speed, Current dir ↑ | Hidden if no `waveHeight` data |
+| Barentswatch Waveforecast | Wave height (bold), Wave dir ↑ | Hidden if no `waveHeight` data |
+| Barentswatch Sea Current | Current speed (bold), Current dir ↑ | Hidden if no ocean data |
+| MET Sea Temp | Sea temp | Hidden if no ocean data |
 | Kartverket | Tide phase | Hidden if no ocean data |
 | Calculated | Sun phase | Always shown |
 
-`hasOceanData` is derived client-side: `forecasts.some(f => f.waveHeight !== undefined)`. Inland points and locations where the ocean grid point is more than 1 km away get a clean weather-only table.
+`hasOceanData` is derived client-side: `forecasts.some(f => f.waveHeight !== undefined)`. Inland points and locations where the wave grid point is more than 1 km away get a clean weather-only table.
 
 When ocean data is suppressed, tide data is also suppressed. `PageNav` receives an `availablePages` prop to hide Score and Tides from the header navigation.
 
-Row background tinting indicates forecast confidence. A legend (High → Medium → Low) is shown above the table using the same colours as the rows.
+The table is trimmed at the last 1-hour interval from MET's Locationforecast (~48 hours). Barentswatch wave data (3-hour intervals) is linearly interpolated to fill every hourly row; interpolated values are shown in grey italic to distinguish them from real observations.
 
 ---
 
