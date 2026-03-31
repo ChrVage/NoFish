@@ -102,6 +102,10 @@ function computeFishingScore(f: HourlyForecast): { score: number; reasons: Reaso
       safetyCap = Math.min(safetyCap, 15);
       danger('⚠️ Waves + gusts');
       waveSafety = true;
+    } else if (waves > 1.0) {
+      safetyCap = Math.min(safetyCap, 35);
+      bad('High waves + wind');
+      waveSafety = true;
     }
   }
 
