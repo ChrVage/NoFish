@@ -43,6 +43,16 @@ export function enrichForecasts(forecasts: HourlyForecast[]): EnrichedForecast[]
     if (result[i].waveHeight !== undefined) realIndices.push(i);
   }
 
+  // Backfill leading hours before the first real wave data point
+  if (realIndices.length > 0 && realIndices[0] > 0) {
+    const first = realIndices[0];
+    for (let i = 0; i < first; i++) {
+      result[i].waveHeight = result[first].waveHeight;
+      result[i].waveDirection = result[first].waveDirection;
+      result[i].isInterpolatedWave = true;
+    }
+  }
+
   // Interpolate between each pair of adjacent real-data points
   for (let k = 0; k < realIndices.length - 1; k++) {
     const a = realIndices[k];
