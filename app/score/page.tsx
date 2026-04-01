@@ -385,6 +385,44 @@ export default async function ScorePage({ searchParams }: PageProps) {
   const hasOceanData = forecasts.some(f => f.waveHeight !== undefined);
   const timezone = getTimezone(lat, lng);
 
+  // Pre-compute scores for all forecasts
+  const scoredForecasts = forecasts.map(f => ({ forecast: f, ...computeFishingScore(f) }));
+
+  // Find best fishing windows (1-3 hours, adaptive based on score variability)
+  // Try all windows of length 1-3. Pick the longest whose average is within
+  // 5 points of the overall best average (prefer longer consistent windows).
+  // Return top 2 non-overlapping windows.
+  type Window = { start: number; len: number; avg: number };
+  const bestWindows: Window[] = [];
+  if (scoredForecasts.length > 0) {
+    let topAvg = -1;
+    const candidates: Window[] = [];
+    for (let len = 1; len <= 3; len++) {
+      for (let i = 0; i <= scoredForecasts.length - len; i++) {
+        let sum = 0;
+        for (let j = 0; j < len; j++) sum += scoredForecasts[i + j].score;
+        const avg = sum / len;
+        candidates.push({ start: i, len, avg });
+        if (avg > topAvg) topAvg = avg;
+      }
+    }
+    // Among windows within 5 points of the best, pick the longest (then highest avg)
+    const viable = candidates
+      .filter(c => c.avg >= topAvg - 5)
+      .sort((a, b) => b.len - a.len || b.avg - a.avg);
+    for (const c of viable) {
+      const overlaps = bestWindows.some(w =>
+        c.start < w.start + w.len && c.start + c.len > w.start
+      );
+      if (!overlaps) {
+        bestWindows.push(c);
+        if (bestWindows.length === 2) break;
+      }
+    }
+    // Sort by time
+    bestWindows.sort((a, b) => a.start - b.start);
+  }
+
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
     const formatter = new Intl.DateTimeFormat('en-US', {
@@ -431,6 +469,112 @@ export default async function ScorePage({ searchParams }: PageProps) {
               {Math.abs(lat).toFixed(4)}°{lat >= 0 ? 'N' : 'S'},{' '}
               {Math.abs(lng).toFixed(4)}°{lng >= 0 ? 'E' : 'W'}
             </p>
+            {bestWindows.length > 0 && (() => {
+              const dateFmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short', timeZone: timezone });
+              const timeFmt = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone });
+              const locationName = locationData
+                ? (locationData.name !== locationData.municipality
+                    ? `${locationData.name}, ${locationData.municipality}`
+                    : locationData.municipality)
+                : `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+              const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+              const icsDateFmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+
+              const buildIcs = (w: (typeof bestWindows)[0]) => {
+                const hours = [];
+                for (let j = 0; j < w.len; j++) hours.push(scoredForecasts[w.start + j]);
+                const start = new Date(hours[0].forecast.time);
+                const last = new Date(hours[hours.length - 1].forecast.time);
+                const end = new Date(last.getTime() + 3600000);
+                const avg = Math.round(w.avg);
+
+                // Build weather description from hourly data
+                const lines: string[] = [`NoFish score: ${avg}%`, ''];
+                for (const h of hours) {
+                  const f = h.forecast;
+                  const t = timeFmt.format(new Date(f.time));
+                  const parts: string[] = [`Score: ${h.score}%`];
+                  if (f.windSpeed !== undefined) parts.push(`Wind: ${f.windSpeed.toFixed(1)} m/s${f.windGust ? ` (gust ${f.windGust.toFixed(1)})` : ''}${f.windDirection !== undefined ? ` from ${f.windDirection}°` : ''}`);
+                  if (f.waveHeight !== undefined) parts.push(`Waves: ${f.waveHeight.toFixed(1)} m${f.waveDirection !== undefined ? ` from ${f.waveDirection}°` : ''}`);
+                  if (f.currentSpeed !== undefined) parts.push(`Current: ${f.currentSpeed.toFixed(2)} m/s${f.currentDirection !== undefined ? ` toward ${f.currentDirection}°` : ''}`);
+                  if (f.temperature !== undefined) parts.push(`Air: ${f.temperature.toFixed(1)}°C`);
+                  if (f.seaTemperature !== undefined) parts.push(`Sea: ${f.seaTemperature.toFixed(1)}°C`);
+                  if (f.precipitation !== undefined && f.precipitation > 0) parts.push(`Precip: ${f.precipitation.toFixed(1)} mm`);
+                  if (f.cloudCover !== undefined) parts.push(`Cloud: ${f.cloudCover}%`);
+                  if (f.pressure !== undefined) parts.push(`Pressure: ${f.pressure.toFixed(0)} hPa`);
+                  if (f.humidity !== undefined) parts.push(`Humidity: ${f.humidity}%`);
+                  if (f.tidePhase) parts.push(`Tide: ${f.tidePhase}`);
+                  if (f.moonPhase) parts.push(`Moon: ${f.moonPhase}`);
+                  if (f.sunPhase) parts.push(`Sun: ${f.sunPhase}`);
+                  lines.push(`${t}:  ${parts.join(' | ')}`);
+                }
+                const desc = lines.join('\\n');
+
+                const ics = [
+                  'BEGIN:VCALENDAR',
+                  'VERSION:2.0',
+                  'PRODID:-//NoFish//Score//EN',
+                  'BEGIN:VEVENT',
+                  `DTSTART:${icsDateFmt(start)}`,
+                  `DTEND:${icsDateFmt(end)}`,
+                  `SUMMARY:🎣 Fishing ${avg}% – ${locationName}`,
+                  `DESCRIPTION:${desc}`,
+                  `LOCATION:${mapsUrl}`,
+                  `GEO:${lat};${lng}`,
+                  `URL:${mapsUrl}`,
+                  `UID:nofish-${start.getTime()}@nofish`,
+                  'END:VEVENT',
+                  'END:VCALENDAR',
+                ].join('\r\n');
+                return `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
+              };
+
+              return (
+                <div className="mt-3">
+                  <h3 className="text-sm font-bold text-ocean-900">Best fishing windows:</h3>
+                  <table className="text-sm" style={{ borderCollapse: 'separate', borderSpacing: '0' }}>
+                    <tbody>
+                      {bestWindows.map((w, idx) => {
+                        const startDate = new Date(scoredForecasts[w.start].forecast.time);
+                        const lastDate = new Date(scoredForecasts[w.start + w.len - 1].forecast.time);
+                        const endHour = new Date(lastDate.getTime() + 3600000);
+                        const avg = Math.round(w.avg);
+                        const icsHref = buildIcs(w);
+                        return (
+                          <tr key={idx}>
+                            <td className="py-0.5 pr-8">
+                              <span
+                                className="inline-block w-11 text-center font-bold rounded px-1.5 py-0.5 text-xs"
+                                style={{ color: getScoreColor(avg), backgroundColor: getScoreBg(avg) }}
+                              >
+                                {avg}%
+                              </span>
+                            </td>
+                            <td className="py-0.5 pr-8 text-ocean-800 font-medium whitespace-nowrap">
+                              {dateFmt.format(startDate)}{' '}
+                              {timeFmt.format(startDate)}–{timeFmt.format(endHour)}
+                            </td>
+                            <td className="py-0.5">
+                              <a
+                                href={icsHref}
+                                download={`fishing-${idx + 1}.ics`}
+                                className="inline-flex items-center gap-0.5 text-xs text-ocean-600 hover:text-ocean-800"
+                                title="Add to calendar"
+                              >
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                .ics
+                              </a>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
           </div>
 
           {forecasts.length === 0 ? (
@@ -446,11 +590,10 @@ export default async function ScorePage({ searchParams }: PageProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {forecasts.map((forecast, i) => {
-                    const { score, reasons } = computeFishingScore(forecast);
+                  {scoredForecasts.map(({ forecast, score, reasons }, i) => {
                     const isMidnight = i > 0 && (() => {
                       const dateFmt = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' });
-                      return dateFmt.format(new Date(forecast.time)) !== dateFmt.format(new Date(forecasts[i - 1].time));
+                      return dateFmt.format(new Date(forecast.time)) !== dateFmt.format(new Date(scoredForecasts[i - 1].forecast.time));
                     })();
 
                     const rows: React.ReactNode[] = [];
