@@ -233,7 +233,7 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
               )}
               {/* Calculated */}
               <th
-                colSpan={1}
+                colSpan={2}
                 scope="colgroup"
                 className="px-4 py-1 text-center font-semibold border-l border-yellow-400/20"
               >
@@ -300,6 +300,9 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-yellow-900/20 border-l-2 border-yellow-400/50">
                 Sun
               </th>
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-yellow-900/20">
+                Moon
+              </th>
             </tr>
           </thead>
 
@@ -321,7 +324,7 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
               })();
 
               // Count total columns for separator rows
-              const totalCols = 6 + (hasOceanData ? 6 : 0) + 1;
+              const totalCols = 7 + (hasOceanData ? 6 : 0) + 1;
 
               const rows: React.ReactNode[] = [];
 
@@ -406,13 +409,16 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
                 )}
                 {/* ── Kartverket cell ── */}
                 {hasOceanData && (
-                  <td className="px-4 py-3 text-sm text-gray-700 border-l-2 border-purple-300/50 border-r-2 border-r-purple-200" style={{ backgroundColor: '#f0fdf4' }}>
+                  <td className="px-4 py-3 text-sm text-gray-700 border-l-2 border-purple-300/50 border-r-2 border-r-purple-200">
                     {forecast.tidePhase || '—'}
                   </td>
                 )}
                 {/* ── Calculated cell ── */}
                 <td className="px-4 py-3 text-sm text-gray-700 border-l-2 border-yellow-200" style={getTimeColumnStyle(forecast.sunPhaseSegments)}>
                   {forecast.sunPhase || '—'}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700">
+                  {forecast.moonPhase || '—'}
                 </td>
               </tr>
               );

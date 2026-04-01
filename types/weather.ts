@@ -163,6 +163,7 @@ export interface HourlyForecast {
   sunPhase?: string;  // e.g., "Daylight (06:23)", "Civil (17:45)", "Nautical (18:12)", "—"
   sunPhaseSegments?: { phase: 'day' | 'civil' | 'nautical' | 'night'; fraction: number }[];
   windGust?: number;
+  moonPhase?: string; // e.g., "🌑 New Moon", "🌕 Full Moon"
 }
 
 // Kartverket Tide API XML types (high/low tide events)

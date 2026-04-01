@@ -409,6 +409,9 @@ export function combineForecasts(
     hourlyForecast.sunPhase = sunResult.label;
     hourlyForecast.sunPhaseSegments = sunResult.segments;
 
+    // Add moon phase
+    hourlyForecast.moonPhase = calculateMoonPhase(entryDate);
+
     // Add Barentswatch sea current data if available
     const currentData = currentDataMap.get(entry.time)
       ?? (seaCurrentEntries?.length ? findClosestEntry(seaCurrentEntries, entryDate.getTime()) : undefined);
@@ -559,7 +562,7 @@ function calculateTidePhase(
       const slots = (bucketMs - windowStart.getTime()) / HOUR_MS;
       if (slots === 1 || slots === 2) {
         const label = nextEvent.flag === 'high' ? 'Hi' : 'Lo';
-        nextLabel = `${label}-${slots}`;
+        nextLabel = `${label}-${slots}h`;
         nextSlots = slots;
       }
     }
@@ -569,7 +572,7 @@ function calculateTidePhase(
       const slots = (windowStart.getTime() - bucketMs) / HOUR_MS;
       if (slots === 1 || slots === 2) {
         const label = prevEvent.flag === 'high' ? 'Hi' : 'Lo';
-        prevLabel = `${label}+${slots}`;
+        prevLabel = `${label}+${slots}h`;
         prevSlots = slots;
       }
     }
@@ -808,6 +811,34 @@ function formatTimeHHMM(utcDate: Date, timezone: string): string {
     hour12: false,
     timeZone: timezone,
   }).format(utcDate);
+}
+
+// ---------------------------------------------------------------------------
+// Moon phase calculation (synodic month / known new-moon epoch)
+// ---------------------------------------------------------------------------
+
+/** Reference new moon: 6 January 2000 18:14 UTC */
+const NEW_MOON_EPOCH_MS = Date.UTC(2000, 0, 6, 18, 14, 0);
+/** Average synodic month in milliseconds */
+const SYNODIC_MONTH_MS = 29.53058770576 * 86_400_000;
+
+/**
+ * Calculate moon phase label for a given UTC date.
+ * Returns an emoji + name string, e.g. "🌕 Full Moon".
+ */
+function calculateMoonPhase(date: Date): string {
+  const daysSinceEpoch = (date.getTime() - NEW_MOON_EPOCH_MS) / 86_400_000;
+  const age = ((daysSinceEpoch % 29.53058770576) + 29.53058770576) % 29.53058770576;
+
+  if (age < 1.85)  return '🌑 New Moon';
+  if (age < 7.38)  return '🌒 Waxing Crescent';
+  if (age < 9.23)  return '🌓 First Quarter';
+  if (age < 14.77) return '🌔 Waxing Gibbous';
+  if (age < 16.61) return '🌕 Full Moon';
+  if (age < 22.15) return '🌖 Waning Gibbous';
+  if (age < 23.99) return '🌗 Last Quarter';
+  if (age < 27.68) return '🌘 Waning Crescent';
+  return '🌑 New Moon';
 }
 
 /**
