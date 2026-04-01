@@ -1,137 +1,143 @@
 # Fishing Score
 
-The Score page shows a per-hour fishing suitability rating from **0 %** (worst) to **100 %** (best). Each row includes the time, the score, and a brief explanation of the factors that contributed.
+The Score page shows a per-hour fishing suitability rating from **0 %** (most dangerous / unfishable) to **100 %** (perfect conditions, fish guaranteed). Each row includes the time, the score, and a brief explanation of the contributing factors.
+
+The algorithm is designed for **deep-water fishing (50–200 m)** on the exposed **Norwegian coast**, where the continuous Norwegian Coastal Current (NCC) often intersects with and overpowers standard tidal movements. The core philosophy is **"No current, no fish"** — water movement is the primary driver for feeding behaviour in deep-water predators such as Ling, Tusk, Cod, and Saithe.
 
 The table only includes **hourly forecast rows** — it stops at the last 1-hour interval from MET Norway's Locationforecast (typically ~48 hours). Wave data from Barentswatch (3-hour intervals) is linearly interpolated to fill every hourly row.
 
-The algorithm is tuned for a **21-foot boat**. Safety is the primary concern — dangerous conditions hard-cap the score regardless of how good the fishing factors are.
+---
+
+## Algorithm design
+
+Instead of hard if/else brackets, the algorithm uses **continuous mathematical functions** — Gaussian curves, sigmoids, and smooth interpolation — to produce a fine-grained, linear 0–100 % scale. Eight independent variables are each evaluated as a **0.0–1.0 factor**, then multiplied together and scaled to a percentage:
+
+```
+score = round( currentF × windF × tideF × moonF × lightF × waveF × precipF × tempF × 100 )
+```
+
+This multiplicative structure means a single dangerous condition (factor → 0) drives the entire score toward 0 %, while truly excellent conditions require *all* factors to be high.
 
 ---
 
-## Two-layer scoring
+## Variable 1: Ocean Current Speed (Base Score)
 
-### 1. Safety caps (hard ceilings)
+The primary driver. A Gaussian curve centred at the **sweet spot of 0.4 m/s** (σ = 0.22) forms the base score.
 
-Safety caps impose a **maximum possible score**. When multiple caps apply the lowest one wins. These cannot be overridden by good fishing conditions.
+| Current speed | Factor | Fishing meaning |
+|---|---|---|
+| 0.0–0.1 m/s | ~0.10–0.15 | "Dead water" — fish rest, bite rate very low |
+| 0.15–0.24 m/s | 0.15–0.55 | Slow — some activity, sub-optimal |
+| **0.25–0.55 m/s** | **0.80–1.00** | **Sweet spot** — strong feeding, manageable gear |
+| 0.6–0.7 m/s | 0.55–0.70 | Gear drag increasing, lines bow ("S-curve" effect) |
+| 0.8–1.0 m/s | 0.20–0.45 | Highly inefficient — nets flat, traps drift |
+| > 1.0 m/s | → 0.00 | Unfishable — dangerous with wind |
 
-Rows that trigger a safety cap show a ⚠️ prefix in the *Why* column.
-
-### 2. Fishing-quality factors (base ± adjustments)
-
-Every hour starts at a **base score of 50** and is adjusted up or down by independent comfort and fishing-quality factors. The result is clamped to 0–100 and then capped by the safety ceiling.
+When no current data is available, a neutral 0.50 default is used.
 
 ---
 
-## Safety caps
+## Variable 2: Wind Speed & Current Interaction (Safety + Drift)
 
-### Darkness
+Wind affects surface drift, which determines whether deep-water gear can maintain bottom contact.
 
-A 21-ft boat at night risks hitting ropes, crab-pot lines, debris, and unlit objects. No radar, limited navigation lights.
+### Safety overrides
 
-| Condition | Phase | Cap |
-|---|---|---|
-| ⚠️ Night — unsafe | Astronomical night (dominant) | 5 % |
-| ⚠️ Dark — poor visibility | Nautical twilight (dominant) | 15 % |
+| Condition | Factor |
+|---|---|
+| Wind > 15 m/s or gusts > 22 m/s | → 0.00 (storm) |
+| Wind > 12 m/s or gusts > 18 m/s | 0.05–0.25 (strong wind) |
 
-### Wave height (21-ft boat limits)
+### Wind–current interaction
 
-| Condition | Waves | Gusts | Cap |
-|---|---|---|---|
-| ⚠️ Dangerous seas | > 2.0 m | any | 5 % |
-| ⚠️ High waves + wind | > 1.5 m | > 5 m/s | 10 % |
-| ⚠️ High waves | > 1.5 m | ≤ 5 m/s (pure swell) | 25 % |
-| ⚠️ Waves + gusts | > 1.0 m | > 10 m/s | 15 % |
+| Alignment | Effect |
+|---|---|
+| Wind opposing current (> 120° difference) | Positive — slows drift, improves bottom contact |
+| Wind aligned with current (< 60°, > 5 m/s) | Negative — boat drifts too fast |
 
-The interaction between waves and gusts is critical: gusts create steep, breaking waves on top of swell which are far more dangerous than smooth swell alone.
+### General wind curve
 
-### Gusts
-
-| Condition | Gust speed | Cap |
-|---|---|---|
-| ⚠️ Dangerous gusts | > 20 m/s | 5 % |
-| ⚠️ Strong gusts | > 15 m/s | 15 % |
-
-### Sustained wind
-
-| Condition | Wind speed | Cap |
-|---|---|---|
-| ⚠️ Storm wind | > 15 m/s | 10 % |
-| ⚠️ Strong wind | > 12 m/s | 25 % |
+Below the safety threshold, the factor decreases smoothly from 1.0 (calm) toward 0.25 (12 m/s). Gusts above 10–12 m/s apply an additional multiplier (0.85–0.92).
 
 ---
 
-## Fishing-quality factors
+## Variable 3: Tidal Phase (Biological Modifier)
 
-These only fire when the corresponding metric is **below** its safety threshold.
+Even where coastal currents dominate, tidal phases dictate biological rhythms at depth и nutrient exchange along underwater structures.
 
-### Wind speed
-
-| Condition | Wind speed | Effect |
+| Tide phase | Factor | Rationale |
 |---|---|---|
-| Calm wind | ≤ 1 m/s | +5 |
-| Light wind | 1–5 m/s | +10 |
-| Moderate breeze | 5–8 m/s | +3 |
-| Moderate wind | 8–12 m/s | −8 |
+| **Rising tide** | 1.00 | Increasing hydrostatic pressure stimulates swim bladders, peak hunting aggression |
+| **Falling tide** | 0.95 | Active water exchange, strong nutrient upwelling |
+| Turning (±1h from Hi/Lo) | 0.85 | Movement slowing/starting |
+| Approaching tide (±2h) | 0.75 | Moderate movement |
+| **Slack tide** (exact Hi/Lo) | 0.55 | Water stalls — least productive phase |
 
-### Gusts
+When no tide data is available, a neutral 0.75 default is used.
 
-| Condition | Gust speed | Effect |
+---
+
+## Variable 4: Moon Phase (Tidal Amplitude)
+
+The moon phase controls the *strength* of tidal pull, reaching deeper into the water column during spring tides.
+
+| Moon phase | Factor | Effect |
 |---|---|---|
-| Gusty | 10–15 m/s | −5 |
+| New Moon / Full Moon (spring) | 0.95–1.00 | Strongest tidal pull, amplified deep-water movement |
+| Waxing/Waning Gibbous/Crescent | 0.86–0.95 | Moderate pull |
+| First Quarter / Last Quarter (neap) | 0.82 | Weakest deep-water movement, caps potential |
 
-### Precipitation
+The factor follows a continuous cosine curve peaking at new and full moon.
 
-| Condition | Amount | Effect |
-|---|---|---|
-| Dry | 0 mm | +5 |
-| Trace | ≤ 0.5 mm | 0 |
-| Light rain | 0.5–2 mm | −5 |
-| Heavy rain | > 2 mm | −15 |
+---
 
-### Wave height (comfort)
+## Variable 5: Light & Time of Day
 
-| Condition | Height | Effect |
-|---|---|---|
-| Calm seas | ≤ 0.3 m | +10 |
-| Low waves | 0.3–0.7 m | +5 |
-| Neutral | 0.7–1.0 m | 0 |
-| Choppy | 1.0–1.5 m | −10 |
+Deep-water fish migrate upward and feed more aggressively in low light. The factor peaks at dawn and dusk.
 
-### Cloud cover
+| Condition | Factor |
+|---|---|
+| Civil twilight / Dawn / Dusk | 1.00 (peak feeding) |
+| Overcast daylight | 0.85 |
+| Full daylight | 0.80 |
+| Bright sun + clear sky | 0.70 |
+| Nautical twilight | 0.08–0.20 (dangerous) |
+| **Night** | **0.00** (unsafe) |
 
-| Condition | Coverage | Effect |
-|---|---|---|
-| Overcast | 50–90 % | +5 |
-| Clear sky | < 20 % | −3 |
+---
 
-Overcast skies reduce light penetration, which tends to make fish feed more confidently near the surface.
+## Variable 6: Wave Height (Gear Handling & Safety)
 
-### Tide phase
+Wave height affects both gear handling efficiency at depth and vessel safety.
 
-| Condition | Phase | Effect |
-|---|---|---|
-| Moving tide | Rising / Falling | +10 |
-| Tide turning | Near high or low (e.g. Hi−1, Lo+1) | +8 |
-| Slack tide | At high or low turn | −5 |
+| Wave height | Factor |
+|---|---|
+| ≤ 0.5 m | 1.00 |
+| 0.5–1.0 m | 0.60–1.00 (smooth sigmoid) |
+| 1.0–1.5 m | 0.35–0.60 |
+| 1.5–2.0 m | 0.05–0.35 (worse with wind) |
+| > 2.0 m | → 0.00 (dangerous) |
 
-Moving water carries bait and activates fish. Slack water at the peak of a high or low is generally the least productive phase.
+Waves above 1.5 m combined with wind (gusts > 5 m/s) receive a halved factor due to breaking wave risk.
 
-### Sun phase
+---
 
-Only applied when the hour is **not** already safety-capped for darkness.
+## Variable 7: Precipitation (Minor)
 
-| Condition | Phase | Effect |
-|---|---|---|
-| Dawn / dusk | Daylight hour with civil twilight fraction > 10 % | +10 |
-| Twilight | Dominant civil twilight | +10 |
-| Daylight | Full daylight | +5 |
+| Condition | Factor |
+|---|---|
+| Dry or light (≤ 0.5 mm/h) | 1.00 |
+| Moderate (0.5–2 mm/h) | 0.93 |
+| Heavy (> 2 mm/h) | 0.85 |
 
-### Atmospheric pressure
+---
 
-| Condition | Pressure | Effect |
-|---|---|---|
-| Stable high | 1015–1030 hPa | +3 |
-| Low pressure | < 1000 hPa | −5 |
+## Variable 8: Sea Temperature (Minor)
+
+| Condition | Factor |
+|---|---|
+| ≥ 3°C | 1.00 |
+| < 3°C | 0.92 (reduced fish activity) |
 
 ---
 
@@ -139,18 +145,29 @@ Only applied when the hour is **not** already safety-capped for darkness.
 
 | Score range | Colour | Meaning |
 |---|---|---|
-| 75–100 % | Green | Excellent |
-| 55–74 % | Light green | Good |
-| 40–54 % | Amber | Fair |
-| 25–39 % | Orange | Poor |
-| 0–24 % | Red | Bad |
+| 70–100 % | Green | Excellent |
+| 50–69 % | Light green | Good |
+| 35–49 % | Amber | Fair |
+| 20–34 % | Orange | Poor |
+| 0–19 % | Red | Dangerous / unfishable |
+
+---
+
+## Regional adaptability
+
+The algorithm is modular. On the exposed Norwegian coast the ocean current variable dominates (0.4 m/s sweet spot). In other regions the weights can be adapted:
+
+- **Deep inland fjords**: Tidal phase may dominate over coastal current. Current factor defaults to neutral when data is absent.
+- **Northern Norway**: Extreme light variation (polar night / midnight sun) makes the light factor more impactful.
+- **Sheltered bays**: Lower wave thresholds, tidal slack matters more.
 
 ---
 
 ## Limitations
 
-- The score is a **rough heuristic** — it does not account for species, bait, local topography, or seasonal migration.
-- Boat size is fixed at 21 ft; larger vessels may tolerate higher seas and night operation.
-- Pressure trend (rising/falling) is not currently tracked; only the absolute value is used.
-- Wave height data comes from Barentswatch Waveforecast and is only available for coastal locations where the nearest grid point is within 1 km. Interpolated values are used for scoring but may miss sudden changes between data points.
+- Designed for **deep-water fishing (50–200 m)** on exposed Norwegian coast; shallower or sheltered fishing behaves differently.
+- Species, bait, local bottom topography, and seasonal migration are not modelled.
+- Sea temperature trend (rising/falling) is not tracked — only the current value is used.
+- Wind–current alignment requires both direction datasets; when either is missing, the interaction modifier is skipped.
+- Wave data comes from Barentswatch Waveforecast and is only available where the nearest grid point is within 1 km.
 - The algorithm may be revised as real-world feedback is gathered.
