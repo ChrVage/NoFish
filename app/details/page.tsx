@@ -156,7 +156,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
               <>
                 {' · '}
                 <a
-                  href={`https://www.barentswatch.no/bolgvarsel/?latitude=${lat}&longitude=${lng}`}
+                  href="https://www.barentswatch.no/bolgevarsel/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline hover:text-gray-600"
