@@ -81,7 +81,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
   return (
     <div className="min-h-screen bg-ocean-50">
       {/* Header */}
-      <header style={{ backgroundColor: '#0c4a6e', color: '#ffffff', padding: '12px 24px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+      <header style={{ backgroundColor: '#ffffff', color: '#1f2937', padding: '12px 24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <BackButton label="🎣 NoFish" />

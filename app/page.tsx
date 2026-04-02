@@ -20,10 +20,10 @@ export default function Home() {
   return (
     <div className="flex flex-col h-dvh overflow-hidden bg-ocean-50">
       {/* Header */}
-      <header style={{ backgroundColor: '#0c4a6e', color: '#ffffff', padding: '12px 24px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', zIndex: 1100, flexShrink: 0, overflow: 'visible', position: 'relative' }}>
+      <header style={{ backgroundColor: '#ffffff', color: '#1f2937', padding: '12px 24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', zIndex: 1100, flexShrink: 0, overflow: 'visible', position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'center', maxWidth: '80rem', margin: '0 auto' }}>
           <span style={{ fontSize: '1rem', whiteSpace: 'nowrap', flexShrink: 0 }}>🎣 NoFish</span>
-          <span style={{ fontSize: '10px', fontStyle: 'italic', fontWeight: 300, opacity: 0.85, textAlign: 'center', flex: 1, padding: '0 12px' }}>... because fishing in bad weather is worse than no fishing at all</span>
+          <span style={{ fontSize: '10px', fontStyle: 'italic', fontWeight: 300, opacity: 0.6, textAlign: 'center', flex: 1, padding: '0 12px' }}>... because fishing in bad weather is worse than no fishing at all</span>
           <div style={{ flexShrink: 0 }}>
             <HeaderMenu />
           </div>
