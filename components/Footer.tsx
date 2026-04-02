@@ -81,7 +81,7 @@ export default function HeaderMenu() {
   );
 }
 
-export function Footer() {
+export function Footer({ showColumnRef }: { showColumnRef?: boolean } = {}) {
   const linkStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'row',
@@ -107,6 +107,19 @@ export function Footer() {
           </svg>
           <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>About NoFish</span>
         </a>
+        {showColumnRef && (
+          <a
+            href="https://github.com/ChrVage/NoFish/blob/main/readme-data.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ ...linkStyle, borderRight: '2px solid white' }}
+          >
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Column Reference</span>
+          </a>
+        )}
         <a
           href="https://github.com/ChrVage/NoFish/issues/new/choose"
           target="_blank"

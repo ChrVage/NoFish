@@ -176,7 +176,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
             </a>
           </p>
 
-          <Footer />
+          <Footer showColumnRef />
 
         </div>
       </main>
