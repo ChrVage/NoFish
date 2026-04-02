@@ -606,7 +606,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                     }
 
                     rows.push(
-                      <tr key={forecast.time}>
+                      <tr key={forecast.time} style={{ verticalAlign: 'top' }}>
                         <td className="py-2 text-sm font-medium tabular-nums whitespace-nowrap" style={getTimeColumnStyle(forecast.sunPhaseSegments)}>
                           {formatTime(forecast.time)}
                         </td>
