@@ -3,6 +3,8 @@ import { execSync } from 'child_process';
 
 function getCommitCount(): string {
   try {
+    // Vercel does a shallow clone; unshallow first so rev-list counts all commits
+    try { execSync('git fetch --unshallow', { encoding: 'utf-8', stdio: 'ignore' }); } catch { /* already full */ }
     return execSync('git rev-list --count HEAD', { encoding: 'utf-8' }).trim();
   } catch {
     return '0';
