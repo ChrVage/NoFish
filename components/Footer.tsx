@@ -23,15 +23,32 @@ export default function HeaderMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-label="Menu"
         aria-expanded={open}
-        className="text-2xl leading-none text-white hover:text-ocean-50 transition-colors select-none px-1"
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: '0.25rem',
+          padding: '0.5rem 0.75rem',
+          backgroundColor: '#f3f4f6',
+          color: '#1f2937',
+          borderRadius: '0.5rem',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: '0.75rem',
+        }}
       >
-        &#9776;
+        <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+          <line x1="4" y1="6" x2="20" y2="6" stroke="#1f2937" strokeWidth="2" strokeLinecap="round" />
+          <line x1="4" y1="12" x2="20" y2="12" stroke="#1f2937" strokeWidth="2" strokeLinecap="round" />
+          <line x1="4" y1="18" x2="20" y2="18" stroke="#1f2937" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+        <span>Menu</span>
       </button>
 
       {open && (
         <div
           className="absolute mt-2 rounded-lg shadow-2xl py-3"
-          style={{ right: '-8px', minWidth: '180px', backgroundColor: '#ffffff', border: '1px solid #e5e7eb' }}
+          style={{ right: '0px', minWidth: '180px', backgroundColor: '#ffffff', border: '1px solid #e5e7eb' }}
         >
           <a
             href="https://github.com/ChrVage/NoFish/blob/main/README.md"

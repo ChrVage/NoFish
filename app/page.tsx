@@ -20,8 +20,8 @@ export default function Home() {
   return (
     <div className="flex flex-col h-dvh overflow-hidden bg-ocean-50">
       {/* Header */}
-      <header className="bg-ocean-900 text-white px-6 py-4 shadow-lg z-[1100] shrink-0 overflow-visible relative">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <header className="bg-ocean-900 text-white px-6 py-3 shadow-lg z-[1100] shrink-0 overflow-visible relative">
+        <div className="max-w-7xl mx-auto flex items-center justify-between pr-2">
           <div className="flex items-center gap-3">
             <span className="text-lg">🎣</span>
             <h1 className="text-base font-normal">

@@ -293,10 +293,10 @@ export default function Map() {
         </p>
       </div>
 
-      {/* My Location button — bottom right, styled like Google Maps */}
-      <div className="absolute bottom-6 right-4 z-[1000] flex flex-col items-end gap-2">
+      {/* My Location button — bottom right, above Leaflet attribution */}
+      <div style={{ position: 'absolute', bottom: '28px', right: '12px', zIndex: 1100, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
         {locationError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 max-w-[200px] shadow">
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: '12px', borderRadius: '8px', padding: '8px 12px', maxWidth: '200px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             {locationError}
           </div>
         )}
@@ -306,16 +306,15 @@ export default function Map() {
           disabled={locating}
           aria-label="Use my current location"
           title="My Location"
-          className="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-60 disabled:cursor-wait"
-          style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
+          style={{ width: '40px', height: '40px', background: '#fff', borderRadius: '50%', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4b5563', cursor: locating ? 'wait' : 'pointer', opacity: locating ? 0.6 : 1, boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
         >
           {locating ? (
-            <svg className="w-5 h-5 animate-spin text-ocean-500" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+            <svg style={{ width: '20px', height: '20px', color: '#0ea5e9' }} fill="none" viewBox="0 0 24 24">
+              <circle opacity="0.25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+              <path opacity="0.75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
             </svg>
           ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
               <circle cx="12" cy="12" r="8" strokeWidth="1.5"/>
               <path strokeLinecap="round" d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
