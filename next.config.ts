@@ -1,14 +1,24 @@
 import type { NextConfig } from "next";
 import { execSync } from 'child_process';
 
-function getCommitCount(): string {
+function getBuildVersion(): string {
+  let count = '';
+  let sha = '';
+
   try {
     // Vercel does a shallow clone; unshallow first so rev-list counts all commits
     try { execSync('git fetch --unshallow', { encoding: 'utf-8', stdio: 'ignore' }); } catch { /* already full */ }
-    return execSync('git rev-list --count HEAD', { encoding: 'utf-8' }).trim();
-  } catch {
-    return '0';
-  }
+    count = execSync('git rev-list --count HEAD', { encoding: 'utf-8' }).trim();
+    sha = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
+  } catch { /* git not available or failed */ }
+
+  // Fallback: Vercel exposes the commit SHA at build time
+  if (!sha) sha = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? '';
+
+  if (count && count !== '0' && sha) return `${count} (${sha})`;
+  if (count && count !== '0') return count;
+  if (sha) return sha;
+  return '0';
 }
 
 const CSP = [
@@ -24,7 +34,7 @@ const CSP = [
 
 const nextConfig: NextConfig = {
   env: {
-    NEXT_PUBLIC_BUILD_VERSION: getCommitCount(),
+    NEXT_PUBLIC_BUILD_VERSION: getBuildVersion(),
   },
   async headers() {
     return [
