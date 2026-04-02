@@ -1,4 +1,13 @@
 import type { NextConfig } from "next";
+import { execSync } from 'child_process';
+
+function getCommitCount(): string {
+  try {
+    return execSync('git rev-list --count HEAD', { encoding: 'utf-8' }).trim();
+  } catch {
+    return '0';
+  }
+}
 
 const CSP = [
   "default-src 'self'",
@@ -12,6 +21,9 @@ const CSP = [
 ].join('; ');
 
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_BUILD_VERSION: getCommitCount(),
+  },
   async headers() {
     return [
       {
