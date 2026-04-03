@@ -141,7 +141,8 @@ function computeFishingScore(f: HourlyForecast): { score: number; reasons: Reaso
       windFactor = 0;
       danger(`⚠️ Storm — ${ws.toFixed(1)} m/s (gusts ${gs.toFixed(1)})`);
     } else if (ws > 12 || gs > 18) {
-      windFactor = lerp01(Math.max(ws, gs * 0.7), 12, 16) * -1 + 1; // 1→0 over 12–16
+      // 12 m/s → 0.20, 13.5 m/s → 0.10, 15 m/s → 0.05
+      windFactor = (1 - lerp01(Math.max(ws, gs * 0.7), 12, 15)) * 0.20;
       windFactor = Math.max(windFactor, 0.05);
       danger(`⚠️ Strong wind ${ws.toFixed(1)} m/s`);
     } else {
@@ -175,8 +176,12 @@ function computeFishingScore(f: HourlyForecast): { score: number; reasons: Reaso
       else if (ws <= 7) { /* neutral */ }
       else bad(`Wind ${ws.toFixed(1)} m/s`);
 
-      // Gust penalty (moderate)
-      if (gs > 12) {
+      // Gust penalty
+      if (ws >= 10 && gs > 15) {
+        // Sustained strong wind + heavy gusts — harsh conditions
+        windFactor *= 0.55;
+        danger(`⚠️ Sustained ${ws.toFixed(1)} m/s with gusts ${gs.toFixed(1)} m/s`);
+      } else if (gs > 12) {
         windFactor *= 0.85;
         bad(`Gusts ${gs.toFixed(1)} m/s`);
       } else if (gs > 10) {
