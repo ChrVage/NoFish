@@ -191,8 +191,8 @@ export async function reverseGeocode(
   lat: number,
   lng: number
 ): Promise<GeocodingResult | null> {
-  // v7 prefix: improved sea priority — land names no longer picked at sea
-  const cacheKey = `geo7:${lat.toFixed(2)}:${lng.toFixed(2)}`;
+  // v8 prefix: 4 dp cache key (~11 m precision) for accurate depth at clicked point
+  const cacheKey = `geo8:${lat.toFixed(4)}:${lng.toFixed(4)}`;
 
   const cached = await getCached<GeocodingResult>(cacheKey);
   if (cached) return cached;
