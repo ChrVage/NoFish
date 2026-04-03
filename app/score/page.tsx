@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { getCombinedForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
 import { getTimezone } from '@/lib/utils/timezone';
+import { formatDistance } from '@/lib/utils/distance';
 import { parseZoomParam } from '@/lib/utils/params';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
@@ -463,16 +464,30 @@ export default async function ScorePage({ searchParams }: PageProps) {
             {locationData && (
               <>
                 <h2 className="text-2xl font-bold text-ocean-900 mb-1">
-                  {locationData.name !== locationData.municipality
-                    ? `${locationData.name}, ${locationData.municipality}`
-                    : locationData.municipality}
-                  {locationData.county && `, ${locationData.county}`}
+                  {locationData.name}
+                  {locationData.placeDistanceM !== undefined && locationData.placeDistanceM > 100 && (
+                    <span className="text-sm font-normal text-gray-400 ml-2">
+                      ({formatDistance(locationData.placeDistanceM)} away)
+                    </span>
+                  )}
                 </h2>
+                {locationData.municipality && locationData.municipality !== 'Unknown municipality' && (
+                  <p className="text-sm text-gray-500">
+                    {locationData.municipality}
+                  </p>
+                )}
               </>
             )}
             <p className="text-sm text-gray-500">
               {Math.abs(lat).toFixed(4)}°{lat >= 0 ? 'N' : 'S'},{' '}
               {Math.abs(lng).toFixed(4)}°{lng >= 0 ? 'E' : 'W'}
+              {locationData?.elevation !== undefined && (
+                <span className="ml-2 text-gray-400">
+                  · {locationData.isSea
+                    ? `Depth: ${Math.abs(Math.round(locationData.elevation))} m`
+                    : `Elevation: ${Math.round(locationData.elevation)} m`}
+                </span>
+              )}
             </p>
             {bestWindows.length > 0 && (() => {
               const dateFmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short', timeZone: timezone });

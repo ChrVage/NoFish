@@ -7,6 +7,8 @@ import { enrichForecasts, type EnrichedForecast } from '@/lib/utils/enrichForeca
 interface ForecastTableProps {
   forecasts: HourlyForecast[];
   timezone: string;
+  /** Force-hide ocean columns even when wave data exists (e.g. land location). */
+  hideOceanData?: boolean;
 }
 
 // Weather symbol mapping (MET Norway symbol codes)
@@ -117,7 +119,7 @@ function getTimeColumnStyle(
   return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: textColor };
 }
 
-export default function ForecastTable({ forecasts, timezone }: ForecastTableProps) {
+export default function ForecastTable({ forecasts, timezone, hideOceanData }: ForecastTableProps) {
   if (!forecasts || forecasts.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-8 text-center">
@@ -127,7 +129,7 @@ export default function ForecastTable({ forecasts, timezone }: ForecastTableProp
   }
 
   // If no row has wave data the point is inland — hide ocean-specific columns
-  const hasOceanData = forecasts.some(f => f.waveHeight !== undefined);
+  const hasOceanData = !hideOceanData && forecasts.some(f => f.waveHeight !== undefined);
   const precipLabel = (forecasts[0]?.temperature ?? 2) > 1 ? 'Rain' : 'Snow';
 
   // Interpolate missing wave heights and trim at last hourly MET row

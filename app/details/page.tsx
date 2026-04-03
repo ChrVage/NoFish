@@ -33,7 +33,8 @@ export default async function DetailsPage({ searchParams }: PageProps) {
   ]);
 
   const { forecasts, oceanForecastLat, oceanForecastLng, waveForecastSource, tideStationName, tideStationLat, tideStationLng } = weatherResult;
-  const hasOceanData = oceanForecastLat !== undefined && oceanForecastLng !== undefined;
+  const isLand = locationData?.isSea === false;
+  const hasOceanData = !isLand && oceanForecastLat !== undefined && oceanForecastLng !== undefined;
   const timezone = getTimezone(lat, lng);
   const oceanForecastDistance = oceanForecastLat !== undefined && oceanForecastLng !== undefined
     ? haversineDistance(lat, lng, oceanForecastLat, oceanForecastLng)
@@ -98,34 +99,50 @@ export default async function DetailsPage({ searchParams }: PageProps) {
             {locationData && (
               <>
                 <h2 className="text-2xl font-bold text-ocean-900 mb-1">
-                  {locationData.name !== locationData.municipality
-                    ? `${locationData.name}, ${locationData.municipality}`
-                    : locationData.municipality}
-                  {locationData.county && `, ${locationData.county}`}
+                  {locationData.name}
+                  {locationData.placeDistanceM !== undefined && locationData.placeDistanceM > 100 && (
+                    <span className="text-sm font-normal text-gray-400 ml-2">
+                      ({formatDistance(locationData.placeDistanceM)} away)
+                    </span>
+                  )}
                 </h2>
+                {locationData.municipality && locationData.municipality !== 'Unknown municipality' && (
+                  <p className="text-sm text-gray-500">
+                    {locationData.municipality}
+                  </p>
+                )}
               </>
             )}
             <p className="text-sm text-gray-500">
               {Math.abs(lat).toFixed(4)}°{lat >= 0 ? 'N' : 'S'},{' '}
               {Math.abs(lng).toFixed(4)}°{lng >= 0 ? 'E' : 'W'}
+              {locationData?.elevation !== undefined && (
+                <span className="ml-2 text-gray-400">
+                  · {locationData.isSea
+                    ? `Depth: ${Math.abs(Math.round(locationData.elevation))} m`
+                    : `Elevation: ${Math.round(locationData.elevation)} m`}
+                </span>
+              )}
             </p>
-            <div className="mt-2 space-y-0.5">
-              {oceanForecastDistance !== null && oceanForecastLat !== undefined && oceanForecastLng !== undefined && (
-                <p className="text-xs text-gray-400">
-                  <span className="font-medium text-ocean-600">{waveForecastSource === 'barentswatch' ? 'Barentswatch Waves' : 'MET Ocean'}</span>
-                  {' '}· forecast grid point {formatDistance(oceanForecastDistance)} away
-                  {' '}({oceanForecastLat.toFixed(4)}°N, {oceanForecastLng.toFixed(4)}°E)
-                </p>
-              )}
-              {tideStationDistance !== null && tideStationLat !== undefined && tideStationLng !== undefined && (
-                <p className="text-xs text-gray-400">
-                  <span className="font-medium text-purple-600">Kartverket Tides</span>
-                  {' '}· nearest station {formatDistance(tideStationDistance)} away
-                  {tideStationName ? ` (${tideStationName})` : ''}
-                  {' '}({tideStationLat.toFixed(4)}°N, {tideStationLng.toFixed(4)}°E)
-                </p>
-              )}
-            </div>
+            {!isLand && (
+              <div className="mt-2 space-y-0.5">
+                {oceanForecastDistance !== null && oceanForecastLat !== undefined && oceanForecastLng !== undefined && (
+                  <p className="text-xs text-gray-400">
+                    <span className="font-medium text-ocean-600">{waveForecastSource === 'barentswatch' ? 'Barentswatch Waves' : 'MET Ocean'}</span>
+                    {' '}· forecast grid point {formatDistance(oceanForecastDistance)} away
+                    {' '}({oceanForecastLat.toFixed(4)}°N, {oceanForecastLng.toFixed(4)}°E)
+                  </p>
+                )}
+                {tideStationDistance !== null && tideStationLat !== undefined && tideStationLng !== undefined && (
+                  <p className="text-xs text-gray-400">
+                    <span className="font-medium text-purple-600">Kartverket Tides</span>
+                    {' '}· nearest station {formatDistance(tideStationDistance)} away
+                    {tideStationName ? ` (${tideStationName})` : ''}
+                    {' '}({tideStationLat.toFixed(4)}°N, {tideStationLng.toFixed(4)}°E)
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Forecast table */}
@@ -139,7 +156,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
               <span className="text-[10px] text-gray-300 select-none">›</span>
               <span className="text-xs font-semibold px-2.5 py-1 rounded-full border" style={{ backgroundColor: '#fed7aa', color: '#9a3412', borderColor: '#fb923c' }}>Low</span>
             </div>
-            <ForecastTable forecasts={forecasts} timezone={timezone} />
+            <ForecastTable forecasts={forecasts} timezone={timezone} hideOceanData={isLand} />
           </div>
 
           <p className="text-xs text-gray-400 mt-6">

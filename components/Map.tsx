@@ -84,6 +84,7 @@ export default function Map() {
       popupContent.innerHTML = `
         <div class="min-w-[220px]">
           <strong class="text-ocean-700 block mb-1" id="location-name">Loading...</strong>
+          <div class="text-gray-500 text-xs" id="location-elev"></div>
           <div class="text-gray-500 text-xs mb-3">${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E</div>
           <div style="display:flex;border-radius:0.5rem;overflow:hidden">
             <button type="button" id="go-score" aria-label="View score" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.25rem;background:#f3f4f6;color:#1f2937;border:none;border-right:2px solid white;padding:0.75rem 1rem;cursor:pointer;flex:1;min-height:64px">
@@ -123,6 +124,8 @@ export default function Map() {
             fetch(`/api/ocean-point?lat=${lat}&lon=${lng}`, { signal }),
           ]);
 
+          let clickedOnLand = false;
+
           if (geoResponse.ok) {
             const result = await geoResponse.json();
             const d = result.data;
@@ -132,22 +135,51 @@ export default function Map() {
               : placeName;
             const nameElement = popupContent.querySelector('#location-name');
             if (nameElement) nameElement.textContent = label;
+
+            // Show elevation/depth below the place name
+            const elev = result.elevation as number | undefined;
+            const isSea = result.isSea as boolean | undefined;
+            if (elev !== undefined) {
+              const elevEl = popupContent.querySelector('#location-elev');
+              if (elevEl) {
+                if (isSea) {
+                  elevEl.textContent = `Depth: ${Math.abs(Math.round(elev))} m`;
+                } else {
+                  elevEl.textContent = `Elevation: ${Math.round(elev)} m`;
+                }
+              }
+            }
+
+            // On land: hide Score and Tide buttons (only show Details)
+            if (isSea === false) {
+              clickedOnLand = true;
+              const scoreBtn = popupContent.querySelector('#go-score') as HTMLElement | null;
+              const tideBtn = popupContent.querySelector('#go-tide') as HTMLElement | null;
+              scoreBtn?.remove();
+              tideBtn?.remove();
+              // Remove border-right from Details button (now the only one)
+              const detailsBtn = popupContent.querySelector('#go-details') as HTMLElement | null;
+              if (detailsBtn) detailsBtn.style.borderRight = 'none';
+              tempMarker.getPopup()?.update();
+            }
           } else {
             const nameElement = popupContent.querySelector('#location-name');
             if (nameElement) nameElement.textContent = `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
           }
 
-          if (oceanResponse.ok) {
+          if (!clickedOnLand && oceanResponse.ok) {
             const oceanResult = await oceanResponse.json();
             const oLat: number | undefined = oceanResult.oceanForecastLat;
             const oLng: number | undefined = oceanResult.oceanForecastLng;
             if (oLat !== undefined && oLng !== undefined && map.getContainer().isConnected) {
+              // Dashed line from click to wave forecast grid point
               activeOceanLine = L.polyline([[lat, lng], [oLat, oLng]], {
                 color: '#38bdf8',
                 weight: 2,
                 dashArray: '5, 6',
                 opacity: 0.85,
               }).addTo(map);
+              // Blue dot at wave forecast grid point
               activeOceanDot = L.circleMarker([oLat, oLng], {
                 radius: 6,
                 color: '#0284c7',

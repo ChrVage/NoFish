@@ -116,7 +116,6 @@ export default async function TidePage({ searchParams }: PageProps) {
                   Forecast for: {locationData.name !== locationData.municipality
                     ? `${locationData.name}, ${locationData.municipality}`
                     : locationData.municipality}
-                  {locationData.county && `, ${locationData.county}`}
                 </h2>
               </>
             )}

@@ -26,7 +26,13 @@ export async function GET(request: NextRequest) {
 
   try {
     const data = await reverseGeocode(latitude, longitude);
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json({
+      success: true,
+      data,
+      elevation: data?.elevation,
+      terrain: data?.terrain,
+      isSea: data?.isSea,
+    });
   } catch (error) {
     console.error('Geocoding API error:', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
