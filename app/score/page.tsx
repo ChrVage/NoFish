@@ -107,7 +107,7 @@ function computeFishingScore(f: HourlyForecast): { score: number; reasons: Reaso
   //   1.0     → ~0.2
   //   1.5+    → ~0.0
   //
-  let currentFactor = 0.5; // default when no current data (neutral)
+  let currentFactor = 1.0; // default when no current data (skip — no effect)
   if (f.currentSpeed !== undefined) {
     const cs = f.currentSpeed;
     // Gaussian centred at 0.4 m/s, σ = 0.22
@@ -414,7 +414,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
     }
     // Among windows within 5 points of the best, pick the longest (then highest avg)
     const viable = candidates
-      .filter(c => c.avg >= topAvg - 5)
+      .filter(c => c.avg >= topAvg - 5 && c.avg >= 20)
       .sort((a, b) => b.len - a.len || b.avg - a.avg);
     for (const c of viable) {
       const overlaps = bestWindows.some(w =>
@@ -427,6 +427,20 @@ export default async function ScorePage({ searchParams }: PageProps) {
     }
     // Sort by time
     bestWindows.sort((a, b) => a.start - b.start);
+
+    // Merge adjacent windows (window 1 ends where window 2 starts)
+    for (let i = bestWindows.length - 1; i > 0; i--) {
+      const prev = bestWindows[i - 1];
+      const curr = bestWindows[i];
+      if (prev.start + prev.len >= curr.start) {
+        const newLen = curr.start + curr.len - prev.start;
+        let sum = 0;
+        for (let j = 0; j < newLen; j++) sum += scoredForecasts[prev.start + j].score;
+        prev.len = newLen;
+        prev.avg = sum / newLen;
+        bestWindows.splice(i, 1);
+      }
+    }
   }
 
   const formatTime = (isoString: string) => {

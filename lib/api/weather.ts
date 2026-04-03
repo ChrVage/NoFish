@@ -346,10 +346,15 @@ export function combineForecasts(
 
   // Create a map of sea current data by time for quick lookup
   const currentDataMap = new Map<string, BarentswatchSeaCurrentEntry>();
+  // Check whether the dataset contains ANY real current values (speed or direction)
+  let hasAnyCurrent = false;
   if (seaCurrentEntries) {
     for (const entry of seaCurrentEntries) {
       if (entry?.forecastTime) {
         currentDataMap.set(entry.forecastTime, entry);
+      }
+      if (entry?.current != null || entry?.direction != null) {
+        hasAnyCurrent = true;
       }
     }
   }
@@ -416,8 +421,12 @@ export function combineForecasts(
     const currentData = currentDataMap.get(entry.time)
       ?? (seaCurrentEntries?.length ? findClosestEntry(seaCurrentEntries, entryDate.getTime()) : undefined);
     if (currentData) {
-      hourlyForecast.currentSpeed = currentData.current ?? undefined;
+      // If a current record exists for this hour, treat null as 0 (dead water)
+      hourlyForecast.currentSpeed = currentData.current ?? 0;
       hourlyForecast.currentDirection = currentData.direction ?? undefined;
+    } else if (hasAnyCurrent) {
+      // Dataset has current data but this hour is missing — treat as 0 (dead water)
+      hourlyForecast.currentSpeed = 0;
     }
 
     // Add sea temperature from MET.no Oceanforecast if available
