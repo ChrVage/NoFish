@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import HeaderMenu from '@/components/Footer';
 
 // Import Map with SSR disabled (Leaflet requires browser window object)
@@ -22,7 +23,8 @@ export default function Home() {
       {/* Header */}
       <header style={{ backgroundColor: '#ffffff', color: '#1f2937', padding: '12px 24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', zIndex: 1100, flexShrink: 0, overflow: 'visible', position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'center', maxWidth: '80rem', margin: '0 auto' }}>
-          <span style={{ fontSize: '1rem', whiteSpace: 'nowrap', flexShrink: 0 }}>🎣 NoFish</span>
+          <Image src="/NoFish.png" alt="NoFish" width={32} height={32} className="rounded-full" style={{ flexShrink: 0 }} />
+          <span style={{ fontSize: '1rem', whiteSpace: 'nowrap', flexShrink: 0, marginLeft: '8px' }}>NoFish</span>
           <span style={{ fontSize: '10px', fontStyle: 'italic', fontWeight: 300, opacity: 0.6, textAlign: 'center', flex: 1, padding: '0 12px' }}>... because fishing in bad weather is worse than no fishing at all</span>
           <div style={{ flexShrink: 0 }}>
             <HeaderMenu />

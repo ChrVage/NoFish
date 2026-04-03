@@ -101,7 +101,7 @@ export default async function TidePage({ searchParams }: PageProps) {
       <header style={{ backgroundColor: '#ffffff', color: '#1f2937', padding: '12px 24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <BackButton label="🎣 NoFish" />
+            <BackButton />
           </div>
           <PageNav lat={lat} lng={lng} zoom={validZoom} current="tide" />
         </div>

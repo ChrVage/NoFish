@@ -2,11 +2,6 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 
-interface BackButtonProps {
-  label?: string;
-  extraParams?: Record<string, string | number | undefined>;
-}
-
 const buttonStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'row',
@@ -19,14 +14,12 @@ const buttonStyle: React.CSSProperties = {
   border: 'none',
   cursor: 'pointer',
   textDecoration: 'none',
-  fontSize: '0.75rem',
+  fontSize: '0.875rem',
+  fontWeight: 700,
 };
 
-export default function BackButton({
-  label = 'Back',
-  extraParams,
-}: BackButtonProps) {
-  const { push } = useRouter();
+export default function BackButton() {
+  const router = useRouter();
   const searchParams = useSearchParams();
 
   const handleBack = () => {
@@ -36,23 +29,18 @@ export default function BackButton({
     if (lat && lng) {
       const params = new URLSearchParams({ lat, lng });
       if (zoom) params.set('zoom', zoom);
-      if (extraParams) {
-        for (const [key, value] of Object.entries(extraParams)) {
-          if (value !== undefined) params.set(key, String(value));
-        }
-      }
-      push(`/?${params.toString()}`);
+      router.push(`/?${params.toString()}`);
     } else {
-      push('/');
+      router.push('/');
     }
   };
 
   return (
     <button onClick={handleBack} style={buttonStyle}>
-      <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
       </svg>
-      <span style={{ fontSize: '0.75rem' }}>{label}</span>
+      <span>Back</span>
     </button>
   );
 }

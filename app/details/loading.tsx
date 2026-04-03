@@ -2,9 +2,9 @@ export default function Loading() {
   return (
     <div className="min-h-screen bg-ocean-50">
       <header style={{ backgroundColor: '#ffffff', color: '#1f2937', padding: '12px 24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        <div className="max-w-7xl mx-auto flex items-center gap-3">
-          <span className="text-3xl">🎣</span>
-          <h1 className="text-2xl font-bold">NoFish</h1>
+        <div className="max-w-7xl mx-auto flex items-center gap-2">
+          <img src="/NoFish.png" alt="NoFish" width={32} height={32} style={{ borderRadius: '9999px' }} />
+          <h1 className="text-lg font-bold">NoFish</h1>
         </div>
       </header>
       <main className="max-w-4xl mx-auto px-4 py-8">
