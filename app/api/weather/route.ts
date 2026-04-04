@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
         oceanForecastLng: result.oceanForecastLng,
         metadata: result.metadata,
       } as WeatherApiResponse,
-      { status: 200 }
+      { status: 200, headers: { 'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=1800' } }
     );
   } catch (error) {
     console.error('Weather API error:', error);

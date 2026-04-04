@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCombinedForecast } from '@/lib/api/weather';
+import { getWaveGridPoint } from '@/lib/api/barentswatch';
 
 export interface OceanPointResponse {
   success: boolean;
@@ -7,6 +7,8 @@ export interface OceanPointResponse {
   oceanForecastLng?: number;
   error?: string;
 }
+
+const CACHE_HEADERS = { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200' };
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -38,15 +40,15 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // getCombinedForecast is cache-backed — no extra upstream request when cache is warm
-    const result = await getCombinedForecast(latitude, longitude);
+    // Lightweight: only calls Barentswatch wave API (1 upstream request)
+    const gridPoint = await getWaveGridPoint(latitude, longitude);
     return NextResponse.json(
       {
         success: true,
-        oceanForecastLat: result.oceanForecastLat,
-        oceanForecastLng: result.oceanForecastLng,
+        oceanForecastLat: gridPoint?.lat,
+        oceanForecastLng: gridPoint?.lng,
       } satisfies OceanPointResponse,
-      { status: 200 }
+      { status: 200, headers: CACHE_HEADERS }
     );
   } catch (error) {
     console.error('Ocean-point API error:', error);

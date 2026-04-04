@@ -5,6 +5,8 @@
  */
 
 import type { BarentswatchWaveResponse, BarentswatchSeaCurrentResponse } from '@/types/weather';
+import { getCached, setCached, withInflight } from '@/lib/db/cache';
+import { haversineDistance } from '@/lib/utils/distance';
 
 const TOKEN_URL = 'https://id.barentswatch.no/connect/token';
 const WAVE_API_URL = 'https://www.barentswatch.no/bwapi/v1/waveforecastpoint/nearest/all';
@@ -146,4 +148,62 @@ export async function getSeaCurrentForecast(
     console.error('Barentswatch sea current forecast error:', error);
     return null;
   }
+}
+
+// ── Lightweight grid-point lookup (for ocean-point API route) ───────────────
+
+/** Maximum distance (km) between the requested point and the wave forecast grid point. */
+const MAX_WAVE_GRID_DISTANCE_KM = 1;
+
+export interface WaveGridPoint {
+  lat: number;
+  lng: number;
+}
+
+/** Wrapper so we can cache "no data" distinctly from a cache miss. */
+interface WaveGridPointCache {
+  point: WaveGridPoint | null;
+}
+
+/**
+ * Return just the Barentswatch wave-forecast grid-point coordinates for a
+ * location, or null when no wave data is available nearby.
+ *
+ * Much cheaper than getCombinedForecast — only calls the Barentswatch wave
+ * API (1 upstream request vs 5).  Cached independently for 1 hour.
+ */
+export async function getWaveGridPoint(
+  lat: number,
+  lng: number,
+): Promise<WaveGridPoint | null> {
+  const cacheKey = `wavepoint:${lat.toFixed(2)}:${lng.toFixed(2)}`;
+  const cached = await getCached<WaveGridPointCache>(cacheKey);
+  if (cached !== null) return cached.point;
+
+  return withInflight<WaveGridPoint | null>(cacheKey, async () => {
+    const waveForecast = await getWaveForecast(lat, lng);
+
+    if (!waveForecast || waveForecast.length === 0) {
+      await setCached(cacheKey, { point: null } satisfies WaveGridPointCache, 1);
+      return null;
+    }
+
+    const gridLat = waveForecast[0].latitude;
+    const gridLng = waveForecast[0].longitude;
+
+    if (gridLat == null || gridLng == null) {
+      await setCached(cacheKey, { point: null } satisfies WaveGridPointCache, 1);
+      return null;
+    }
+
+    const distance = haversineDistance(lat, lng, gridLat, gridLng);
+    if (distance > MAX_WAVE_GRID_DISTANCE_KM) {
+      await setCached(cacheKey, { point: null } satisfies WaveGridPointCache, 1);
+      return null;
+    }
+
+    const result: WaveGridPoint = { lat: gridLat, lng: gridLng };
+    await setCached(cacheKey, { point: result } satisfies WaveGridPointCache, 1);
+    return result;
+  });
 }

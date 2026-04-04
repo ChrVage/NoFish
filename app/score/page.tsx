@@ -10,7 +10,7 @@ import { enrichForecasts } from '@/lib/utils/enrichForecasts';
 import type { HourlyForecast } from '@/types/weather';
 
 interface PageProps {
-  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string }>;
+  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string }>;
 }
 
 // ── Sun-phase background colour (same as ForecastTable Time column) ─────────
@@ -372,7 +372,7 @@ function getScoreBg(score: number): string {
 }
 
 export default async function ScorePage({ searchParams }: PageProps) {
-  const { lat: latStr, lng: lngStr, zoom: zoomStr } = await searchParams;
+  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr } = await searchParams;
   const lat = parseFloat(latStr ?? '');
   const lng = parseFloat(lngStr ?? '');
   const validZoom = parseZoomParam(zoomStr);
@@ -381,9 +381,11 @@ export default async function ScorePage({ searchParams }: PageProps) {
     notFound();
   }
 
+  const isSea = seaStr === '0' ? false : seaStr === '1' ? true : undefined;
+
   const [locationData, weatherResult] = await Promise.all([
     reverseGeocode(lat, lng),
-    getCombinedForecast(lat, lng),
+    getCombinedForecast(lat, lng, isSea !== undefined ? { isSea } : undefined),
   ]);
 
   const { forecasts: rawForecasts } = weatherResult;
@@ -468,7 +470,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton />
           </div>
-          <PageNav lat={lat} lng={lng} zoom={validZoom} current="score" availablePages={hasOceanData ? undefined : ['details']} />
+          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="score" availablePages={hasOceanData ? undefined : ['details']} />
         </div>
       </header>
 

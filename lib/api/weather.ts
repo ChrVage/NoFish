@@ -874,7 +874,8 @@ export interface CombinedForecastResult {
 
 export async function getCombinedForecast(
   lat: number,
-  lng: number
+  lng: number,
+  options?: { isSea?: boolean },
 ): Promise<CombinedForecastResult> {
   // Cache key uses 2 dp (≈1 km) — forecast resolution doesn't need more
   const weatherCacheKey = `weather:${lat.toFixed(2)}:${lng.toFixed(2)}`;
@@ -882,13 +883,16 @@ export async function getCombinedForecast(
   if (cachedWeather) return cachedWeather;
 
   return withInflight(weatherCacheKey, async () => {
+    // Skip ocean-related API calls for inland points (saves 4 upstream requests)
+    const skipOcean = options?.isSea === false;
+
     // Fetch all forecasts in parallel
     const [locationForecast, waveForecast, seaCurrentForecast, tideForecast, oceanForecast] = await Promise.all([
       getLocationForecast(lat, lng),
-      getWaveForecast(lat, lng),
-      getSeaCurrentForecast(lat, lng),
-      getTideForecast(lat, lng),
-      getOceanForecast(lat, lng),
+      skipOcean ? Promise.resolve(null) : getWaveForecast(lat, lng),
+      skipOcean ? Promise.resolve(null) : getSeaCurrentForecast(lat, lng),
+      skipOcean ? Promise.resolve(null) : getTideForecast(lat, lng),
+      skipOcean ? Promise.resolve(null) : getOceanForecast(lat, lng),
     ]);
 
     // Only pass tide data if real events were returned

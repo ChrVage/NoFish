@@ -26,13 +26,16 @@ export async function GET(request: NextRequest) {
 
   try {
     const data = await reverseGeocode(latitude, longitude);
-    return NextResponse.json({
-      success: true,
-      data,
-      elevation: data?.elevation,
-      terrain: data?.terrain,
-      isSea: data?.isSea,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data,
+        elevation: data?.elevation,
+        terrain: data?.terrain,
+        isSea: data?.isSea,
+      },
+      { headers: { 'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800' } }
+    );
   } catch (error) {
     console.error('Geocoding API error:', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });

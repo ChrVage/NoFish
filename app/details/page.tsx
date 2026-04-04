@@ -13,11 +13,11 @@ import PageNav from '@/components/PageNav';
 import { Footer } from '@/components/Footer';
 
 interface PageProps {
-  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string }>;
+  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string }>;
 }
 
 export default async function DetailsPage({ searchParams }: PageProps) {
-  const { lat: latStr, lng: lngStr, zoom: zoomStr } = await searchParams;
+  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr } = await searchParams;
   const lat = parseFloat(latStr ?? '');
   const lng = parseFloat(lngStr ?? '');
   const validZoom = parseZoomParam(zoomStr);
@@ -26,10 +26,13 @@ export default async function DetailsPage({ searchParams }: PageProps) {
     notFound();
   }
 
+  // Pass isSea hint when known — skips 4 ocean API calls for inland points
+  const isSea = seaStr === '0' ? false : seaStr === '1' ? true : undefined;
+
   // Fetch data in parallel directly from lib — no internal HTTP round-trips
   const [locationData, weatherResult] = await Promise.all([
     reverseGeocode(lat, lng),
-    getCombinedForecast(lat, lng),
+    getCombinedForecast(lat, lng, isSea !== undefined ? { isSea } : undefined),
   ]);
 
   const { forecasts, oceanForecastLat, oceanForecastLng, waveForecastSource, tideStationName, tideStationLat, tideStationLng } = weatherResult;
@@ -87,7 +90,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton />
           </div>
-          <PageNav lat={lat} lng={lng} zoom={validZoom} current="details" availablePages={hasOceanData ? undefined : ['details']} />
+          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="details" availablePages={hasOceanData ? undefined : ['details']} />
         </div>
       </header>
 

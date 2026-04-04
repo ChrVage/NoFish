@@ -117,14 +117,14 @@ export default function Map() {
       }).openPopup();
 
       // Fetch location name and ocean forecast grid point in parallel
+      let clickedOnLand = false;
+
       (async () => {
         try {
           const [geoResponse, oceanResponse] = await Promise.all([
             fetch(`/api/geocoding?lat=${lat}&lon=${lng}`, { signal }),
             fetch(`/api/ocean-point?lat=${lat}&lon=${lng}`, { signal }),
           ]);
-
-          let clickedOnLand = false;
 
           if (geoResponse.ok) {
             const result = await geoResponse.json();
@@ -217,14 +217,15 @@ export default function Map() {
       };
 
       const zoom = map.getZoom();
+      const seaParam = clickedOnLand ? '&sea=0' : '&sea=1';
       popupContent.querySelector('#go-score')?.addEventListener('click', () =>
-        navigate(`/score?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}`)
+        navigate(`/score?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}${seaParam}`)
       );
       popupContent.querySelector('#go-details')?.addEventListener('click', () =>
-        navigate(`/details?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}`)
+        navigate(`/details?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}${seaParam}`)
       );
       popupContent.querySelector('#go-tide')?.addEventListener('click', () =>
-        navigate(`/tide?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}`)
+        navigate(`/tide?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}${seaParam}`)
       );
 
       // Remove the pin when popup closes; leave dot/line on map until next click
