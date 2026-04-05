@@ -1,8 +1,9 @@
-# 🎣 NoFish
+# NoFish
 
-**Because fishing in bad weather is worse than no fishing at all.**
+**Help to avoid taking your boat out when fishing times are suboptimal**
+**... because fishing in bad weather is worse than no fishing at all.**
 
-NoFish gives small boat fishers access to wind, wave, and tide forecasts for any point on the Norwegian coast — so they can make a safer call before they leave the dock.
+NoFish gives small boat fishers access to wind, wave, and tide forecasts for any point on the Norwegian coast — so they can make a good decision before they leave the dock.
 
 This is not powered by AI. Every skipper needs to use their own judgment, experience, and real intelligence before heading out on the North Sea. NoFish gives you the data — the decision is yours.
 

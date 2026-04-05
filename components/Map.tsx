@@ -2,13 +2,111 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { createRoot, type Root } from 'react-dom/client';
+import { flushSync } from 'react-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+
+// ── Popup content (rendered via createRoot into a Leaflet popup) ────────────
+
+const popupButtonStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '0.25rem',
+  background: '#f3f4f6',
+  color: '#1f2937',
+  border: 'none',
+  padding: '0.75rem 1rem',
+  cursor: 'pointer',
+  flex: 1,
+  minHeight: '64px',
+};
+
+interface PopupContentProps {
+  lat: number;
+  lng: number;
+  loading: boolean;
+  name?: string;
+  elevation?: number;
+  isSea?: boolean;
+  showScore: boolean;
+  showTide: boolean;
+  onNavigate: (page: string) => void;
+}
+
+function PopupContent({ lat, lng, loading, name, elevation, isSea, showScore, showTide, onNavigate }: PopupContentProps) {
+  const buttons: { key: string; label: string; ariaLabel: string; icon: React.ReactNode }[] = [];
+
+  if (showScore) {
+    buttons.push({
+      key: 'score', label: 'Score', ariaLabel: 'View score',
+      icon: (
+        <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+    });
+  }
+
+  buttons.push({
+    key: 'details', label: 'Details', ariaLabel: 'View forecast details',
+    icon: (
+      <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18M3 6h18M3 18h18" />
+      </svg>
+    ),
+  });
+
+  if (showTide) {
+    buttons.push({
+      key: 'tide', label: 'Tides', ariaLabel: 'View tides',
+      icon: (
+        <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      ),
+    });
+  }
+
+  return (
+    <div style={{ minWidth: '220px', fontSize: '0.875rem' }}>
+      <strong className="text-ocean-700" style={{ display: 'block', marginBottom: '0.25rem' }}>
+        {loading ? 'Loading...' : (name ?? `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`)}
+      </strong>
+      {!loading && elevation !== undefined && (
+        <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>
+          {isSea ? `Depth: ${Math.abs(Math.round(elevation))} m` : `Elevation: ${Math.round(elevation)} m`}
+        </div>
+      )}
+      <div style={{ color: '#6b7280', fontSize: '0.75rem', marginBottom: '0.75rem' }}>
+        {lat.toFixed(4)}°N, {lng.toFixed(4)}°E
+      </div>
+      <div style={{ display: 'flex', borderRadius: '0.5rem', overflow: 'hidden' }}>
+        {buttons.map((btn, i) => (
+          <button
+            key={btn.key}
+            type="button"
+            onClick={() => onNavigate(btn.key)}
+            aria-label={btn.ariaLabel}
+            style={{
+              ...popupButtonStyle,
+              borderRight: i < buttons.length - 1 ? '2px solid white' : 'none',
+            }}
+          >
+            {btn.icon}
+            <span style={{ fontSize: '0.75rem' }}>{btn.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Map() {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const openMarkerAtRef = useRef<((lat: number, lng: number) => void) | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -57,6 +155,7 @@ export default function Map() {
     let activeOceanDot: L.CircleMarker | null = null;
     let activeOceanLine: L.Polyline | null = null;
     let activeFetchController: AbortController | null = null;
+    let activePopupRoot: Root | null = null;
 
     const clearOceanLayers = () => {
       if (activeOceanLine) { map.removeLayer(activeOceanLine); activeOceanLine = null; }
@@ -78,47 +177,41 @@ export default function Map() {
 
       const tempMarker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
 
-      // Create popup with three navigation links
-      const popupContent = document.createElement('div');
-      popupContent.className = 'text-sm';
-      popupContent.innerHTML = `
-        <div class="min-w-[220px]">
-          <strong class="text-ocean-700 block mb-1" id="location-name">Loading...</strong>
-          <div class="text-gray-500 text-xs" id="location-elev"></div>
-          <div class="text-gray-500 text-xs mb-3">${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E</div>
-          <div style="display:flex;border-radius:0.5rem;overflow:hidden">
-            <button type="button" id="go-score" aria-label="View score" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.25rem;background:#f3f4f6;color:#1f2937;border:none;border-right:2px solid white;padding:0.75rem 1rem;cursor:pointer;flex:1;min-height:64px">
-              <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-              </svg>
-              <span style="font-size:0.75rem">Score</span>
-            </button>
-            <button type="button" id="go-details" aria-label="View forecast details" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.25rem;background:#f3f4f6;color:#1f2937;border:none;border-right:2px solid white;padding:0.75rem 1rem;cursor:pointer;flex:1;min-height:64px">
-              <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M3 6h18M3 18h18"/>
-              </svg>
-              <span style="font-size:0.75rem">Details</span>
-            </button>
-            <button type="button" id="go-tide" aria-label="View tides" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.25rem;background:#f3f4f6;color:#1f2937;border:none;padding:0.75rem 1rem;cursor:pointer;flex:1;min-height:64px">
-              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-              </svg>
-              <span style="font-size:0.75rem">Tides</span>
-            </button>
-          </div>
-        </div>
-      `;
+      // Clean up previous popup React root
+      if (activePopupRoot) { activePopupRoot.unmount(); activePopupRoot = null; }
 
-      // Bind popup and open it
-      tempMarker.bindPopup(popupContent, {
+      const popupContainer = document.createElement('div');
+      const popupRoot = createRoot(popupContainer);
+      activePopupRoot = popupRoot;
+
+      let isLand = false;
+      let hasOcean = true;
+
+      const navigate = (page: string) => {
+        popupRoot.unmount();
+        if (activePopupRoot === popupRoot) activePopupRoot = null;
+        map.removeLayer(tempMarker);
+        clearOceanLayers();
+        map.closePopup();
+        const zoom = map.getZoom();
+        const seaParam = isLand ? '&sea=0' : '&sea=1';
+        router.push(`/${page}?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}${seaParam}`);
+      };
+
+      // Initial render — show loading state with all buttons visible
+      flushSync(() => {
+        popupRoot.render(
+          <PopupContent lat={lat} lng={lng} loading={true} showScore={true} showTide={true} onNavigate={navigate} />
+        );
+      });
+
+      tempMarker.bindPopup(popupContainer, {
         closeButton: true,
         autoClose: true,
         closeOnClick: false,
       }).openPopup();
 
       // Fetch location name and ocean forecast grid point in parallel
-      let clickedOnLand = false;
-
       (async () => {
         try {
           const [geoResponse, oceanResponse] = await Promise.all([
@@ -126,48 +219,26 @@ export default function Map() {
             fetch(`/api/ocean-point?lat=${lat}&lon=${lng}`, { signal }),
           ]);
 
+          let popupName: string | undefined;
+          let elevation: number | undefined;
+          let isSea: boolean | undefined;
+
           if (geoResponse.ok) {
             const result = await geoResponse.json();
             const d = result.data;
             const placeName = d?.name || d?.municipality || d?.displayName || `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
-            const label = d?.municipality && d.name && d.name !== d.municipality
+            popupName = d?.municipality && d.name && d.name !== d.municipality
               ? `${d.name}, ${d.municipality}`
               : placeName;
-            const nameElement = popupContent.querySelector('#location-name');
-            if (nameElement) nameElement.textContent = label;
-
-            // Show elevation/depth below the place name
-            const elev = result.elevation as number | undefined;
-            const isSea = result.isSea as boolean | undefined;
-            if (elev !== undefined) {
-              const elevEl = popupContent.querySelector('#location-elev');
-              if (elevEl) {
-                if (isSea) {
-                  elevEl.textContent = `Depth: ${Math.abs(Math.round(elev))} m`;
-                } else {
-                  elevEl.textContent = `Elevation: ${Math.round(elev)} m`;
-                }
-              }
-            }
-
-            // On land: hide Score and Tide buttons (only show Details)
+            elevation = result.elevation as number | undefined;
+            isSea = result.isSea as boolean | undefined;
             if (isSea === false) {
-              clickedOnLand = true;
-              const scoreBtn = popupContent.querySelector('#go-score') as HTMLElement | null;
-              const tideBtn = popupContent.querySelector('#go-tide') as HTMLElement | null;
-              scoreBtn?.remove();
-              tideBtn?.remove();
-              // Remove border-right from Details button (now the only one)
-              const detailsBtn = popupContent.querySelector('#go-details') as HTMLElement | null;
-              if (detailsBtn) detailsBtn.style.borderRight = 'none';
-              tempMarker.getPopup()?.update();
+              isLand = true;
+              hasOcean = false;
             }
-          } else {
-            const nameElement = popupContent.querySelector('#location-name');
-            if (nameElement) nameElement.textContent = `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
           }
 
-          if (!clickedOnLand && oceanResponse.ok) {
+          if (!isLand && oceanResponse.ok) {
             const oceanResult = await oceanResponse.json();
             const oLat: number | undefined = oceanResult.oceanForecastLat;
             const oLng: number | undefined = oceanResult.oceanForecastLng;
@@ -192,55 +263,44 @@ export default function Map() {
                 { direction: 'top', offset: [0, -4] }
               );
             } else {
-              // No ocean data nearby — hide Score and Tide buttons
-              const scoreBtn = popupContent.querySelector('#go-score') as HTMLElement | null;
-              const tideBtn = popupContent.querySelector('#go-tide') as HTMLElement | null;
-              scoreBtn?.remove();
-              tideBtn?.remove();
-              tempMarker.getPopup()?.update();
+              hasOcean = false;
             }
           }
+
+          // Re-render popup with fetched data
+          flushSync(() => {
+            popupRoot.render(
+              <PopupContent
+                lat={lat} lng={lng} loading={false}
+                name={popupName} elevation={elevation} isSea={isSea}
+                showScore={hasOcean} showTide={hasOcean}
+                onNavigate={navigate}
+              />
+            );
+          });
+          tempMarker.getPopup()?.update();
         } catch (error) {
           // Ignore aborted fetches (user clicked a new spot before this resolved)
           if (error instanceof DOMException && error.name === 'AbortError') return;
           console.error('Map fetch error:', error);
-          const nameElement = popupContent.querySelector('#location-name');
-          if (nameElement) nameElement.textContent = `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
+          flushSync(() => {
+            popupRoot.render(
+              <PopupContent lat={lat} lng={lng} loading={false} showScore={true} showTide={true} onNavigate={navigate} />
+            );
+          });
+          tempMarker.getPopup()?.update();
         }
       })();
 
-      const navigate = (path: string) => {
-        map.removeLayer(tempMarker);
-        clearOceanLayers();
-        map.closePopup();
-        router.push(path);
-      };
-
-      const zoom = map.getZoom();
-      const seaParam = clickedOnLand ? '&sea=0' : '&sea=1';
-      popupContent.querySelector('#go-score')?.addEventListener('click', () =>
-        navigate(`/score?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}${seaParam}`)
-      );
-      popupContent.querySelector('#go-details')?.addEventListener('click', () =>
-        navigate(`/details?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}${seaParam}`)
-      );
-      popupContent.querySelector('#go-tide')?.addEventListener('click', () =>
-        navigate(`/tide?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}${seaParam}`)
-      );
-
       // Remove the pin when popup closes; leave dot/line on map until next click
-      // (clearOceanLayers runs at the top of openMarkerAt — removing it here
-      // prevents a race where popupclose fires after the next fetch has already
-      // placed a fresh dot, wiping it out immediately)
       tempMarker.on('popupclose', () => {
+        popupRoot.unmount();
+        if (activePopupRoot === popupRoot) activePopupRoot = null;
         map.removeLayer(tempMarker);
       });
 
       return tempMarker;
     };
-
-    // Expose openMarkerAt so the location button (rendered in JSX) can call it
-    openMarkerAtRef.current = openMarkerAt;
 
     // If returning from a detail page, restore the marker + popup
     let restoreTimer: ReturnType<typeof setTimeout> | null = null;
@@ -274,7 +334,7 @@ export default function Map() {
     mapRef.current = map;
 
     return () => {
-      openMarkerAtRef.current = null;
+      if (activePopupRoot) activePopupRoot.unmount();
       if (restoreTimer !== null) clearTimeout(restoreTimer);
       if (singleClickTimer !== null) clearTimeout(singleClickTimer);
       if (activeFetchController) activeFetchController.abort();

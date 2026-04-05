@@ -1,0 +1,35 @@
+# Prompt for reviewing code
+
+Act as an expert Next.js developer and senior code reviewer. 
+Please review the provided code for my web application, "NoFish" — a marine weather forecasting tool for fishers that aggregates data from MET Norway, Barentswatch, and Kartverket.
+
+Please review the code based on the following prioritized criteria:
+
+1. Good architecture and Next.js best practices: Clean code, DRY principles, proper separation of server vs. client components, and efficient state management (especially regarding map interactions and zoom state).
+2. API efficiency & Data handling: Efficient fetching and aggregation of multiple external APIs server-side, robust error handling, and clean execution of data interpolation (e.g., transforming 3-hour wave data into 1-hour intervals).
+3. Security: Verification that API calls and keys remain strictly server-side, safe handling of client inputs (coordinates), and adherence to the strict security headers (CSP, HSTS, no-sniff) defined in the project.
+4. User experience & Responsiveness: Mobile-first considerations, especially ensuring that the large forecast tables and map popups are highly readable and responsive on small screens.
+5. WCAG (Accessibility): Proper semantic HTML, correct ARIA roles (crucial for the map and data tables), and full keyboard navigability.
+
+## Instructions for response
+
+Provide a brief summary of the overall code quality in the context of the NoFish architecture.
+
+Identify and explain the single most important necessary change in detail. Why is it critical for performance, security, or UX?
+
+## Reason for existing
+Found in the [Readme.md](readme.md) file.
+
+## Future plans 
+- Add **barometric pressure** and implement it as a part of the fishing score.
+- Add **Wave period**, and implment it to score, as a safety score.
+- Show total score, but split **safety score** and **fishing score**.
+- Consider adding a WMS Layer from Kartverket to be able to show **sea-bottom** topografy in the map.
+- Implement link to seasonal **protection zones** from Fiskeridirectoratet
+- Link directly to **fishing rules** by species from Fiskeridirektoratet.
+- Implment an **API** so others can collect next best fishing times based on coordinates.
+- Remove all the other readme pages, and add them as a part of nofish.no, instead of GitHub.
+- Create a feedback form on nofish.no.
+- Find a better way to determine if the coordinate is land or sea. Today Geonorge not leaving depth is enough for limiting the response.
+- Find a way to show the VHF working channel, emergency channel (16) and phone number to Kystradioen (120)
+- SEO to make sure people find the site when I am happy with it.

@@ -4,6 +4,7 @@ import { reverseGeocode } from '@/lib/api/geocoding';
 import { getTimezone } from '@/lib/utils/timezone';
 import { formatDistance } from '@/lib/utils/distance';
 import { parseZoomParam } from '@/lib/utils/params';
+import Header from '@/components/Header';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
 import { enrichForecasts } from '@/lib/utils/enrichForecasts';
@@ -465,14 +466,14 @@ export default async function ScorePage({ searchParams }: PageProps) {
 
   return (
     <div className="min-h-screen bg-ocean-50">
-      <header style={{ backgroundColor: '#ffffff', color: '#1f2937', padding: '12px 24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+      <Header>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <BackButton />
           </div>
           <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="score" availablePages={hasOceanData ? undefined : ['details']} />
         </div>
-      </header>
+      </Header>
 
       <main className="max-w-2xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-lg p-8">

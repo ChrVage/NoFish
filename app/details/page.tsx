@@ -8,6 +8,7 @@ import { getTimezone } from '@/lib/utils/timezone';
 import { haversineDistance, formatDistance } from '@/lib/utils/distance';
 import { parseZoomParam } from '@/lib/utils/params';
 import ForecastTable from '@/components/ForecastTable';
+import Header from '@/components/Header';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
 import { Footer } from '@/components/Footer';
@@ -85,14 +86,14 @@ export default async function DetailsPage({ searchParams }: PageProps) {
   return (
     <div className="min-h-screen bg-ocean-50">
       {/* Header */}
-      <header style={{ backgroundColor: '#ffffff', color: '#1f2937', padding: '12px 24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+      <Header>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <BackButton />
           </div>
           <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="details" availablePages={hasOceanData ? undefined : ['details']} />
         </div>
-      </header>
+      </Header>
 
       {/* Main content */}
       <main className="max-w-4xl mx-auto px-4 py-8">
