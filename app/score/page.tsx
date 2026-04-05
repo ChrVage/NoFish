@@ -92,7 +92,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton />
           </div>
-          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="score" availablePages={hasOceanData ? undefined : ['details']} />
+          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="score" />
         </div>
       </Header>
 
