@@ -11,12 +11,6 @@ Please review the code based on the following prioritized criteria:
 4. User experience & Responsiveness: Mobile-first considerations, especially ensuring that the large forecast tables and map popups are highly readable and responsive on small screens.
 5. WCAG (Accessibility): Proper semantic HTML, correct ARIA roles (crucial for the map and data tables), and full keyboard navigability.
 
-## Instructions for response
-
-Provide a brief summary of the overall code quality in the context of the NoFish architecture.
-
-Identify and explain the single most important necessary change in detail. Why is it critical for performance, security, or UX?
-
 ## Reason for existing
 Found in the [Readme.md](readme.md) file.
 
@@ -33,3 +27,9 @@ Found in the [Readme.md](readme.md) file.
 - Find a better way to determine if the coordinate is land or sea. Today Geonorge not leaving depth is enough for limiting the response.
 - Find a way to show the VHF working channel, emergency channel (16) and phone number to Kystradioen (120)
 - SEO to make sure people find the site when I am happy with it.
+
+## Instructions for response
+
+Provide a brief summary of the overall code quality in the context of the NoFish architecture, reason to exist and future plans.
+
+Identify and explain the **single most important** change in detail. Why is it critical for performance, security, or UX?
