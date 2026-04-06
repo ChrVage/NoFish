@@ -27,6 +27,7 @@ Found in the [Readme.md](readme.md) file.
 - Find a better way to determine if the coordinate is land or sea. Today Geonorge not leaving depth is enough for limiting the response.
 - Find a way to show the VHF working channel, emergency channel (16) and phone number to Kystradioen (120)
 - SEO to make sure people find the site when I am happy with it.
+- Add possibility for fish logging, and add weather to the log,so that you can know in which conditions you fish the fish.
 
 ## Instructions for response
 
