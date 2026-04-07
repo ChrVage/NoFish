@@ -12,7 +12,7 @@ Please review the code based on the following prioritized criteria:
 5. WCAG (Accessibility): Proper semantic HTML, correct ARIA roles (crucial for the map and data tables), and full keyboard navigability.
 
 ## Reason for existing
-Found in the [Readme.md](readme.md) file.
+Found in the [README.md](README.md) file.
 
 ## Future plans 
 - Add **barometric pressure** and implement it as a part of the fishing score.
