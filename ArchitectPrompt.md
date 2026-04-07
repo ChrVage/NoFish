@@ -15,11 +15,6 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## Future plans 
-- Add **barometric pressure** and implement it as a part of the fishing score.
-- Add **Wave period**, and implment it to score, as a safety score.
-
-- Prioritize the calendar import for google calendar
-
 - Consider adding a WMS Layer from Kartverket to be able to show **sea-bottom** topografy in the map.
 
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
