@@ -376,23 +376,35 @@ export function computeFishingScore(f: HourlyForecast): { score: number; safetyS
   //     7–10 s  → 0.85–1.0 (moderate)
   //     5–7 s   → 0.6–0.85 (short, uncomfortable)
   //     < 5 s   → 0.3–0.6 (steep, dangerous chop)
-  //   Only applies when there are meaningful waves (> 0.5 m).
+  //   Only matters when waves are big enough to be a problem (> 1.5 m).
+  //   Between 1.0–1.5 m the penalty is scaled down (small waves with short
+  //   period are uncomfortable but not unsafe for a 21' boat).
   //
   let wavePeriodFactor = 1.0; // default when no data or calm seas
-  if (f.wavePeriod !== undefined && f.waveHeight !== undefined && f.waveHeight > 0.5) {
+  if (f.wavePeriod !== undefined && f.waveHeight !== undefined && f.waveHeight > 1.0) {
     const wp = f.wavePeriod;
+    // Scale penalty by wave height: 0 at 1.0 m, full at 1.5 m+
+    const heightScale = Math.min(1, (f.waveHeight - 1.0) / 0.5);
+    let rawPeriodFactor = 1.0;
+    let reason: { text: string; tone: 'good' | 'bad' | 'danger' } | null = null;
+
     if (wp >= 10) {
-      wavePeriodFactor = 1.0;
-      good('Long swell — comfortable', 'safety');
+      rawPeriodFactor = 1.0;
+      reason = { text: 'Long swell — comfortable', tone: 'good' };
     } else if (wp >= 7) {
-      wavePeriodFactor = 0.85 + 0.15 * lerp01(wp, 7, 10);
-      // neutral — no reason unless notable
+      rawPeriodFactor = 0.85 + 0.15 * lerp01(wp, 7, 10);
     } else if (wp >= 5) {
-      wavePeriodFactor = 0.60 + 0.25 * lerp01(wp, 5, 7);
-      bad(`Short waves ${wp.toFixed(1)}s`, 'safety');
+      rawPeriodFactor = 0.60 + 0.25 * lerp01(wp, 5, 7);
+      reason = { text: `Short waves ${wp.toFixed(1)}s`, tone: 'bad' };
     } else {
-      wavePeriodFactor = 0.30 + 0.30 * lerp01(wp, 3, 5);
-      danger(`⚠️ Steep chop ${wp.toFixed(1)}s`, 'safety');
+      rawPeriodFactor = 0.30 + 0.30 * lerp01(wp, 3, 5);
+      reason = { text: `⚠️ Steep chop ${wp.toFixed(1)}s`, tone: 'danger' };
+    }
+
+    // Blend toward 1.0 for smaller waves
+    wavePeriodFactor = 1.0 - heightScale * (1.0 - rawPeriodFactor);
+    if (reason && heightScale >= 0.5) {
+      reasons.push({ ...reason, category: 'safety' as const });
     }
   }
 
@@ -431,14 +443,28 @@ export function getScoreBg(score: number): string {
  * Find best fishing windows (1–3 hours) from a list of scored forecasts.
  * Returns up to 2 non-overlapping windows, sorted by time.
  * Prefers the longest consistent window whose average is within 5 points of the best.
+ *
+ * Windows are only shown when the hours are free of danger-level conditions.
+ * If every hour in the forecast has a danger reason, "No safe fishing periods" is shown.
  */
 export function findBestWindows(scoredForecasts: ScoredForecast[]): BestWindow[] {
   if (scoredForecasts.length === 0) return [];
+
+  // A window is eligible only if none of its hours have a danger-tone reason
+  const hasDanger = (idx: number) =>
+    scoredForecasts[idx].reasons.some(r => r.tone === 'danger');
 
   let topAvg = -1;
   const candidates: BestWindow[] = [];
   for (let len = 1; len <= 3; len++) {
     for (let i = 0; i <= scoredForecasts.length - len; i++) {
+      // Skip windows containing any hour with danger conditions
+      let dangerInWindow = false;
+      for (let j = 0; j < len; j++) {
+        if (hasDanger(i + j)) { dangerInWindow = true; break; }
+      }
+      if (dangerInWindow) continue;
+
       let sum = 0;
       for (let j = 0; j < len; j++) sum += scoredForecasts[i + j].score;
       const avg = sum / len;
@@ -447,9 +473,12 @@ export function findBestWindows(scoredForecasts: ScoredForecast[]): BestWindow[]
     }
   }
 
+  // No safe windows at all — every hour has a danger condition
+  if (candidates.length === 0) return [];
+
   // Among windows within 5 points of the best, pick the longest (then highest avg)
   const viable = candidates
-    .filter(c => c.avg >= topAvg - 5 && c.avg >= 20)
+    .filter(c => c.avg >= topAvg - 5)
     .sort((a, b) => b.len - a.len || b.avg - a.avg);
 
   const bestWindows: BestWindow[] = [];

@@ -67,6 +67,10 @@ export default async function ScorePage({ searchParams }: PageProps) {
   // Find best fishing windows (top 2 non-overlapping, 1–3 hours)
   const bestWindows = findBestWindows(scoredForecasts);
 
+  // Set of row indices within a best-window (for highlighting)
+  const bestWindowIndices = new Set<number>();
+  bestWindows.forEach(w => { for (let j = 0; j < w.len; j++) bestWindowIndices.add(w.start + j); });
+
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
     const formatter = new Intl.DateTimeFormat('en-US', {
@@ -363,7 +367,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                         <td className="py-2 text-sm font-medium tabular-nums whitespace-nowrap" style={getTimeColumnStyle(forecast.sunPhaseSegments)}>
                           {formatTime(forecast.time)}
                         </td>
-                        <td className="py-2 text-center text-sm tabular-nums" style={{ color: getScoreColor(score), backgroundColor: getScoreBg(score), fontWeight: 800 }}>
+                        <td className="py-2 text-center text-sm tabular-nums" style={{ color: getScoreColor(score), backgroundColor: getScoreBg(score), fontWeight: 800, ...(bestWindowIndices.has(i) ? { outline: '2px solid #2563eb', outlineOffset: '-1px', borderRadius: '4px' } : {}) }}>
                           {score}%
                         </td>
                         <td className="py-2 text-center tabular-nums text-xs font-normal text-gray-600">
