@@ -178,4 +178,4 @@ Vercel automatically provisions and renews a Let's Encrypt TLS certificate for e
 ---
 
 > See [readme-architecture.md](readme-architecture.md) for project structure and data flow.
-> See [readme-dataquality.md](readme-dataquality.md) for data source accuracy ratings.
+> See [readme-data.md](readme-data.md) for data source accuracy ratings and column reference.

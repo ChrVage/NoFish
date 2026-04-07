@@ -23,7 +23,7 @@ Found in the [README.md](README.md) file.
 - Implment an **API** so others can collect next best fishing times based on coordinates.
 
 - Remove all the other readme pages, and add them as a part of nofish.no, instead of GitHub.
-- Create a feedback form on nofish.no.
+- Create a feedback form on nofish.no. Create link to it on each score, tide and detail, to add data for that point to the feedback.
 
 - Find a better way to determine if the coordinate is land or sea. Today Geonorge not leaving depth is enough for limiting the response.
 

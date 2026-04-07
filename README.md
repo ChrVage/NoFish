@@ -66,11 +66,10 @@ The table is trimmed at the last 1-hour interval from MET's Locationforecast (ty
 
 ## Docs
 
-- [readme-data.md](readme-data.md) — data column reference for the Details and Tide pages
+- [readme-data.md](readme-data.md) — data column reference, source ratings, and data quality
 - [readme-score.md](readme-score.md) — fishing score algorithm and factor weights
 - [readme-technical.md](readme-technical.md) — tech stack, APIs, database, and deployment
 - [readme-architecture.md](readme-architecture.md) — project structure and data flow
-- [readme-dataquality.md](readme-dataquality.md) — data source ratings and limitations
 
 ---
 
