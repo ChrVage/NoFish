@@ -27,11 +27,13 @@ import type { HourlyForecast } from '@/types/weather';
 
 // ── Public types ────────────────────────────────────────────────────────────
 
-export type Reason = { text: string; tone: 'good' | 'bad' | 'danger' };
+export type Reason = { text: string; tone: 'good' | 'bad' | 'danger'; category: 'safety' | 'fishing' };
 
 export interface ScoredForecast {
   forecast: HourlyForecast;
   score: number;
+  safetyScore: number;
+  fishingScore: number;
   reasons: Reason[];
 }
 
@@ -72,11 +74,11 @@ function moonAge(date: Date): number {
 
 // ── The scoring function ────────────────────────────────────────────────────
 
-export function computeFishingScore(f: HourlyForecast): { score: number; reasons: Reason[] } {
+export function computeFishingScore(f: HourlyForecast): { score: number; safetyScore: number; fishingScore: number; reasons: Reason[] } {
   const reasons: Reason[] = [];
-  const good   = (text: string) => reasons.push({ text, tone: 'good' });
-  const bad    = (text: string) => reasons.push({ text, tone: 'bad' });
-  const danger = (text: string) => reasons.push({ text, tone: 'danger' });
+  const good   = (text: string, category: 'safety' | 'fishing') => reasons.push({ text, tone: 'good', category });
+  const bad    = (text: string, category: 'safety' | 'fishing') => reasons.push({ text, tone: 'bad', category });
+  const danger = (text: string, category: 'safety' | 'fishing') => reasons.push({ text, tone: 'danger', category });
 
   // ═══ 1. CURRENT SPEED — base score (Gaussian, peak at 0.4 m/s) ═══════
   //
@@ -96,12 +98,12 @@ export function computeFishingScore(f: HourlyForecast): { score: number; reasons
     // Rapid drop above 1.0 m/s
     if (cs > 1.0) currentFactor *= Math.max(0, 1 - (cs - 1.0) / 0.5);
 
-    if (cs >= 0.25 && cs <= 0.55) good(`Current ${cs.toFixed(2)} m/s — sweet spot`);
-    else if (cs < 0.15) bad(`Current ${cs.toFixed(2)} m/s — dead water`);
-    else if (cs > 1.0) danger(`⚠️ Current ${cs.toFixed(2)} m/s — unfishable`);
-    else if (cs > 0.7) bad(`Current ${cs.toFixed(2)} m/s — gear drag`);
-    else if (cs < 0.25) bad(`Current ${cs.toFixed(2)} m/s — slow`);
-    else good(`Current ${cs.toFixed(2)} m/s`);
+    if (cs >= 0.25 && cs <= 0.55) good(`Current ${cs.toFixed(2)} m/s — sweet spot`, 'fishing');
+    else if (cs < 0.15) bad(`Current ${cs.toFixed(2)} m/s — dead water`, 'fishing');
+    else if (cs > 1.0) danger(`⚠️ Current ${cs.toFixed(2)} m/s — unfishable`, 'fishing');
+    else if (cs > 0.7) bad(`Current ${cs.toFixed(2)} m/s — gear drag`, 'fishing');
+    else if (cs < 0.25) bad(`Current ${cs.toFixed(2)} m/s — slow`, 'fishing');
+    else good(`Current ${cs.toFixed(2)} m/s`, 'fishing');
   }
 
   // ═══ 2. WIND & DRIFT — safety + wind-current interaction ═════════════
@@ -119,12 +121,12 @@ export function computeFishingScore(f: HourlyForecast): { score: number; reasons
     // Gale / storm override
     if (ws > 15 || gs > 22) {
       windFactor = 0;
-      danger(`⚠️ Storm — ${ws.toFixed(1)} m/s (gusts ${gs.toFixed(1)})`);
+      danger(`⚠️ Storm — ${ws.toFixed(1)} m/s (gusts ${gs.toFixed(1)})`, 'safety');
     } else if (ws > 12 || gs > 18) {
       // 12 m/s → 0.20, 13.5 m/s → 0.10, 15 m/s → 0.05
       windFactor = (1 - lerp01(Math.max(ws, gs * 0.7), 12, 15)) * 0.20;
       windFactor = Math.max(windFactor, 0.05);
-      danger(`⚠️ Strong wind ${ws.toFixed(1)} m/s`);
+      danger(`⚠️ Strong wind ${ws.toFixed(1)} m/s`, 'safety');
     } else {
       // Base wind curve: gentle penalty increasing from 0 m/s upward
       // 0–3 m/s ideal (factor ~0.95), 8 m/s → ~0.7, 12 m/s → ~0.35
@@ -143,27 +145,27 @@ export function computeFishingScore(f: HourlyForecast): { score: number; reasons
           // Wind opposing current — excellent for drift control
           const bonus = 0.1 * (ws / 8); // stronger wind = bigger benefit (up to a point)
           windFactor = Math.min(1, windFactor + Math.min(bonus, 0.15));
-          good('Wind opposing current');
+          good('Wind opposing current', 'safety');
         } else if (angleDiff < 60 && ws > 5) {
           // Wind aligned with current — bad drift
           const penalty = 0.1 * (ws / 8);
           windFactor = Math.max(0.15, windFactor - penalty);
-          bad('Wind aligned with current');
+          bad('Wind aligned with current', 'safety');
         }
       }
 
-      if (ws <= 3) good(`Light wind ${ws.toFixed(1)} m/s`);
+      if (ws <= 3) good(`Light wind ${ws.toFixed(1)} m/s`, 'safety');
       else if (ws <= 7) { /* neutral */ }
-      else bad(`Wind ${ws.toFixed(1)} m/s`);
+      else bad(`Wind ${ws.toFixed(1)} m/s`, 'safety');
 
       // Gust penalty
       if (ws >= 10 && gs > 15) {
         // Sustained strong wind + heavy gusts — harsh conditions
         windFactor *= 0.55;
-        danger(`⚠️ Sustained ${ws.toFixed(1)} m/s with gusts ${gs.toFixed(1)} m/s`);
+        danger(`⚠️ Sustained ${ws.toFixed(1)} m/s with gusts ${gs.toFixed(1)} m/s`, 'safety');
       } else if (gs > 12) {
         windFactor *= 0.85;
-        bad(`Gusts ${gs.toFixed(1)} m/s`);
+        bad(`Gusts ${gs.toFixed(1)} m/s`, 'safety');
       } else if (gs > 10) {
         windFactor *= 0.92;
       }
@@ -182,20 +184,20 @@ export function computeFishingScore(f: HourlyForecast): { score: number; reasons
     const tp = f.tidePhase.toLowerCase();
     if (tp.includes('rising')) {
       tideFactor = 1.0;
-      good('Rising tide — fish active');
+      good('Rising tide — fish active', 'fishing');
     } else if (tp.includes('falling')) {
       tideFactor = 0.95;
-      good('Falling tide');
+      good('Falling tide', 'fishing');
     } else if (tp.match(/[+-]1h/)) {
       tideFactor = 0.85;
-      good('Tide turning');
+      good('Tide turning', 'fishing');
     } else if (tp.match(/[+-]2h/)) {
       tideFactor = 0.75;
       // neutral, no label
     } else if (tp.match(/^(hi|lo)\b/i) || tp.includes('(')) {
       // Exact high/low = slack
       tideFactor = 0.55;
-      bad('Slack tide');
+      bad('Slack tide', 'fishing');
     } else {
       tideFactor = 0.80;
     }
@@ -218,9 +220,9 @@ export function computeFishingScore(f: HourlyForecast): { score: number; reasons
     moonFactor = 0.82 + 0.18 * (0.5 + 0.5 * Math.cos(2 * phase));
 
     if (f.moonPhase.includes('New Moon') || f.moonPhase.includes('Full Moon')) {
-      good('Spring tide (strong pull)');
+      good('Spring tide (strong pull)', 'fishing');
     } else if (f.moonPhase.includes('Quarter')) {
-      bad('Neap tide (weak pull)');
+      bad('Neap tide (weak pull)', 'fishing');
     }
   }
 
@@ -240,27 +242,33 @@ export function computeFishingScore(f: HourlyForecast): { score: number; reasons
 
     if (dominant.phase === 'night') {
       lightFactor = 0.0;
-      danger('⚠️ Night — unsafe');
+      danger('⚠️ Night — unsafe', 'safety');
+      danger('⚠️ Night — no feeding', 'fishing');
     } else if (dominant.phase === 'nautical') {
       lightFactor = nightFrac > 0.1 ? 0.08 : 0.20;
-      danger('⚠️ Dark — poor visibility');
+      danger('⚠️ Dark — poor visibility', 'safety');
+      bad('Dark — low activity', 'fishing');
     } else if (dominant.phase === 'civil') {
       // Civil twilight = prime time for deep-water fish
       lightFactor = 1.0;
-      good('Twilight — peak feeding');
+      good('Good visibility', 'safety');
+      good('Twilight — peak feeding', 'fishing');
     } else if (dominant.phase === 'day') {
       if (civilFrac > 0.1) {
         lightFactor = 1.0;
-        good('Dawn/dusk');
+        good('Good visibility', 'safety');
+        good('Dawn/dusk — active feeding', 'fishing');
       } else {
         lightFactor = 0.80;
         // Bright midday with clear sky → slight penalty
         if (f.cloudCover !== undefined && f.cloudCover < 20) {
           lightFactor = 0.70;
-          bad('Bright sun');
+          good('Clear sky', 'safety');
+          bad('Bright sun — fish deep', 'fishing');
         } else if (f.cloudCover !== undefined && f.cloudCover >= 50) {
           lightFactor = 0.85;
-          good('Overcast');
+          good('Overcast', 'safety');
+          good('Overcast — fish active', 'fishing');
         }
       }
     }
@@ -279,26 +287,26 @@ export function computeFishingScore(f: HourlyForecast): { score: number; reasons
     const wh = f.waveHeight;
     if (wh <= 0.5) {
       waveFactor = 1.0;
-      good('Calm seas');
+      good('Calm seas', 'safety');
     } else if (wh <= 1.0) {
       waveFactor = 1.0 - 0.4 * sigmoid01(wh, 0.5, 1.0);
-      if (wh <= 0.7) good('Low waves');
+      if (wh <= 0.7) good('Low waves', 'safety');
     } else if (wh <= 2.0) {
       waveFactor = 0.6 - 0.5 * sigmoid01(wh, 1.0, 2.0);
       if (wh > 1.5) {
         const gustVal = f.windGust ?? f.windSpeed ?? 0;
         if (gustVal > 5) {
           waveFactor *= 0.5;
-          danger(`⚠️ Waves ${wh.toFixed(1)}m + wind`);
+          danger(`⚠️ Waves ${wh.toFixed(1)}m + wind`, 'safety');
         } else {
-          bad(`Waves ${wh.toFixed(1)}m`);
+          bad(`Waves ${wh.toFixed(1)}m`, 'safety');
         }
       } else {
-        bad(`Waves ${wh.toFixed(1)}m`);
+        bad(`Waves ${wh.toFixed(1)}m`, 'safety');
       }
     } else {
       waveFactor = Math.max(0, 0.1 - 0.1 * sigmoid01(wh, 2.0, 3.0));
-      danger(`⚠️ Dangerous seas ${wh.toFixed(1)}m`);
+      danger(`⚠️ Dangerous seas ${wh.toFixed(1)}m`, 'safety');
     }
   }
 
@@ -307,7 +315,7 @@ export function computeFishingScore(f: HourlyForecast): { score: number; reasons
   if (f.precipitation !== undefined) {
     if (f.precipitation > 2) {
       precipFactor = 0.85;
-      bad('Heavy rain');
+      bad('Heavy rain', 'fishing');
     } else if (f.precipitation > 0.5) {
       precipFactor = 0.93;
     }
@@ -320,16 +328,20 @@ export function computeFishingScore(f: HourlyForecast): { score: number; reasons
     // Very cold water (< 3°C) slightly negative for activity
     if (f.seaTemperature < 3) {
       tempFactor = 0.92;
-      bad('Cold sea');
+      bad('Cold sea', 'fishing');
     }
     // No per-hour trend data available, so we only flag extremes
   }
 
   // ═══ COMBINE — multiply factors, scale to 0–100 ══════════════════════
-  const raw = currentFactor * windFactor * tideFactor * moonFactor * lightFactor * waveFactor * precipFactor * tempFactor;
+  const safetyRaw = windFactor * waveFactor * lightFactor;
+  const fishingRaw = currentFactor * tideFactor * moonFactor * precipFactor * tempFactor;
+  const raw = safetyRaw * fishingRaw;
   const score = Math.round(Math.max(0, Math.min(100, raw * 100)));
+  const safetyScore = Math.round(Math.max(0, Math.min(100, safetyRaw * 100)));
+  const fishingScore = Math.round(Math.max(0, Math.min(100, fishingRaw * 100)));
 
-  return { score, reasons };
+  return { score, safetyScore, fishingScore, reasons };
 }
 
 // ── Score display helpers ───────────────────────────────────────────────────

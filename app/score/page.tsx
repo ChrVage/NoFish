@@ -147,11 +147,11 @@ export default async function ScorePage({ searchParams }: PageProps) {
                 const avg = Math.round(w.avg);
 
                 // Build weather description from hourly data
-                const lines: string[] = [`NoFish score: ${avg}%`, ''];
+                const lines: string[] = [`NoFish score: ${avg}% (Safety: ${Math.round(hours.reduce((s, h) => s + h.safetyScore, 0) / hours.length)}% | Fishing: ${Math.round(hours.reduce((s, h) => s + h.fishingScore, 0) / hours.length)}%)`, ''];
                 for (const h of hours) {
                   const f = h.forecast;
                   const t = timeFmt.format(new Date(f.time));
-                  const parts: string[] = [`Score: ${h.score}%`];
+                  const parts: string[] = [`Score: ${h.score}% (Safety: ${h.safetyScore}% | Fishing: ${h.fishingScore}%)`];
                   if (f.windSpeed !== undefined) parts.push(`Wind: ${f.windSpeed.toFixed(1)} m/s${f.windGust ? ` (gust ${f.windGust.toFixed(1)})` : ''}${f.windDirection !== undefined ? ` from ${f.windDirection}°` : ''}`);
                   if (f.waveHeight !== undefined) parts.push(`Waves: ${f.waveHeight.toFixed(1)} m${f.waveDirection !== undefined ? ` from ${f.waveDirection}°` : ''}`);
                   if (f.currentSpeed !== undefined) parts.push(`Current: ${f.currentSpeed.toFixed(2)} m/s${f.currentDirection !== undefined ? ` toward ${f.currentDirection}°` : ''}`);
@@ -241,14 +241,21 @@ export default async function ScorePage({ searchParams }: PageProps) {
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm" style={{ borderSpacing: '0.5rem 0', borderCollapse: 'separate' }}>
                 <thead>
-                  <tr className="border-b border-gray-200 text-left text-xs text-gray-400">
-                    <th className="pb-2">Time</th>
-                    <th className="pb-2 text-center">Score</th>
-                    <th className="pb-2">Why</th>
+                  <tr className="text-xs text-gray-400 text-left">
+                    <th rowSpan={2} className="pb-2">Time</th>
+                    <th colSpan={3} className="pb-0">Score</th>
+                    <th colSpan={2} className="pb-0">Why</th>
+                  </tr>
+                  <tr className="border-b border-gray-200 text-xs text-gray-400 text-left">
+                    <th className="pb-2">Total</th>
+                    <th className="pb-2">Safety</th>
+                    <th className="pb-2">Fishing</th>
+                    <th className="pb-2">Safety</th>
+                    <th className="pb-2">Fishing</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {scoredForecasts.map(({ forecast, score, reasons }, i) => {
+                  {scoredForecasts.map(({ forecast, score, safetyScore, fishingScore, reasons }, i) => {
                     const isMidnight = i > 0 && (() => {
                       const dateFmt = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' });
                       return dateFmt.format(new Date(forecast.time)) !== dateFmt.format(new Date(scoredForecasts[i - 1].forecast.time));
@@ -258,7 +265,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                     if (isMidnight) {
                       rows.push(
                         <tr key={`midnight-${forecast.time}`} aria-hidden="true">
-                          <td colSpan={3} style={{ height: '3px', padding: 0, backgroundColor: '#d1d5db' }} />
+                          <td colSpan={6} style={{ height: '3px', padding: 0, backgroundColor: '#d1d5db' }} />
                         </tr>
                       );
                     }
@@ -268,18 +275,40 @@ export default async function ScorePage({ searchParams }: PageProps) {
                         <td className="py-2 text-sm font-medium tabular-nums whitespace-nowrap" style={getTimeColumnStyle(forecast.sunPhaseSegments)}>
                           {formatTime(forecast.time)}
                         </td>
-                        <td className="py-2 text-center font-bold tabular-nums" style={{ color: getScoreColor(score), backgroundColor: getScoreBg(score) }}>
+                        <td className="py-2 text-center text-sm tabular-nums" style={{ color: getScoreColor(score), backgroundColor: getScoreBg(score), fontWeight: 800 }}>
                           {score}%
                         </td>
+                        <td className="py-2 text-center tabular-nums text-xs font-normal text-gray-600">
+                          {safetyScore}%
+                        </td>
+                        <td className="py-2 text-center tabular-nums text-xs text-gray-600">
+                          {fishingScore}%
+                        </td>
                         <td className="py-2 text-xs">
-                          {reasons.length === 0 ? '—' : reasons.map((r, j) => (
-                            <span key={j}>
-                              {j > 0 && <span className="text-gray-300"> · </span>}
-                              <span style={{ color: r.tone === 'danger' ? '#991b1b' : r.tone === 'bad' ? '#c2410c' : '#15803d' }}>
-                                {r.text}
+                          {(() => {
+                            const safetyReasons = reasons.filter(r => r.category === 'safety');
+                            return safetyReasons.length === 0 ? '—' : safetyReasons.map((r, j) => (
+                              <span key={j}>
+                                {j > 0 && <span className="text-gray-300"> · </span>}
+                                <span style={{ color: r.tone === 'danger' ? '#991b1b' : r.tone === 'bad' ? '#c2410c' : '#15803d' }}>
+                                  {r.text}
+                                </span>
                               </span>
-                            </span>
-                          ))}
+                            ));
+                          })()}
+                        </td>
+                        <td className="py-2 text-xs">
+                          {(() => {
+                            const fishingReasons = reasons.filter(r => r.category === 'fishing');
+                            return fishingReasons.length === 0 ? '—' : fishingReasons.map((r, j) => (
+                              <span key={j}>
+                                {j > 0 && <span className="text-gray-300"> · </span>}
+                                <span style={{ color: r.tone === 'danger' ? '#991b1b' : r.tone === 'bad' ? '#c2410c' : '#15803d' }}>
+                                  {r.text}
+                                </span>
+                              </span>
+                            ));
+                          })()}
                         </td>
                       </tr>
                     );

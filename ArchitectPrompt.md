@@ -17,16 +17,25 @@ Found in the [README.md](README.md) file.
 ## Future plans 
 - Add **barometric pressure** and implement it as a part of the fishing score.
 - Add **Wave period**, and implment it to score, as a safety score.
-- Show total score, but split **safety score** and **fishing score**.
+
+- Prioritize the calendar import for google calendar
+
 - Consider adding a WMS Layer from Kartverket to be able to show **sea-bottom** topografy in the map.
+
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
 - Link directly to **fishing rules** by species from Fiskeridirektoratet.
+
 - Implment an **API** so others can collect next best fishing times based on coordinates.
+
 - Remove all the other readme pages, and add them as a part of nofish.no, instead of GitHub.
 - Create a feedback form on nofish.no.
+
 - Find a better way to determine if the coordinate is land or sea. Today Geonorge not leaving depth is enough for limiting the response.
+
 - Find a way to show the VHF working channel, emergency channel (16) and phone number to Kystradioen (120)
+
 - SEO to make sure people find the site when I am happy with it.
+
 - Add possibility for fish logging, and add weather to the log,so that you can know in which conditions you fish the fish.
 
 ## Instructions for response
