@@ -187,7 +187,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData }: Fo
               <th className="sticky left-0 bg-ocean-800 z-10" aria-hidden="true" />
               {/* MET Norway Locationforecast — always present */}
               <th
-                colSpan={5}
+                colSpan={6}
                 scope="colgroup"
                 className="px-4 py-1 text-center font-semibold border-l-2 border-amber-400/50 border-r border-amber-400/20"
               >
@@ -196,7 +196,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData }: Fo
               {/* Barentswatch Waveforecast — coastal only */}
               {hasOceanData && (
                 <th
-                  colSpan={2}
+                  colSpan={3}
                   scope="colgroup"
                   className="px-4 py-1 text-center font-semibold border-l border-ocean-400/20 border-r border-ocean-400/20"
                 >
@@ -261,35 +261,43 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData }: Fo
                 {precipLabel}
               </th>
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-amber-900/20 border-r-2 border-amber-400/30">
-                Air Temp
+                Temp
+              </th>
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-amber-900/20 border-r-2 border-amber-400/30">
+                Pressure
               </th>
 
               {/* ── Barentswatch Waveforecast columns ── */}
               {hasOceanData && (
                 <th scope="col" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30 border-l-2 border-ocean-400/50">
-                  Wave Height
+                  Height
                 </th>
               )}
               {hasOceanData && (
-                <th scope="col" aria-label="Wave direction" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30 border-r-2 border-ocean-400/30">
-                  Wave Dir
+                <th scope="col" aria-label="Wave direction" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30">
+                  Dir
+                </th>
+              )}
+              {hasOceanData && (
+                <th scope="col" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30 border-r-2 border-ocean-400/30">
+                  Period
                 </th>
               )}
               {/* ── Barentswatch Sea Current columns ── */}
               {hasOceanData && (
                 <th scope="col" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-blue-800/30 border-l-2 border-blue-400/50">
-                  Current Speed
+                  Current
                 </th>
               )}
               {hasOceanData && (
                 <th scope="col" aria-label="Current direction" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-blue-800/30 border-r-2 border-blue-400/30">
-                  Curr Dir
+                  Dir
                 </th>
               )}
               {/* ── MET.no Oceanforecast Sea Temp column ── */}
               {hasOceanData && (
                 <th scope="col" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-cyan-800/30 border-l-2 border-cyan-400/50 border-r-2 border-cyan-400/30">
-                  Sea Temp
+                  Temp
                 </th>
               )}
               {/* ── Kartverket column ── */}
@@ -326,7 +334,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData }: Fo
               })();
 
               // Count total columns for separator rows
-              const totalCols = 7 + (hasOceanData ? 6 : 0) + 1;
+              const totalCols = 8 + (hasOceanData ? 7 : 0) + 1;
 
               const rows: React.ReactNode[] = [];
 
@@ -370,6 +378,9 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData }: Fo
                 <td className="px-4 py-3 text-sm text-gray-700 border-r-2 border-amber-200">
                   {formatValue(forecast.temperature, 1, '°C')}
                 </td>
+                <td className="px-4 py-3 text-sm text-gray-700 border-r-2 border-amber-200">
+                  {forecast.pressure !== undefined ? `${forecast.pressure.toFixed(0)} hPa` : '—'}
+                </td>
 
                 {/* ── Barentswatch Waveforecast cells ── */}
                 {hasOceanData && (
@@ -382,16 +393,25 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData }: Fo
                   </td>
                 )}
                 {hasOceanData && (
-                  <td className="px-4 py-3 text-sm text-gray-700 text-center border-r-2 border-ocean-200">
+                  <td className="px-4 py-3 text-sm text-gray-700 text-center">
                     {/* Wave direction: do NOT add 180° (show as-is) */}
                     <DirectionArrow degrees={forecast.waveDirection} isFromDirection={false} className={forecast.isInterpolatedWave ? 'text-gray-400' : 'text-ocean-600'} />
+                  </td>
+                )}
+                {hasOceanData && (
+                  <td className="px-4 py-3 text-sm text-gray-700 text-center border-r-2 border-ocean-200">
+                    {forecast.wavePeriod !== undefined
+                      ? forecast.isInterpolatedWave
+                        ? <span className="text-gray-400 italic">{forecast.wavePeriod.toFixed(1)} s</span>
+                        : <>{forecast.wavePeriod.toFixed(1)}{' s'}</>
+                      : '—'}
                   </td>
                 )}
                 {/* ── Barentswatch Sea Current cells ── */}
                 {hasOceanData && (
                   <td className="px-4 py-3 text-sm text-gray-700 text-center border-l-2 border-blue-300/50">
                     {forecast.currentSpeed !== undefined
-                      ? <><strong>{forecast.currentSpeed.toFixed(2)}</strong>{' m/s'}</>
+                      ? <>{forecast.currentSpeed.toFixed(2)}{' m/s'}</>
                       : '—'}
                   </td>
                 )}
@@ -405,7 +425,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData }: Fo
                 {hasOceanData && (
                   <td className="px-4 py-3 text-sm text-gray-700 text-center border-l-2 border-cyan-300/50 border-r-2 border-cyan-200">
                     {forecast.seaTemperature !== undefined
-                      ? <><strong>{forecast.seaTemperature.toFixed(1)}</strong>{'°C'}</>
+                      ? <>{forecast.seaTemperature.toFixed(1)}{'°C'}</>
                       : '—'}
                   </td>
                 )}

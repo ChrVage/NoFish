@@ -21,6 +21,8 @@
  *   6. Wave height     – gear-handling & safety
  *   7. Precipitation   – minor modifier
  *   8. Sea temperature – minor modifier
+ *   9. Barometric pressure – fish activity modifier (fishing)
+ *  10. Wave period     – steep chop penalty (safety)
  */
 
 import type { HourlyForecast } from '@/types/weather';
@@ -333,9 +335,70 @@ export function computeFishingScore(f: HourlyForecast): { score: number; safetyS
     // No per-hour trend data available, so we only flag extremes
   }
 
+  // ═══ 9. BAROMETRIC PRESSURE — fish activity modifier (fishing) ════════
+  //
+  //   Stable / slowly falling pressure is best for fishing.
+  //   Without trend data, we score based on absolute value:
+  //     1010–1020 hPa → ideal (moderate low, fish active)
+  //     1000–1010     → good (approaching low)
+  //     1020–1030     → slight penalty (high pressure, fish sluggish)
+  //     < 1000        → storm proximity, but fish may feed frenetically
+  //     > 1030        → strong high, fish inactive
+  //
+  let pressureFactor = 1.0;
+  if (f.pressure !== undefined) {
+    const p = f.pressure;
+    if (p >= 1010 && p <= 1020) {
+      pressureFactor = 1.0;
+      good('Ideal pressure', 'fishing');
+    } else if (p >= 1000 && p < 1010) {
+      pressureFactor = 0.95;
+      good('Low pressure — fish active', 'fishing');
+    } else if (p > 1020 && p <= 1030) {
+      pressureFactor = 0.90;
+      bad('High pressure', 'fishing');
+    } else if (p < 1000) {
+      // Very low — storm-adjacent, fish may feed before front
+      pressureFactor = 0.88;
+      bad(`Low pressure ${p.toFixed(0)} hPa`, 'fishing');
+    } else {
+      // > 1030 hPa — strong stable high
+      pressureFactor = 0.82;
+      bad(`Strong high ${p.toFixed(0)} hPa — fish inactive`, 'fishing');
+    }
+  }
+
+  // ═══ 10. WAVE PERIOD — safety modifier ════════════════════════════════
+  //
+  //   Longer wave period = more spread-out swell = safer & more comfortable.
+  //   Short steep waves are dangerous and make gear handling very difficult.
+  //     ≥ 10 s  → 1.0  (long comfortable swell)
+  //     7–10 s  → 0.85–1.0 (moderate)
+  //     5–7 s   → 0.6–0.85 (short, uncomfortable)
+  //     < 5 s   → 0.3–0.6 (steep, dangerous chop)
+  //   Only applies when there are meaningful waves (> 0.5 m).
+  //
+  let wavePeriodFactor = 1.0; // default when no data or calm seas
+  if (f.wavePeriod !== undefined && f.waveHeight !== undefined && f.waveHeight > 0.5) {
+    const wp = f.wavePeriod;
+    if (wp >= 10) {
+      wavePeriodFactor = 1.0;
+      good('Long swell — comfortable', 'safety');
+    } else if (wp >= 7) {
+      wavePeriodFactor = 0.85 + 0.15 * lerp01(wp, 7, 10);
+      // neutral — no reason unless notable
+    } else if (wp >= 5) {
+      wavePeriodFactor = 0.60 + 0.25 * lerp01(wp, 5, 7);
+      bad(`Short waves ${wp.toFixed(1)}s`, 'safety');
+    } else {
+      wavePeriodFactor = 0.30 + 0.30 * lerp01(wp, 3, 5);
+      danger(`⚠️ Steep chop ${wp.toFixed(1)}s`, 'safety');
+    }
+  }
+
   // ═══ COMBINE — multiply factors, scale to 0–100 ══════════════════════
-  const safetyRaw = windFactor * waveFactor * lightFactor;
-  const fishingRaw = currentFactor * tideFactor * moonFactor * precipFactor * tempFactor;
+  const safetyRaw = windFactor * waveFactor * lightFactor * wavePeriodFactor;
+  const fishingRaw = currentFactor * tideFactor * moonFactor * precipFactor * tempFactor * pressureFactor;
   const raw = safetyRaw * fishingRaw;
   const score = Math.round(Math.max(0, Math.min(100, raw * 100)));
   const safetyScore = Math.round(Math.max(0, Math.min(100, safetyRaw * 100)));

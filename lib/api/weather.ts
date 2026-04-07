@@ -402,6 +402,7 @@ export function combineForecasts(
     if (waveData) {
       hourlyForecast.waveHeight = waveData.totalSignificantWaveHeight ?? undefined;
       hourlyForecast.waveDirection = waveData.totalMeanWaveDirection ?? undefined;
+      hourlyForecast.wavePeriod = waveData.totalPeakPeriod ?? undefined;
     }
 
     // Add tide phase if tide data is available

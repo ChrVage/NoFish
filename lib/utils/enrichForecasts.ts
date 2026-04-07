@@ -49,6 +49,7 @@ export function enrichForecasts(forecasts: HourlyForecast[]): EnrichedForecast[]
     for (let i = 0; i < first; i++) {
       result[i].waveHeight = result[first].waveHeight;
       result[i].waveDirection = result[first].waveDirection;
+      result[i].wavePeriod = result[first].wavePeriod;
       result[i].isInterpolatedWave = true;
     }
   }
@@ -76,6 +77,14 @@ export function enrichForecasts(forecasts: HourlyForecast[]): EnrichedForecast[]
         if (diff < -180) diff += 360;
         result[i].waveDirection = ((dA + t * diff) % 360 + 360) % 360;
       }
+
+      // Interpolate wave period
+      const pA = result[a].wavePeriod;
+      const pB = result[b].wavePeriod;
+      if (pA !== undefined && pB !== undefined) {
+        result[i].wavePeriod = pA + t * (pB - pA);
+      }
+
       result[i].isInterpolatedWave = true;
     }
   }

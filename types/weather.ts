@@ -154,6 +154,7 @@ export interface HourlyForecast {
   pressure?: number;
   waveHeight?: number;
   waveDirection?: number;
+  wavePeriod?: number;
   seaTemperature?: number;
   currentSpeed?: number;
   currentDirection?: number;
