@@ -156,6 +156,7 @@ export default function Map() {
     let activeOceanLine: L.Polyline | null = null;
     let activeFetchController: AbortController | null = null;
     let activePopupRoot: Root | null = null;
+    let navigating = false;
 
     const clearOceanLayers = () => {
       if (activeOceanLine) { map.removeLayer(activeOceanLine); activeOceanLine = null; }
@@ -163,7 +164,8 @@ export default function Map() {
     };
 
     const openMarkerAt = (lat: number, lng: number) => {
-      // Guard: bail if the map has already been removed
+      // Guard: bail if navigating away or the map has already been removed
+      if (navigating) return;
       if (!map.getContainer().isConnected) return;
 
       // Abort any in-flight fetch from a previous click so its result can never
@@ -181,6 +183,7 @@ export default function Map() {
       if (activePopupRoot) { activePopupRoot.unmount(); activePopupRoot = null; }
 
       const popupContainer = document.createElement('div');
+      L.DomEvent.disableClickPropagation(popupContainer);
       const popupRoot = createRoot(popupContainer);
       activePopupRoot = popupRoot;
 
@@ -188,11 +191,7 @@ export default function Map() {
       let hasOcean = true;
 
       const navigate = (page: string) => {
-        popupRoot.unmount();
-        if (activePopupRoot === popupRoot) activePopupRoot = null;
-        map.removeLayer(tempMarker);
-        clearOceanLayers();
-        map.closePopup();
+        navigating = true;
         const zoom = map.getZoom();
         const seaParam = isLand ? '&sea=0' : '&sea=1';
         router.push(`/${page}?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}${seaParam}`);
@@ -334,7 +333,11 @@ export default function Map() {
     mapRef.current = map;
 
     return () => {
-      if (activePopupRoot) activePopupRoot.unmount();
+      if (activePopupRoot) {
+        const root = activePopupRoot;
+        // Defer unmount to avoid "unmount while rendering" React error
+        setTimeout(() => root.unmount(), 0);
+      }
       if (restoreTimer !== null) clearTimeout(restoreTimer);
       if (singleClickTimer !== null) clearTimeout(singleClickTimer);
       if (activeFetchController) activeFetchController.abort();
