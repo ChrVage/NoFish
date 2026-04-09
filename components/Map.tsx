@@ -346,7 +346,7 @@ export default function Map() {
     });
 
     // Auto-toggle sea chart based on zoom level
-    const SEA_CHART_AUTO_ZOOM = 12;
+    const SEA_CHART_AUTO_ZOOM = 13;
     const updateSeaChartForZoom = () => {
       seaChartManualRef.current = false;
       setShowSeaChart(map.getZoom() >= SEA_CHART_AUTO_ZOOM);

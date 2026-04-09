@@ -20,6 +20,8 @@ Found in the [README.md](README.md) file.
 
 - Improve location name logic.
 
+- Explore possibilities to tune fish score to the depth where clicked.
+
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
 - Link directly to **fishing rules** by species from Fiskeridirektoratet.
 
@@ -31,6 +33,8 @@ Found in the [README.md](README.md) file.
 - Find a better way to determine if the coordinate is land or sea. Today Geonorge not leaving depth is enough for limiting the response.
 
 - Find a way to show the VHF working channel, emergency channel (16) and phone number to Kystradioen (120)
+
+- Explore possibilities for changing boat size and fish species to tune for
 
 - SEO to make sure people find the site when I am happy with it.
 

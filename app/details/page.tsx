@@ -7,6 +7,7 @@ import { insertLookup, ensureTable } from '@/lib/db/lookups';
 import { getTimezone } from '@/lib/utils/timezone';
 import { haversineDistance, formatDistance } from '@/lib/utils/distance';
 import { parseZoomParam } from '@/lib/utils/params';
+import { enrichForecasts } from '@/lib/utils/enrichForecasts';
 import ForecastTable from '@/components/ForecastTable';
 import Header from '@/components/Header';
 import BackButton from '@/components/BackButton';
@@ -36,7 +37,8 @@ export default async function DetailsPage({ searchParams }: PageProps) {
     getCombinedForecast(lat, lng, isSea !== undefined ? { isSea } : undefined),
   ]);
 
-  const { forecasts, oceanForecastLat, oceanForecastLng, waveForecastSource, tideStationName, tideStationLat, tideStationLng } = weatherResult;
+  const { forecasts: rawForecasts, oceanForecastLat, oceanForecastLng, waveForecastSource, tideStationName, tideStationLat, tideStationLng } = weatherResult;
+  const forecasts = enrichForecasts(rawForecasts);
   const isLand = locationData?.isSea === false;
   const hasOceanData = !isLand && oceanForecastLat !== undefined && oceanForecastLng !== undefined;
   const timezone = getTimezone(lat, lng);

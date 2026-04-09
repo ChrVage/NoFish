@@ -1,11 +1,10 @@
 'use client';
 
 import React from 'react';
-import type { HourlyForecast } from '@/types/weather';
-import { enrichForecasts, type EnrichedForecast } from '@/lib/utils/enrichForecasts';
+import type { EnrichedForecast } from '@/lib/utils/enrichForecasts';
 
 interface ForecastTableProps {
-  forecasts: HourlyForecast[];
+  forecasts: EnrichedForecast[];
   timezone: string;
   /** Force-hide ocean columns even when wave data exists (e.g. land location). */
   hideOceanData?: boolean;
@@ -132,8 +131,8 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData }: Fo
   const hasOceanData = !hideOceanData && forecasts.some(f => f.waveHeight !== undefined);
   const precipLabel = (forecasts[0]?.temperature ?? 2) > 1 ? 'Rain' : 'Snow';
 
-  // Interpolate missing wave heights and trim at last hourly MET row
-  const displayForecasts: EnrichedForecast[] = enrichForecasts(forecasts);
+  // Pre-enriched by the server component — use directly
+  const displayForecasts = forecasts;
 
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
