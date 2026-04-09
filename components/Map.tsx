@@ -107,10 +107,12 @@ function PopupContent({ lat, lng, loading, name, elevation, isSea, showScore, sh
 export default function Map() {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const seaChartLayerRef = useRef<L.TileLayer | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
+  const [showSeaChart, setShowSeaChart] = useState(false);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -139,6 +141,16 @@ export default function Map() {
       attribution: '© OpenStreetMap contributors',
       maxZoom: 19,
     }).addTo(map);
+
+    // Kartverket sea chart overlay (depth contours / bottom topography)
+    seaChartLayerRef.current = L.tileLayer(
+      'https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=sjokartraster&zoom={z}&x={x}&y={y}',
+      {
+        attribution: '© <a href="https://www.kartverket.no" target="_blank" rel="noopener">Kartverket</a>',
+        maxZoom: 19,
+        opacity: 0.7,
+      }
+    );
 
     // Custom marker icon using ocean theme
     const customIcon = L.divIcon({
@@ -348,6 +360,18 @@ export default function Map() {
     };
   }, [router]);
 
+  // Toggle Kartverket sea chart overlay
+  useEffect(() => {
+    const map = mapRef.current;
+    const layer = seaChartLayerRef.current;
+    if (!map || !layer) return;
+    if (showSeaChart) {
+      layer.addTo(map);
+    } else {
+      map.removeLayer(layer);
+    }
+  }, [showSeaChart]);
+
   const handleMyLocation = () => {
     const MIN_LOCATION_ZOOM = 10;
     const GEOLOCATION_TIMEOUT_MS = 10000;
@@ -387,6 +411,33 @@ export default function Map() {
         <p className="text-sm text-gray-700">
           Click to analyze a location, or double-click to zoom in.
         </p>
+      </div>
+
+      {/* Sea chart toggle — top right */}
+      <div style={{ position: 'absolute', top: '16px', right: '12px', zIndex: 1100 }}>
+        <button
+          type="button"
+          onClick={() => setShowSeaChart(v => !v)}
+          aria-label={showSeaChart ? 'Hide sea chart' : 'Show sea chart (Kartverket)'}
+          title={showSeaChart ? 'Hide sea chart' : 'Sea chart – depth & bottom topography (Kartverket)'}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            background: showSeaChart ? '#0284c7' : '#fff',
+            color: showSeaChart ? '#fff' : '#374151',
+            border: '1px solid #d1d5db',
+            borderRadius: '8px',
+            padding: '6px 12px',
+            fontSize: '13px',
+            fontWeight: 500,
+            cursor: 'pointer',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+          }}
+        >
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 17c2-2 4-3 6-1s4 3 6 1 4-2 6 0M3 12c2-2 4-3 6-1s4 3 6 1 4-2 6 0M3 7c2-2 4-3 6-1s4 3 6 1 4-2 6 0" />
+          </svg>
+          Sea chart
+        </button>
       </div>
 
       {/* My Location button — bottom right, above Leaflet attribution */}

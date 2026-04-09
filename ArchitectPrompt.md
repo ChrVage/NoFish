@@ -15,6 +15,7 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## Future plans 
+- Add error boundaries around Map and ForecastTable. A malformed geocoding response, a Barentswatch timeout, or any unexpected runtime error will crash the entire component tree with no fallback UI. Users see a blank page with no explanation and no way to recover. For a marine weather tool, this is a safety concern — storms and poor connectivity are exactly when users need the app most. A simple <ErrorBoundary fallback={...}> wrapper with a retry button would eliminate this class of failure.
 - Consider adding a WMS Layer from Kartverket to be able to show **sea-bottom** topografy in the map.
 
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
