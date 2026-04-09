@@ -144,10 +144,20 @@ export function computeFishingScore(f: HourlyForecast): { score: number; safetyS
         if (angleDiff > 180) angleDiff = 360 - angleDiff;
 
         if (angleDiff > 120) {
-          // Wind opposing current — excellent for drift control
-          const bonus = 0.1 * (ws / 8); // stronger wind = bigger benefit (up to a point)
-          windFactor = Math.min(1, windFactor + Math.min(bonus, 0.15));
-          good('Wind opposing current', 'safety');
+          // Wind opposing current
+          const cs = f.currentSpeed!;
+          if (ws > 8 && cs > 0.5) {
+            // Strong wind against strong current — dangerous steep breaking waves
+            const severity = lerp01(ws, 8, 14) * lerp01(cs, 0.5, 1.0);
+            windFactor *= Math.max(0.15, 1 - severity * 0.8);
+            if (severity > 0.5) danger(`⚠️ Wind against strong current — dangerous seas`, 'safety');
+            else bad('Wind opposing strong current — steep chop', 'safety');
+          } else {
+            // Light/moderate wind opposing current — slows drift, helps bottom contact
+            const bonus = 0.1 * (ws / 8);
+            windFactor = Math.min(1, windFactor + Math.min(bonus, 0.15));
+            good('Wind opposing current', 'safety');
+          }
         } else if (angleDiff < 60 && ws > 5) {
           // Wind aligned with current — bad drift
           const penalty = 0.1 * (ws / 8);
