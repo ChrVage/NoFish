@@ -113,6 +113,7 @@ export default function Map() {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [showSeaChart, setShowSeaChart] = useState(false);
+  const seaChartManualRef = useRef(false);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -144,7 +145,7 @@ export default function Map() {
 
     // Kartverket sea chart overlay (depth contours / bottom topography)
     seaChartLayerRef.current = L.tileLayer(
-      'https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=sjokartraster&zoom={z}&x={x}&y={y}',
+      'https://cache.kartverket.no/v1/wmts/1.0.0/sjokartraster/default/webmercator/{z}/{y}/{x}.png',
       {
         attribution: '© <a href="https://www.kartverket.no" target="_blank" rel="noopener">Kartverket</a>',
         maxZoom: 19,
@@ -344,6 +345,18 @@ export default function Map() {
       map.setView(e.latlng, map.getZoom() + 4, { animate: true });
     });
 
+    // Auto-toggle sea chart based on zoom level
+    const SEA_CHART_AUTO_ZOOM = 12;
+    const updateSeaChartForZoom = () => {
+      seaChartManualRef.current = false;
+      setShowSeaChart(map.getZoom() >= SEA_CHART_AUTO_ZOOM);
+    };
+    map.on('zoomend', updateSeaChartForZoom);
+    // Set initial state based on starting zoom
+    if (initialZoom >= SEA_CHART_AUTO_ZOOM) {
+      setShowSeaChart(true);
+    }
+
     mapRef.current = map;
 
     return () => {
@@ -419,7 +432,7 @@ export default function Map() {
       <div style={{ position: 'absolute', top: '16px', right: '12px', zIndex: 1100 }}>
         <button
           type="button"
-          onClick={() => setShowSeaChart(v => !v)}
+          onClick={() => { seaChartManualRef.current = true; setShowSeaChart(v => !v); }}
           aria-label={showSeaChart ? 'Hide sea chart' : 'Show sea chart (Kartverket)'}
           title={showSeaChart ? 'Hide sea chart' : 'Sea chart – depth & bottom topography (Kartverket)'}
           style={{
