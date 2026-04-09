@@ -303,9 +303,11 @@ export default function Map() {
         }
       })();
 
-      // Remove the pin when popup closes; leave dot/line on map until next click
+      // Remove the pin when popup closes; leave dot/line on map until next click.
+      // Defer unmount to avoid "unmount while rendering" when Leaflet auto-closes
+      // the previous popup during a flushSync render of the new one.
       tempMarker.on('popupclose', () => {
-        popupRoot.unmount();
+        setTimeout(() => popupRoot.unmount(), 0);
         if (activePopupRoot === popupRoot) activePopupRoot = null;
         map.removeLayer(tempMarker);
       });
