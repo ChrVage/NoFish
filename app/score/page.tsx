@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import { getCombinedForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
 import { getTimezone } from '@/lib/utils/timezone';
-import { formatDistance } from '@/lib/utils/distance';
 import { parseZoomParam } from '@/lib/utils/params';
 import Header from '@/components/Header';
 import BackButton from '@/components/BackButton';
@@ -112,11 +111,6 @@ export default async function ScorePage({ searchParams }: PageProps) {
               <>
                 <h2 className="text-2xl font-bold text-ocean-900 mb-1">
                   {locationData.name}
-                  {locationData.placeDistanceM !== undefined && locationData.placeDistanceM > 100 && (
-                    <span className="text-sm font-normal text-gray-400 ml-2">
-                      ({formatDistance(locationData.placeDistanceM)} away)
-                    </span>
-                  )}
                 </h2>
                 {locationData.municipality && locationData.municipality !== 'Unknown municipality' && (
                   <p className="text-sm text-gray-500">

@@ -1,7 +1,7 @@
 /**
  * Reverse geocode coordinates and look up elevation / depth.
- * Primary: Geonorge Stedsnavn + Høydedata APIs (Kartverket).
- * Fallback: Nominatim (OpenStreetMap) for place name when Geonorge returns nothing.
+ * Primary: Kartverket Stedsnavn (place names) + Høydedata (elevation) APIs.
+ * Fallback: Nominatim (OpenStreetMap) for municipality / county.
  */
 import { getCached, setCached, withInflight } from '@/lib/db/cache';
 
@@ -21,17 +21,19 @@ export interface GeocodingResult {
   placeDistanceM?: number;
 }
 
-// ── Geonorge Stedsnavn response types ─────────────────────────────────────
+// ── Kartverket Stedsnavn /punkt response types ────────────────────────────
 
-interface GeonorgeName {
+interface KartverketPunktEntry {
   meterFraPunkt: number;
   navneobjekttype: string;
-  kommuner?: { kommunenavn?: string; fylkesnavn?: string }[];
   stedsnavn: { skrivemåte: string; språk: string; navnestatus: string }[];
+  stedsnummer: number;
+  stedstatus: string;
 }
 
-interface GeonorgeStedResponse {
-  navn: GeonorgeName[];
+interface KartverketPunktResponse {
+  metadata: { totaltAntallTreff: number };
+  navn: KartverketPunktEntry[];
 }
 
 // ── Geonorge Høydedata response types ─────────────────────────────────────
@@ -50,8 +52,8 @@ interface GeonorgeElevationResponse {
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
-/** Pick the Norwegian name (or first available) from a Geonorge place record. */
-function pickName(entry: GeonorgeName): string {
+/** Pick the Norwegian name (or first available) from a Kartverket place record. */
+function pickName(entry: KartverketPunktEntry): string {
   const norsk = entry.stedsnavn.find(s => s.språk === 'Norsk');
   return (norsk ?? entry.stedsnavn[0])?.skrivemåte ?? 'Unnamed location';
 }
@@ -72,88 +74,130 @@ async function fetchElevation(lat: number, lng: number): Promise<{ elevation: nu
 }
 
 /**
- * Place-type priority for SEA locations: shallows/reefs first, then sea, then islands.
- * Types NOT listed here get a very high default (999) so land names fall to the bottom.
+ * Place-type priority for SEA locations.
+ * The Kartverket /punkt API returns compound types like "Skjær i sjø", "Grunne i sjø".
+ * We match against the start of the type string to handle variations.
+ * Lower number = higher priority (picked first).
  */
-const SEA_PRIORITY: Record<string, number> = {
-  'Grunne':       1,
-  'Skjær':        1,
-  'Båe':          2,
-  'Flu':          2,
-  'Rev':          3,
-  'Banke':        4,
-  'Sjø':          5,
-  'Fjord':        6,
-  'Sund':         7,
-  'Vik':          8,
-  'Bukt':         8,
-  'Straum':       9,
-  'Havn':        10,
-  'Holme':       12,
-  'Øy':          14,
-  'Halvøy':      16,
-  'Nes':         18,
-};
+const SEA_PRIORITY_PREFIXES: [string, number][] = [
+  ['Grunne',       1],   // Grunne, Grunne i sjø — underwater shallows
+  ['Skjær',        1],   // Skjær, Skjær i sjø — skerries
+  ['Båe',          2],   // underwater rock
+  ['Flu',          2],   // shoal/reef
+  ['Rev',          3],   // reef
+  ['Banke',        4],   // bank
+  ['Lysbøye',      5],   // light buoy — good sea landmark
+  ['Sjø',          6],
+  ['Fjord',        7],
+  ['Sund',         8],
+  ['Våg',          9],   // Våg, Våg i sjø — small bay
+  ['Vik',         10],
+  ['Bukt',        10],
+  ['Straum',      11],
+  ['Havn',        12],
+  ['Holme',       14],
+  ['Øy',          16],
+  ['Halvøy',      18],
+  ['Nes',         20],
+];
 
 /**
- * Place-type priority for LAND locations: settlements first.
+ * Place-type priority for LAND locations.
  */
-const LAND_PRIORITY: Record<string, number> = {
-  'By':           1,
-  'Tettsted':     2,
-  'Bydel':        3,
-  'Grend':        5,
-  'Øy':           6,
-  'Halvøy':       7,
-  'Vik':          8,
-  'Bukt':         8,
-  'Nes':          9,
-  'Havn':        10,
-  'Strandplass': 11,
-  'Fjord':       12,
-  'Sund':        13,
-  'Dal':         15,
-  'Fjell':       20,
-  'Ås':          25,
-  'Elv':         25,
-  'Innsjø':      25,
-  'Vatn':        25,
-};
+const LAND_PRIORITY_PREFIXES: [string, number][] = [
+  ['By',           1],
+  ['Tettsted',     2],
+  ['Bydel',        3],
+  ['Grend',        5],
+  ['Øy',           6],
+  ['Halvøy',       7],
+  ['Vik',          8],
+  ['Våg',          8],
+  ['Bukt',         8],
+  ['Nes',          9],
+  ['Havn',        10],
+  ['Strandplass', 11],
+  ['Fjord',       12],
+  ['Sund',        13],
+  ['Dal',         15],
+  ['Fjell',       20],
+  ['Ås',          25],
+  ['Elv',         25],
+  ['Innsjø',      25],
+  ['Vatn',        25],
+  ['Vann',        25],
+  ['Tjern',       25],
+];
 
 function placeTypePriority(type: string, isSea: boolean): number {
-  const table = isSea ? SEA_PRIORITY : LAND_PRIORITY;
+  const table = isSea ? SEA_PRIORITY_PREFIXES : LAND_PRIORITY_PREFIXES;
+  for (const [prefix, prio] of table) {
+    if (type.startsWith(prefix)) return prio;
+  }
   // At sea: unlisted types (land settlements etc.) get 999 so sea features win
-  return table[type] ?? (isSea ? 999 : 50);
+  return isSea ? 999 : 50;
 }
 
-/** Fetch closest well-known place name from Geonorge Stedsnavn. */
-async function fetchGeonorgeName(lat: number, lng: number, isSea: boolean): Promise<{ name: string; municipality: string; county: string; distanceM: number } | null> {
-  try {
-    const url = `https://ws.geonorge.no/stedsnavn/v1/punkt?nord=${lat}&ost=${lng}&koordsys=4258&radius=10000&treffPerSide=30`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data: GeonorgeStedResponse = await res.json();
-    if (!data.navn || data.navn.length === 0) return null;
+/**
+ * Fetch place name from Kartverket Stedsnavn /punkt endpoint.
+ *
+ * Strategy: two-pass search.
+ *   1. Small radius (500 m) with many results — finds nearby micro-locations
+ *      (skerries, shallows, underwater tops) that are most relevant for fishing.
+ *   2. If nothing useful found, expand to 5 000 m for broader context.
+ *
+ * Results are sorted by place-type priority (sea micro-locations first at sea),
+ * then by distance, so the most specific nearby name wins.
+ */
+async function fetchKartverketPlaceName(
+  lat: number,
+  lng: number,
+  isSea: boolean,
+): Promise<{ name: string; distanceM: number } | null> {
+  const baseUrl = 'https://api.kartverket.no/stedsnavn/v1/punkt';
 
-    // Sort by place-type priority (sea vs land), then by distance
-    const sorted = [...data.navn].sort((a, b) => {
-      const pa = placeTypePriority(a.navneobjekttype, isSea);
-      const pb = placeTypePriority(b.navneobjekttype, isSea);
-      if (pa !== pb) return pa - pb;
-      return a.meterFraPunkt - b.meterFraPunkt;
-    });
+  const fetchAndRank = async (radius: number, limit: number): Promise<KartverketPunktEntry[] | null> => {
+    try {
+      const url = `${baseUrl}?nord=${lat}&ost=${lng}&koordsys=4258&radius=${radius}&treffPerSide=${limit}&utkoordsys=4258`;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const data: KartverketPunktResponse = await res.json();
+      if (!data.navn || data.navn.length === 0) return null;
 
-    const entry = sorted[0];
-    const kommune = entry.kommuner?.[0];
-    return {
-      name: pickName(entry),
-      municipality: kommune?.kommunenavn ?? '',
-      county: kommune?.fylkesnavn ?? '',
-      distanceM: entry.meterFraPunkt,
-    };
-  } catch {
-    return null;
+      // Filter out inactive places
+      const active = data.navn.filter(e => e.stedstatus === 'aktiv');
+      if (active.length === 0) return null;
+
+      // Sort by type priority then distance
+      return active.sort((a, b) => {
+        const pa = placeTypePriority(a.navneobjekttype, isSea);
+        const pb = placeTypePriority(b.navneobjekttype, isSea);
+        if (pa !== pb) return pa - pb;
+        return a.meterFraPunkt - b.meterFraPunkt;
+      });
+    } catch {
+      return null;
+    }
+  };
+
+  // Pass 1: tight radius — prefer nearby micro-locations
+  const nearbyResults = await fetchAndRank(500, 30);
+  if (nearbyResults) {
+    const best = nearbyResults[0];
+    // Accept if it's a high-priority type OR very close
+    if (placeTypePriority(best.navneobjekttype, isSea) <= 20 || best.meterFraPunkt <= 200) {
+      return { name: pickName(best), distanceM: best.meterFraPunkt };
+    }
   }
+
+  // Pass 2: wider radius
+  const wideResults = await fetchAndRank(5000, 50);
+  if (wideResults) {
+    const best = wideResults[0];
+    return { name: pickName(best), distanceM: best.meterFraPunkt };
+  }
+
+  return null;
 }
 
 /** Fallback: Nominatim reverse geocode. */
@@ -206,28 +250,19 @@ export async function reverseGeocode(
         ? (elev.terrain === 'Hav' || (elev.elevation < 0 && !['Skog', 'Åpen fastmark', 'Bebygd', 'Innsjø', 'Myr', 'Isbre', 'Fjell'].includes(elev.terrain)))
         : false; // default to land when elevation unavailable
 
-      // Now fetch place name with sea/land-aware priority
-      const geonorge = await fetchGeonorgeName(lat, lng, isSea);
+      // Fetch place name (Kartverket) and municipality (Nominatim) in parallel.
+      // The /punkt endpoint doesn't return kommune, so Nominatim is always needed.
+      const [kartverket, nominatim] = await Promise.all([
+        fetchKartverketPlaceName(lat, lng, isSea),
+        fetchNominatimName(lat, lng),
+      ]);
 
-      let name = geonorge?.name ?? '';
-      let municipality = geonorge?.municipality ?? '';
-      let county = geonorge?.county ?? '';
-      let country = 'Norway';
-      let displayName = '';
-      let placeDistanceM = geonorge?.distanceM;
-
-      // Always fetch Nominatim for municipality / county if Geonorge didn't provide one,
-      // or as a full fallback when Geonorge returned no name at all
-      if (!name || !municipality) {
-        const nom = await fetchNominatimName(lat, lng);
-        if (nom) {
-          if (!name) name = nom.name;
-          if (!municipality) municipality = nom.municipality;
-          if (!county) county = nom.county;
-          country = nom.country || country;
-          displayName = nom.displayName;
-        }
-      }
+      const name = kartverket?.name || nominatim?.name || '';
+      const municipality = nominatim?.municipality || '';
+      const county = nominatim?.county || '';
+      const country = nominatim?.country || 'Norway';
+      const displayName = nominatim?.displayName || '';
+      const placeDistanceM = kartverket?.distanceM;
 
       const result: GeocodingResult = {
         name: name || 'Unnamed location',

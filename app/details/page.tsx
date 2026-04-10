@@ -106,11 +106,6 @@ export default async function DetailsPage({ searchParams }: PageProps) {
               <>
                 <h2 className="text-2xl font-bold text-ocean-900 mb-1">
                   {locationData.name}
-                  {locationData.placeDistanceM !== undefined && locationData.placeDistanceM > 100 && (
-                    <span className="text-sm font-normal text-gray-400 ml-2">
-                      ({formatDistance(locationData.placeDistanceM)} away)
-                    </span>
-                  )}
                 </h2>
                 {locationData.municipality && locationData.municipality !== 'Unknown municipality' && (
                   <p className="text-sm text-gray-500">

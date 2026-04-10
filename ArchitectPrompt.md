@@ -16,15 +16,10 @@ Found in the [README.md](README.md) file.
 
 ## Future plans 
 
-- I want to use Kartverket's Open Stedsnavn API, like how the weather service yr.no finds specific small islets, skerries, and underwater tops from a given coordinate 
-Step 1: Please read the OpenAPI specification here: https://api.kartverket.no/stedsnavn/v1/openapi.json to understand the exact required parameters for the /punkt endpoint. 
-Step 2: Ensure you specify the correct coordinate system parameter (EPSG:4326) so the API accepts standard lat/lon. Include an appropriate search radius.
-Step 3: Add logic to handle the JSON response. Instead of just picking the first result, prioritize highly localized place names. You should sort and filter the array by distance, and prioritize the navneobjekttype (object type) for micro-locations (e.g., 'skjær', 'grunne', 'flu', 'holme', 'båe') over larger municipal or regional names.
-Step 4: Use these names consistently in the map-popup, and also the details pages. 
-
 - When inspecting a location at sea, there should be a warning in the header of the details page that indicates the end of the civil twilight for that location. If there are any dangerous conditions forecasted before that time, the time and the condition should be indicated like in the Score page.
 
 - Explore possibilities to tune fish score to the depth where clicked.
+- Find a way to toggle current score on and off based on the quality and existence of reliable current forecast. Inform whether or not the current is accounted for.
 
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
 - Link directly to **fishing rules** by species from Fiskeridirektoratet.
