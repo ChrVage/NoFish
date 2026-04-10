@@ -60,8 +60,11 @@ export default async function ScorePage({ searchParams }: PageProps) {
   const hasOceanData = forecasts.some(f => f.waveHeight !== undefined);
   const timezone = getTimezone(lat, lng);
 
-  // Pre-compute scores for all forecasts
-  const scoredForecasts = forecasts.map(f => ({ forecast: f, ...computeFishingScore(f) }));
+  // Pre-compute scores for all forecasts (depth-adaptive)
+  const depth = locationData?.isSea && locationData.elevation !== undefined
+    ? Math.abs(locationData.elevation)
+    : undefined;
+  const scoredForecasts = forecasts.map(f => ({ forecast: f, ...computeFishingScore(f, depth) }));
 
   // Find best fishing windows (top 2 non-overlapping, 1–3 hours)
   const bestWindows = findBestWindows(scoredForecasts);

@@ -43,6 +43,9 @@ export default async function DetailsPage({ searchParams }: PageProps) {
   const isLand = locationData?.isSea === false;
   const hasOceanData = !isLand && oceanForecastLat !== undefined && oceanForecastLng !== undefined;
   const timezone = getTimezone(lat, lng);
+  const depth = locationData?.isSea && locationData.elevation !== undefined
+    ? Math.abs(locationData.elevation)
+    : undefined;
   const oceanForecastDistance = oceanForecastLat !== undefined && oceanForecastLng !== undefined
     ? haversineDistance(lat, lng, oceanForecastLat, oceanForecastLng)
     : null;
@@ -94,7 +97,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
       for (const f of forecasts) {
         const fMs = new Date(f.time).getTime();
         if (fMs >= cutoffMs) break;
-        const { reasons } = computeFishingScore(f);
+        const { reasons } = computeFishingScore(f, depth);
         const dangerReasons = reasons.filter(r => r.tone === 'danger').map(r => r.text);
         if (dangerReasons.length > 0) {
           allDangers.push({ time: f.time, reasons: dangerReasons, count: dangerReasons.length });

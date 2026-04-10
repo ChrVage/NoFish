@@ -16,7 +16,6 @@ Found in the [README.md](README.md) file.
 
 ## Future plans 
 
-- Explore possibilities to tune fish score to the depth where clicked.
 - Find a way to toggle current score on and off based on the quality and existence of reliable current forecast. Inform whether or not the current is accounted for.
 
 - Consider adding CI pipeline (e.g., GitHub Actions) that calls npm test.
@@ -32,7 +31,7 @@ Found in the [README.md](README.md) file.
 - Implment an **API** so others can collect next best fishing times based on coordinates.
 - Find a better way to determine if the coordinate is land or sea. Today Geonorge not leaving depth is enough for limiting the response.
 
-- Explore possibilities for changing boat size and fish species to tune for
+- Explore possibilities for changing boat size and fish species to tune for (fish species will help adapt the depth. But polloch could be large at the bottom and small higher up.) 
 
 - Create a beter Icon and logo https://realfavicongenerator.net/
 

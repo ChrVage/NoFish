@@ -1,5 +1,5 @@
 /**
- * Deep-water fishing score — Norwegian coast, 50–200 m depth
+ * Depth-adaptive fishing score — Norwegian coast
  *
  * The score uses continuous mathematical functions (Gaussian curves, sigmoids)
  * to produce a smooth 0–100 % gauge.
@@ -12,12 +12,16 @@
  * no fish" is the core philosophy — water movement is the primary driver for
  * deep-water predators (Ling, Tusk, Cod, Saithe).
  *
+ * An optional `depth` parameter (positive metres below sea level) tunes the
+ * scoring to the seabed depth at the clicked location. When omitted the
+ * classic 50–200 m deep-water profile is used.
+ *
  * Variables (multiplied together as 0–1 factors, then scaled to 0–100):
- *   1. Current speed   – Gaussian peak at 0.4 m/s (the base score)
+ *   1. Current speed   – Gaussian peak adapted to depth (the base score)
  *   2. Wind & drift    – safety override + wind-current interaction
- *   3. Tide phase      – biological modifier (mid-tide > turning > slack)
- *   4. Moon phase      – tidal amplitude modifier (spring > neap)
- *   5. Light & temp    – dawn/dusk peak, darkness penalty, temp stability
+ *   3. Tide phase      – biological modifier, spread adapted to depth
+ *   4. Moon phase      – tidal amplitude modifier, spread adapted to depth
+ *   5. Light & temp    – dawn/dusk peak, bonus fades at extreme depth
  *   6. Wave height     – gear-handling & safety
  *   7. Precipitation   – minor modifier
  *   8. Sea temperature – minor modifier
@@ -65,6 +69,35 @@ function lerp01(x: number, x0: number, x1: number): number {
   return Math.max(0, Math.min(1, (x - x0) / (x1 - x0)));
 }
 
+// ── Depth profile ───────────────────────────────────────────────────────────
+
+export interface DepthProfile {
+  /** Gaussian peak for ideal current speed (m/s). */
+  currentMu: number;
+  /** Gaussian width for current speed. */
+  currentSigma: number;
+  /** How strongly tide phase matters (0 = no effect, 1 = full spread). */
+  tideSpread: number;
+  /** How strongly spring/neap distinction matters (0–1). */
+  moonSpread: number;
+  /** Strength of dawn/dusk fishing bonus (0–1). */
+  dawnDuskBonus: number;
+}
+
+/** Return a depth profile that shifts scoring knobs based on seabed depth. */
+export function getDepthProfile(depth: number | undefined): DepthProfile {
+  if (depth === undefined) {
+    // No depth data — use classic 50–200 m deep-water defaults
+    return { currentMu: 0.40, currentSigma: 0.22, tideSpread: 0.75, moonSpread: 0.82, dawnDuskBonus: 0.70 };
+  }
+  const d = Math.abs(depth); // ensure positive
+  if (d < 30)  return { currentMu: 0.25, currentSigma: 0.18, tideSpread: 1.00, moonSpread: 1.00, dawnDuskBonus: 1.00 };
+  if (d < 100) return { currentMu: 0.35, currentSigma: 0.20, tideSpread: 0.90, moonSpread: 0.90, dawnDuskBonus: 0.90 };
+  if (d < 200) return { currentMu: 0.40, currentSigma: 0.22, tideSpread: 0.75, moonSpread: 0.82, dawnDuskBonus: 0.70 };
+  if (d < 400) return { currentMu: 0.45, currentSigma: 0.25, tideSpread: 0.60, moonSpread: 0.70, dawnDuskBonus: 0.30 };
+  return              { currentMu: 0.50, currentSigma: 0.28, tideSpread: 0.50, moonSpread: 0.60, dawnDuskBonus: 0.10 };
+}
+
 // ── Moon phase age helper ───────────────────────────────────────────────────
 const NEW_MOON_EPOCH_MS = Date.UTC(2000, 0, 6, 18, 14, 0);
 const SYNODIC_DAYS = 29.53058770576;
@@ -76,14 +109,16 @@ function moonAge(date: Date): number {
 
 // ── The scoring function ────────────────────────────────────────────────────
 
-export function computeFishingScore(f: HourlyForecast): { score: number; safetyScore: number; fishingScore: number; reasons: Reason[] } {
+export function computeFishingScore(f: HourlyForecast, depth?: number): { score: number; safetyScore: number; fishingScore: number; reasons: Reason[] } {
+  const dp = getDepthProfile(depth);
   const reasons: Reason[] = [];
   const good   = (text: string, category: 'safety' | 'fishing') => reasons.push({ text, tone: 'good', category });
   const bad    = (text: string, category: 'safety' | 'fishing') => reasons.push({ text, tone: 'bad', category });
   const danger = (text: string, category: 'safety' | 'fishing') => reasons.push({ text, tone: 'danger', category });
 
-  // ═══ 1. CURRENT SPEED — base score (Gaussian, peak at 0.4 m/s) ═══════
+  // ═══ 1. CURRENT SPEED — base score (Gaussian, peak adapted to depth) ══
   //
+  //   Peak shifts with depth: shallow → 0.25 m/s, deep → 0.50 m/s
   //   0.0 m/s → ~0.2  ("dead water")
   //   0.3–0.5 → ~1.0  (sweet spot)
   //   0.7     → ~0.7
@@ -93,18 +128,20 @@ export function computeFishingScore(f: HourlyForecast): { score: number; safetyS
   let currentFactor = 1.0; // default when no current data (skip — no effect)
   if (f.currentSpeed !== undefined) {
     const cs = f.currentSpeed;
-    // Gaussian centred at 0.4 m/s, σ = 0.22
-    currentFactor = gaussian(cs, 0.40, 0.22);
+    // Gaussian centred at depth-adjusted peak, σ from depth profile
+    currentFactor = gaussian(cs, dp.currentMu, dp.currentSigma);
     // Floor for dead water (< 0.1 m/s → max 0.15)
     if (cs < 0.1) currentFactor = Math.min(currentFactor, 0.15);
     // Rapid drop above 1.0 m/s
     if (cs > 1.0) currentFactor *= Math.max(0, 1 - (cs - 1.0) / 0.5);
 
-    if (cs >= 0.25 && cs <= 0.55) good(`Current ${cs.toFixed(2)} m/s — sweet spot`, 'fishing');
+    const sweetLo = dp.currentMu - dp.currentSigma * 0.7;
+    const sweetHi = dp.currentMu + dp.currentSigma * 0.7;
+    if (cs >= sweetLo && cs <= sweetHi) good(`Current ${cs.toFixed(2)} m/s — sweet spot`, 'fishing');
     else if (cs < 0.15) bad(`Current ${cs.toFixed(2)} m/s — dead water`, 'fishing');
     else if (cs > 1.0) danger(`⚠️ Current ${cs.toFixed(2)} m/s — unfishable`, 'fishing');
     else if (cs > 0.7) bad(`Current ${cs.toFixed(2)} m/s — gear drag`, 'fishing');
-    else if (cs < 0.25) bad(`Current ${cs.toFixed(2)} m/s — slow`, 'fishing');
+    else if (cs < sweetLo) bad(`Current ${cs.toFixed(2)} m/s — slow`, 'fishing');
     else good(`Current ${cs.toFixed(2)} m/s`, 'fishing');
   }
 
@@ -184,52 +221,49 @@ export function computeFishingScore(f: HourlyForecast): { score: number; safetyS
     }
   }
 
-  // ═══ 3. TIDE PHASE — biological modifier ═════════════════════════════
+  // ═══ 3. TIDE PHASE — biological modifier (spread adapted to depth) ═══
   //
   //   Mid-tide (Rising/Falling)  → 1.0  (peak nutrient exchange)
-  //   Rising tide                → extra +0.05 (increased hydrostatic pressure)
-  //   Turning (±1h, ±2h)        → 0.7–0.85
-  //   Slack (exact Hi/Lo)       → 0.55
+  //   Shallow water amplifies tidal effect; deep water compresses it.
+  //   tideSpread=1.0 → full range (slack=0.40, rising=1.0)
+  //   tideSpread=0.5 → compressed (slack=0.70, rising=1.0)
   //
   let tideFactor = 0.75; // default when no tide data
   if (f.tidePhase) {
     const tp = f.tidePhase.toLowerCase();
-    if (tp.includes('rising')) {
-      tideFactor = 1.0;
-      good('Rising tide — fish active', 'fishing');
-    } else if (tp.includes('falling')) {
-      tideFactor = 0.95;
-      good('Falling tide', 'fishing');
-    } else if (tp.match(/[+-]1h/)) {
-      tideFactor = 0.85;
-      good('Tide turning', 'fishing');
-    } else if (tp.match(/[+-]2h/)) {
-      tideFactor = 0.75;
-      // neutral, no label
-    } else if (tp.match(/^(hi|lo)\b/i) || tp.includes('(')) {
-      // Exact high/low = slack
-      tideFactor = 0.55;
-      bad('Slack tide', 'fishing');
-    } else {
-      tideFactor = 0.80;
-    }
+    // Base factors at full spread (tideSpread=1.0)
+    let baseTide = 0.80;
+    if (tp.includes('rising'))        baseTide = 1.00;
+    else if (tp.includes('falling'))  baseTide = 0.95;
+    else if (tp.match(/[+-]1h/))      baseTide = 0.85;
+    else if (tp.match(/[+-]2h/))      baseTide = 0.75;
+    else if (tp.match(/^(hi|lo)\b/i) || tp.includes('(')) baseTide = 0.55;
+
+    // Compress toward 1.0 based on tideSpread: factor = 1 - spread * (1 - base)
+    tideFactor = 1.0 - dp.tideSpread * (1.0 - baseTide);
+
+    if (tp.includes('rising'))          good('Rising tide — fish active', 'fishing');
+    else if (tp.includes('falling'))    good('Falling tide', 'fishing');
+    else if (tp.match(/[+-]1h/))        good('Tide turning', 'fishing');
+    else if (tp.match(/^(hi|lo)\b/i) || tp.includes('(')) bad('Slack tide', 'fishing');
   }
 
-  // ═══ 4. MOON PHASE — tidal amplitude modifier ════════════════════════
+  // ═══ 4. MOON PHASE — tidal amplitude modifier (spread adapted) ═════
   //
-  //   New/Full Moon (spring tides) → 1.0  (strongest deep-water pull)
-  //   First/Last Quarter (neap)   → 0.82 (weaker tidal movement)
+  //   New/Full Moon (spring tides) → 1.0  (strongest pull)
+  //   First/Last Quarter (neap)   → neap floor adapted by moonSpread
   //   Continuous cosine curve between them
   //
   let moonFactor = 0.90; // default
   const entryDate = new Date(f.time);
   if (f.moonPhase) {
     const age = moonAge(entryDate);
-    // cos peaks at 0 (new moon) and π (full moon ≈ 14.77 days)
-    // Map: 0/29.5 days = new moon, 14.77 = full moon, 7.4/22.1 = quarter
     const phase = (age / SYNODIC_DAYS) * 2 * Math.PI;
-    // cos(2*phase) peaks at new & full moon, troughs at quarters
-    moonFactor = 0.82 + 0.18 * (0.5 + 0.5 * Math.cos(2 * phase));
+    // Raw cosine: 1.0 at new/full moon, 0.0 at quarters
+    const cosVal = 0.5 + 0.5 * Math.cos(2 * phase);
+    // Neap floor scales with moonSpread: spread=1→0.70, spread=0.5→0.85
+    const neapFloor = 1.0 - dp.moonSpread * 0.30;
+    moonFactor = neapFloor + (1.0 - neapFloor) * cosVal;
 
     if (f.moonPhase.includes('New Moon') || f.moonPhase.includes('Full Moon')) {
       good('Spring tide (strong pull)', 'fishing');
@@ -246,7 +280,11 @@ export function computeFishingScore(f: HourlyForecast): { score: number; safetyS
   //   Nautical twilight                          → 0.25 (dangerous)
   //   Night                                      → 0.0  (unsafe)
   //
-  let lightFactor = 0.80; // default daylight
+  //   At extreme depth the dawn/dusk feeding bonus fades (perpetual dark
+  //   at the bottom), controlled by dp.dawnDuskBonus (0–1).
+  //
+  let lightFactor = 0.80; // default daylight (safety)
+  let lightFishingFactor = 1.0; // default neutral (fishing)
   if (f.sunPhaseSegments && f.sunPhaseSegments.length > 0) {
     const dominant = f.sunPhaseSegments.reduce((a, b) => b.fraction > a.fraction ? b : a);
     const nightFrac = f.sunPhaseSegments.filter(s => s.phase === 'night').reduce((sum, s) => sum + s.fraction, 0);
@@ -261,24 +299,28 @@ export function computeFishingScore(f: HourlyForecast): { score: number; safetyS
       danger('⚠️ Dark — poor visibility', 'safety');
       bad('Dark — low activity', 'fishing');
     } else if (dominant.phase === 'civil') {
-      // Civil twilight = prime time for deep-water fish
+      // Civil twilight = prime time — bonus scaled by depth
       lightFactor = 1.0;
+      lightFishingFactor = 1.0 + 0.15 * dp.dawnDuskBonus; // up to 1.15 at shallow
       good('Good visibility', 'safety');
       good('Twilight — peak feeding', 'fishing');
     } else if (dominant.phase === 'day') {
       if (civilFrac > 0.1) {
         lightFactor = 1.0;
+        lightFishingFactor = 1.0 + 0.12 * dp.dawnDuskBonus; // up to 1.12 at shallow
         good('Good visibility', 'safety');
         good('Dawn/dusk — active feeding', 'fishing');
       } else {
         lightFactor = 0.80;
-        // Bright midday with clear sky → slight penalty
+        // Bright midday with clear sky → slight fishing penalty, scaled by depth
         if (f.cloudCover !== undefined && f.cloudCover < 20) {
           lightFactor = 0.70;
+          lightFishingFactor = 1.0 - 0.10 * dp.dawnDuskBonus; // down to 0.90 at shallow (fish go deep)
           good('Clear sky', 'safety');
           bad('Bright sun — fish deep', 'fishing');
         } else if (f.cloudCover !== undefined && f.cloudCover >= 50) {
           lightFactor = 0.85;
+          lightFishingFactor = 1.0 + 0.05 * dp.dawnDuskBonus; // slight bonus
           good('Overcast', 'safety');
           good('Overcast — fish active', 'fishing');
         }
@@ -420,7 +462,7 @@ export function computeFishingScore(f: HourlyForecast): { score: number; safetyS
 
   // ═══ COMBINE — multiply factors, scale to 0–100 ══════════════════════
   const safetyRaw = windFactor * waveFactor * lightFactor * wavePeriodFactor;
-  const fishingRaw = currentFactor * tideFactor * moonFactor * precipFactor * tempFactor * pressureFactor;
+  const fishingRaw = currentFactor * tideFactor * moonFactor * precipFactor * tempFactor * pressureFactor * lightFishingFactor;
   const raw = safetyRaw * fishingRaw;
   const score = Math.round(Math.max(0, Math.min(100, raw * 100)));
   const safetyScore = Math.round(Math.max(0, Math.min(100, safetyRaw * 100)));

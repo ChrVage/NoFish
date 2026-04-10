@@ -4,6 +4,7 @@ import {
   findBestWindows,
   getScoreColor,
   getScoreBg,
+  getDepthProfile,
   type ScoredForecast,
 } from './fishingScore';
 import type { HourlyForecast } from '@/types/weather';
@@ -467,5 +468,70 @@ describe('getScoreBg', () => {
     for (let s = 0; s <= 100; s += 10) {
       expect(getScoreBg(s)).toMatch(/^#[0-9a-f]{6}$/);
     }
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Depth profile
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe('getDepthProfile', () => {
+  it('returns default profile when depth is undefined', () => {
+    const dp = getDepthProfile(undefined);
+    expect(dp.currentMu).toBe(0.40);
+    expect(dp.currentSigma).toBe(0.22);
+  });
+
+  it('shallow water (<30m) peaks at lower current speed', () => {
+    const dp = getDepthProfile(20);
+    expect(dp.currentMu).toBe(0.25);
+    expect(dp.tideSpread).toBe(1.0);
+  });
+
+  it('deep water (>400m) peaks at higher current speed', () => {
+    const dp = getDepthProfile(500);
+    expect(dp.currentMu).toBe(0.50);
+    expect(dp.dawnDuskBonus).toBe(0.10);
+  });
+
+  it('handles negative elevation (depth below sea level)', () => {
+    const dp = getDepthProfile(-150);
+    expect(dp.currentMu).toBe(0.40); // 100–200 m bracket
+  });
+});
+
+describe('depth-adaptive scoring', () => {
+  it('shallow water favours slower current', () => {
+    const f = mkForecast({ currentSpeed: 0.25 });
+    const shallow = computeFishingScore(f, 20);
+    const deep = computeFishingScore(f, 150);
+    // 0.25 m/s is the shallow sweet spot but below the deep sweet spot
+    expect(shallow.fishingScore).toBeGreaterThan(deep.fishingScore);
+  });
+
+  it('deep water favours faster current', () => {
+    const f = mkForecast({ currentSpeed: 0.45 });
+    const shallow = computeFishingScore(f, 20);
+    const deep = computeFishingScore(f, 150);
+    // 0.45 m/s is above the shallow sweet spot but near the deep sweet spot
+    expect(deep.fishingScore).toBeGreaterThan(shallow.fishingScore);
+  });
+
+  it('tide phase matters more in shallow water', () => {
+    const rising = mkForecast({ tidePhase: 'Rising' });
+    const slack = mkForecast({ tidePhase: 'Hi (13:00)' });
+    const shallowRising = computeFishingScore(rising, 20);
+    const shallowSlack = computeFishingScore(slack, 20);
+    const deepRising = computeFishingScore(rising, 500);
+    const deepSlack = computeFishingScore(slack, 500);
+    const shallowDiff = shallowRising.fishingScore - shallowSlack.fishingScore;
+    const deepDiff = deepRising.fishingScore - deepSlack.fishingScore;
+    expect(shallowDiff).toBeGreaterThan(deepDiff);
+  });
+
+  it('no depth passes through without error', () => {
+    const { score } = computeFishingScore(mkForecast({ currentSpeed: 0.40 }));
+    expect(score).toBeGreaterThanOrEqual(0);
+    expect(score).toBeLessThanOrEqual(100);
   });
 });
