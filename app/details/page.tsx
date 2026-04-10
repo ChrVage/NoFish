@@ -1,13 +1,14 @@
 import { notFound } from 'next/navigation';
 import { after } from 'next/server';
 import { headers } from 'next/headers';
-import { getCombinedForecast } from '@/lib/api/weather';
+import { getCombinedForecast, solarPosition } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
 import { insertLookup, ensureTable } from '@/lib/db/lookups';
 import { getTimezone } from '@/lib/utils/timezone';
 import { haversineDistance, formatDistance } from '@/lib/utils/distance';
 import { parseZoomParam } from '@/lib/utils/params';
 import { enrichForecasts } from '@/lib/utils/enrichForecasts';
+import { computeFishingScore } from '@/lib/scoring/fishingScore';
 import ForecastTable from '@/components/ForecastTable';
 import Header from '@/components/Header';
 import BackButton from '@/components/BackButton';
@@ -48,6 +49,72 @@ export default async function DetailsPage({ searchParams }: PageProps) {
   const tideStationDistance = tideStationLat !== undefined && tideStationLng !== undefined
     ? haversineDistance(lat, lng, tideStationLat, tideStationLng)
     : null;
+
+  // ── Civil twilight end warning (sea locations only) ──────────────────────
+  // Find today's civil twilight end (sun crosses -6° going down in the evening)
+  const timeFmtHHMM = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone });
+  let civilTwilightEnd: Date | null = null;
+  let isDark = false;
+  let topDangers: { time: string; reasons: string[] }[] = [];
+  if (!isLand) {
+    const now = new Date();
+    const currentElev = solarPosition(now, lat, lng).elevation;
+    isDark = currentElev < -6;
+
+    // Search for the evening civil twilight end: scan from local noon onward
+    // Start of local day in the forecast timezone
+    const dayStart = new Date(new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now).replace(/-/g, '/') + ' 12:00:00 UTC');
+    // Approximate local noon in UTC (offset by ~lng/15 hours; good enough for scanning)
+    const localNoonApprox = new Date(dayStart.getTime() - (lng / 15) * 3600000);
+    // Scan from noon to midnight in 1-minute steps
+    const scanEnd = new Date(localNoonApprox.getTime() + 12 * 3600000);
+    let prevElev = solarPosition(localNoonApprox, lat, lng).elevation;
+    for (let t = new Date(localNoonApprox.getTime() + 60000); t <= scanEnd; t = new Date(t.getTime() + 60000)) {
+      const elev = solarPosition(t, lat, lng).elevation;
+      // Civil twilight ends when elevation crosses -6° going downward
+      if (prevElev >= -6 && elev < -6) {
+        // Binary search for exact crossing
+        let lo = new Date(t.getTime() - 60000);
+        let hi = t;
+        for (let i = 0; i < 12; i++) {
+          const mid = new Date((lo.getTime() + hi.getTime()) / 2);
+          if (solarPosition(mid, lat, lng).elevation >= -6) lo = mid;
+          else hi = mid;
+        }
+        civilTwilightEnd = new Date((lo.getTime() + hi.getTime()) / 2);
+        break;
+      }
+      prevElev = elev;
+    }
+
+    // Collect all danger hours before civil twilight end, pick worst 1–2
+    if (civilTwilightEnd && !isDark) {
+      const cutoffMs = civilTwilightEnd.getTime();
+      const allDangers: { time: string; reasons: string[]; count: number }[] = [];
+      for (const f of forecasts) {
+        const fMs = new Date(f.time).getTime();
+        if (fMs >= cutoffMs) break;
+        const { reasons } = computeFishingScore(f);
+        const dangerReasons = reasons.filter(r => r.tone === 'danger').map(r => r.text);
+        if (dangerReasons.length > 0) {
+          allDangers.push({ time: f.time, reasons: dangerReasons, count: dangerReasons.length });
+        }
+      }
+      // Pick first danger chronologically, then only add a later one if it's more serious
+      const chronological = allDangers.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+      topDangers = [];
+      if (chronological.length > 0) {
+        topDangers.push(chronological[0]);
+        // Only add a second entry if it has strictly more danger reasons
+        for (let i = 1; i < chronological.length; i++) {
+          if (chronological[i].count > chronological[0].count) {
+            topDangers.push(chronological[i]);
+            break;
+          }
+        }
+      }
+    }
+  }
 
   // Capture request headers now — not available inside after()
   const reqHeaders = await headers();
@@ -99,20 +166,16 @@ export default async function DetailsPage({ searchParams }: PageProps) {
 
       {/* Main content */}
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="bg-white rounded-lg shadow-lg" style={{ padding: '2rem 1.5rem' }}>
           {/* Location header */}
-          <div className="mb-6 border-b border-gray-200 pb-4">
+          <div className="mb-6">
             {locationData && (
-              <>
-                <h2 className="text-2xl font-bold text-ocean-900 mb-1">
-                  {locationData.name}
-                </h2>
-                {locationData.municipality && locationData.municipality !== 'Unknown municipality' && (
-                  <p className="text-sm text-gray-500">
-                    {locationData.municipality}
-                  </p>
+              <h2 className="text-2xl font-bold text-ocean-900 mb-1">
+                {locationData.name}
+                {locationData.municipality && locationData.municipality !== 'Unknown municipality' && locationData.municipality !== locationData.name && (
+                  <span className="text-lg font-normal text-gray-500">, {locationData.municipality}</span>
                 )}
-              </>
+              </h2>
             )}
             <p className="text-sm text-gray-500">
               {Math.abs(lat).toFixed(4)}°{lat >= 0 ? 'N' : 'S'},{' '}
@@ -143,6 +206,48 @@ export default async function DetailsPage({ searchParams }: PageProps) {
                   </p>
                 )}
               </div>
+            )}
+
+            {/* Civil twilight & safety warnings */}
+            {!isLand && (isDark || civilTwilightEnd) && (
+              <p className="mt-2 text-sm text-amber-800">
+                {isDark ? (
+                  <span className="font-semibold">Currently: Dark</span>
+                ) : civilTwilightEnd && (() => {
+                  const twilightMs = civilTwilightEnd.getTime();
+                  const firstForecastMs = forecasts.length > 0 ? new Date(forecasts[0].time).getTime() : 0;
+                  type Entry = { ms: number; kind: 'danger'; time: string; reasons: string[] } | { ms: number; kind: 'twilight' };
+                  const entries: Entry[] = [
+                    ...topDangers.map(d => ({ ms: new Date(d.time).getTime(), kind: 'danger' as const, time: d.time, reasons: d.reasons })),
+                    { ms: twilightMs, kind: 'twilight' as const },
+                  ].sort((a, b) => a.ms - b.ms);
+
+                  return entries.map((entry, i) => {
+                    if (entry.kind === 'twilight') {
+                      return (
+                        <span key="twilight">
+                          {i > 0 && ' · '}
+                          <span style={{ fontWeight: 700 }}>{timeFmtHHMM.format(civilTwilightEnd)}:</span>
+                          {' Civil daylight ends'}
+                        </span>
+                      );
+                    }
+                    const isCurrent = entry.ms <= firstForecastMs;
+                    const cleaned = entry.reasons.map(r => r.replace(/⚠️\s*/g, '').trim());
+                    return (
+                      <span key={i} className="text-red-800">
+                        {i > 0 && ' · '}
+                        {'⚠️ '}
+                        <span style={{ fontWeight: 700 }}>
+                          {isCurrent ? 'Now:' : `${timeFmtHHMM.format(new Date(entry.time))}:`}
+                        </span>
+                        {' '}
+                        {cleaned.join(', ')}
+                      </span>
+                    );
+                  });
+                })()}
+              </p>
             )}
           </div>
 

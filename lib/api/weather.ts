@@ -636,7 +636,7 @@ const _deg = 180 / Math.PI;
  * @param lng   Longitude in degrees
  * @returns elevation (–90…90°, positive = above horizon), azimuth (0=N, 90=E, 180=S, 270=W)
  */
-function solarPosition(
+export function solarPosition(
   date: Date,
   lat: number,
   lng: number

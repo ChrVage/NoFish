@@ -16,22 +16,19 @@ Found in the [README.md](README.md) file.
 
 ## Future plans 
 
-- When inspecting a location at sea, there should be a warning in the header of the details page that indicates the end of the civil twilight for that location. If there are any dangerous conditions forecasted before that time, the time and the condition should be indicated like in the Score page.
-
 - Explore possibilities to tune fish score to the depth where clicked.
 - Find a way to toggle current score on and off based on the quality and existence of reliable current forecast. Inform whether or not the current is accounted for.
+
+- Remove the non-technical readme, such as readme-data and readme-score pages, and add them as a part of nofish.no, instead of GitHub. Update the links on the pages to reflect the new pages. Split the Readme.md into a part that stays on Github, with a very short "reason to exist", and links to readme-technical (that also includes readme-architecture). The other part of the Readme.md should be moved to a page on Nofish that explains the webpage.
+- Create a feedback form on nofish.no. Create link to it on each score, tide and detail, to add data for that point to the feedback.
 
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
 - Link directly to **fishing rules** by species from Fiskeridirektoratet.
 
-- Implment an **API** so others can collect next best fishing times based on coordinates.
-
-- Remove all the other readme pages, and add them as a part of nofish.no, instead of GitHub.
-- Create a feedback form on nofish.no. Create link to it on each score, tide and detail, to add data for that point to the feedback.
-
-- Find a better way to determine if the coordinate is land or sea. Today Geonorge not leaving depth is enough for limiting the response.
-
 - Find a way to show the VHF working channel, emergency channel (16) and phone number to Kystradioen (120)
+
+- Implment an **API** so others can collect next best fishing times based on coordinates.
+- Find a better way to determine if the coordinate is land or sea. Today Geonorge not leaving depth is enough for limiting the response.
 
 - Explore possibilities for changing boat size and fish species to tune for
 
