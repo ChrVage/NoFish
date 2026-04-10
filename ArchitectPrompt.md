@@ -16,12 +16,11 @@ Found in the [README.md](README.md) file.
 
 ## Future plans 
 
-- Find a way to toggle current score on and off based on the quality and existence of reliable current forecast. Inform whether or not the current is accounted for.
-
 - Consider adding CI pipeline (e.g., GitHub Actions) that calls npm test.
 
-- Remove the non-technical readme, such as readme-data and readme-score pages, and add them as a part of nofish.no, instead of GitHub. Update the links on the pages to reflect the new pages. Split the Readme.md into a part that stays on Github, with a very short "reason to exist", and links to readme-technical (that also includes readme-architecture). The other part of the Readme.md should be moved to a page on Nofish that explains the webpage.
-- Create a feedback form on nofish.no. Create link to it on each score, tide and detail, to add data for that point to the feedback.
+- Remove the non-technical readme, such as readme-data and readme-score pages, and add them as a page on nofish.no, instead of locked in GitHub. Update the links on the pages to reflect the new pages. Split the Readme.md into a part that stays on Github, with a very short "reason to exist", and links to readme-technical (that also includes readme-architecture). The other part of the Readme.md should be moved to a page on Nofish that explains the webpage and it's purpose. In the readme-data page now moved to nofish.no it should be clearly stated that current is forecast only, and cannot neccessarily be trusted. Local knowledge is important.
+
+- Create a feedback form on nofish.no. Create link to it on each score, tide and detail, to add data for that point to the feedback. Each feedback should be sent to nofish@vage.com.
 
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
 - Link directly to **fishing rules** by species from Fiskeridirektoratet.
@@ -29,7 +28,7 @@ Found in the [README.md](README.md) file.
 - Find a way to show the VHF working channel, emergency channel (16) and phone number to Kystradioen (120)
 
 - Implment an **API** so others can collect next best fishing times based on coordinates.
-- Find a better way to determine if the coordinate is land or sea. Today Geonorge not leaving depth is enough for limiting the response.
+- Find a better way to determine if the coordinate is land or sea.
 
 - Explore possibilities for changing boat size and fish species to tune for (fish species will help adapt the depth. But polloch could be large at the bottom and small higher up.) 
 

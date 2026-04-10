@@ -24,6 +24,11 @@ import { haversineDistance } from '@/lib/utils/distance';
  *  Beyond this threshold the wave data is considered inaccurate and is suppressed. */
 const MAX_OCEAN_FORECAST_DISTANCE_KM = 1;
 
+/** Maximum distance (km) between the requested point and the sea current grid point.
+ *  Current varies significantly near coastlines, straits and islands, so we use
+ *  the same tight tolerance as for wave data. */
+const MAX_CURRENT_FORECAST_DISTANCE_KM = 1;
+
 const USER_AGENT = 'NoFish/1.0 github.com/ChrVage/NoFish';
 
 /**
@@ -866,6 +871,11 @@ export interface CombinedForecastResult {
   oceanForecastLat?: number;
   oceanForecastLng?: number;
   waveForecastSource?: 'barentswatch';
+  // Barentswatch sea current grid point (undefined if current data unavailable/too far)
+  currentForecastLat?: number;
+  currentForecastLng?: number;
+  /** Distance (km) from the requested point to the current grid point, or undefined. */
+  currentForecastDistanceKm?: number;
   // Kartverket tide station (undefined if tide data unavailable)
   tideStationName?: string;
   tideStationLat?: number;
@@ -930,13 +940,38 @@ export async function getCombinedForecast(
     // the tide and score pages aren't meaningful for this location.
     const usableTideForecast = usableWaveEntries ? realTideForecast : null;
 
+    // Sea current grid point — distance check
+    let currentForecastLat: number | undefined;
+    let currentForecastLng: number | undefined;
+    let currentForecastDistanceKm: number | undefined;
+    let usableCurrentEntries: BarentswatchSeaCurrentEntry[] | null = null;
+
+    if (seaCurrentForecast && seaCurrentForecast.length > 0) {
+      const firstCurrent = seaCurrentForecast[0];
+      const cLat = firstCurrent?.latitude;
+      const cLng = firstCurrent?.longitude;
+      const currentDistance = cLat != null && cLng != null
+        ? haversineDistance(lat, lng, cLat, cLng)
+        : null;
+
+      if (currentDistance !== null && currentDistance <= MAX_CURRENT_FORECAST_DISTANCE_KM) {
+        currentForecastLat = cLat;
+        currentForecastLng = cLng;
+        currentForecastDistanceKm = currentDistance;
+        usableCurrentEntries = seaCurrentForecast;
+      }
+    }
+
     const result: CombinedForecastResult = {
-      forecasts: combineForecasts(locationForecast, usableWaveEntries, usableTideForecast, lat, lng, seaCurrentForecast, oceanForecast),
+      forecasts: combineForecasts(locationForecast, usableWaveEntries, usableTideForecast, lat, lng, usableCurrentEntries, oceanForecast),
       forecastLat,
       forecastLng,
       oceanForecastLat: waveForecastLat,
       oceanForecastLng: waveForecastLng,
       waveForecastSource: usableWaveEntries ? 'barentswatch' : undefined,
+      currentForecastLat,
+      currentForecastLng,
+      currentForecastDistanceKm,
       tideStationName: usableTideForecast?.stationName,
       tideStationLat: usableTideForecast?.stationLat,
       tideStationLng: usableTideForecast?.stationLng,
