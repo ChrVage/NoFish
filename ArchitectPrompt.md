@@ -19,6 +19,8 @@ Found in the [README.md](README.md) file.
 - Explore possibilities to tune fish score to the depth where clicked.
 - Find a way to toggle current score on and off based on the quality and existence of reliable current forecast. Inform whether or not the current is accounted for.
 
+- Consider adding CI pipeline (e.g., GitHub Actions) that calls npm test.
+
 - Remove the non-technical readme, such as readme-data and readme-score pages, and add them as a part of nofish.no, instead of GitHub. Update the links on the pages to reflect the new pages. Split the Readme.md into a part that stays on Github, with a very short "reason to exist", and links to readme-technical (that also includes readme-architecture). The other part of the Readme.md should be moved to a page on Nofish that explains the webpage.
 - Create a feedback form on nofish.no. Create link to it on each score, tide and detail, to add data for that point to the feedback.
 
