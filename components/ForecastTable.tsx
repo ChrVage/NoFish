@@ -8,6 +8,8 @@ interface ForecastTableProps {
   timezone: string;
   /** Force-hide ocean columns even when wave data exists (e.g. land location). */
   hideOceanData?: boolean;
+  /** ISO time strings of best-scoring hours to highlight with a blue outline. */
+  highlightTimes?: string[];
 }
 
 // Weather symbol mapping (MET Norway symbol codes)
@@ -118,7 +120,7 @@ function getTimeColumnStyle(
   return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: textColor };
 }
 
-export default function ForecastTable({ forecasts, timezone, hideOceanData }: ForecastTableProps) {
+export default function ForecastTable({ forecasts, timezone, hideOceanData, highlightTimes }: ForecastTableProps) {
   if (!forecasts || forecasts.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-8 text-center">
@@ -130,6 +132,9 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData }: Fo
   // If no row has wave data the point is inland — hide ocean-specific columns
   const hasOceanData = !hideOceanData && forecasts.some(f => f.waveHeight !== undefined);
   const precipLabel = (forecasts[0]?.temperature ?? 2) > 1 ? 'Rain' : 'Snow';
+
+  // Set of ISO times to highlight (best-scoring hours from the score page)
+  const highlightSet = highlightTimes ? new Set(highlightTimes) : null;
 
   // Pre-enriched by the server component — use directly
   const displayForecasts = forecasts;
@@ -346,6 +351,8 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData }: Fo
                 );
               }
 
+              const isHighlighted = highlightSet?.has(forecast.time) ?? false;
+
               rows.push(
               <tr
                 key={forecast.time}
@@ -354,7 +361,10 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData }: Fo
               >
                 <td
                   className="px-4 py-3 text-sm font-medium sticky left-0 z-10"
-                  style={getTimeColumnStyle(forecast.sunPhaseSegments)}
+                  style={{
+                    ...getTimeColumnStyle(forecast.sunPhaseSegments),
+                    ...(isHighlighted ? { outline: '2px solid #2563eb', outlineOffset: '-1px', borderRadius: '4px' } : undefined),
+                  }}
                 >
                   {formatTime(forecast.time)}
                 </td>

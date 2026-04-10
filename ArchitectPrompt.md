@@ -16,8 +16,6 @@ Found in the [README.md](README.md) file.
 
 ## Future plans 
 
-- If you go from score-page to details-page, the frames around the higest scores should also be around the times in the details view.
-
 - I want to use Kartverket's Open Stedsnavn API, like how the weather service yr.no finds specific small islets, skerries, and underwater tops from a given coordinate 
 Step 1: Please read the OpenAPI specification here: https://api.kartverket.no/stedsnavn/v1/openapi.json to understand the exact required parameters for the /punkt endpoint. 
 Step 2: Ensure you specify the correct coordinate system parameter (EPSG:4326) so the API accepts standard lat/lon. Include an appropriate search radius.
@@ -54,3 +52,8 @@ Step 4: Use these names consistently in the map-popup, and also the details page
 Provide a brief summary of the overall code quality in the context of the NoFish architecture, reason to exist and future plans.
 
 Identify and explain the **single most important** change in detail. Why is it critical for performance, security, or UX?
+
+
+# Commands
+' npm run dev
+' vercel --prod

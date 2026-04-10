@@ -71,6 +71,11 @@ export default async function ScorePage({ searchParams }: PageProps) {
   const bestWindowIndices = new Set<number>();
   bestWindows.forEach(w => { for (let j = 0; j < w.len; j++) bestWindowIndices.add(w.start + j); });
 
+  // Comma-separated ISO times for best-window rows (passed to details via URL)
+  const highlightTimes = Array.from(bestWindowIndices)
+    .map(i => scoredForecasts[i].forecast.time)
+    .join(',');
+
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
     const formatter = new Intl.DateTimeFormat('en-US', {
@@ -96,7 +101,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton />
           </div>
-          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="score" />
+          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="score" highlightTimes={highlightTimes} />
         </div>
       </Header>
 

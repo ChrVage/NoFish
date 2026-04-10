@@ -15,11 +15,11 @@ import PageNav from '@/components/PageNav';
 import { Footer } from '@/components/Footer';
 
 interface PageProps {
-  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string }>;
+  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string; ht?: string }>;
 }
 
 export default async function DetailsPage({ searchParams }: PageProps) {
-  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr } = await searchParams;
+  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr, ht: htStr } = await searchParams;
   const lat = parseFloat(latStr ?? '');
   const lng = parseFloat(lngStr ?? '');
   const validZoom = parseZoomParam(zoomStr);
@@ -93,7 +93,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton />
           </div>
-          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="details" />
+          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="details" highlightTimes={htStr} />
         </div>
       </Header>
 
@@ -162,7 +162,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
               <span className="text-[10px] text-gray-300 select-none">›</span>
               <span className="text-xs font-semibold px-2.5 py-1 rounded-full border" style={{ backgroundColor: '#fed7aa', color: '#9a3412', borderColor: '#fb923c' }}>Low</span>
             </div>
-            <ForecastTable forecasts={forecasts} timezone={timezone} hideOceanData={isLand} />
+            <ForecastTable forecasts={forecasts} timezone={timezone} hideOceanData={isLand} highlightTimes={htStr ? htStr.split(',') : undefined} />
           </div>
 
           <p className="text-xs text-gray-400 mt-6">

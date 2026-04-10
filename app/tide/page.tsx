@@ -11,11 +11,11 @@ import { Footer } from '@/components/Footer';
 import type { TidePrediction } from '@/types/weather';
 
 interface PageProps {
-  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string }>;
+  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string; ht?: string }>;
 }
 
 export default async function TidePage({ searchParams }: PageProps) {
-  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr } = await searchParams;
+  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr, ht: htStr } = await searchParams;
   const lat = parseFloat(latStr ?? '');
   const lng = parseFloat(lngStr ?? '');
   const validZoom = parseZoomParam(zoomStr);
@@ -104,7 +104,7 @@ export default async function TidePage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton />
           </div>
-          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="tide" />
+          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="tide" highlightTimes={htStr} />
         </div>
       </Header>
 
