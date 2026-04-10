@@ -20,12 +20,12 @@ Found in the [README.md](README.md) file.
 
 - Remove the non-technical readme, such as readme-data and readme-score pages, and add them as a page on nofish.no, instead of locked in GitHub. Update the links on the pages to reflect the new pages. Split the Readme.md into a part that stays on Github, with a very short "reason to exist", and links to readme-technical (that also includes readme-architecture). The other part of the Readme.md should be moved to a page on Nofish that explains the webpage and it's purpose. In the readme-data page now moved to nofish.no it should be clearly stated that current is forecast only, and cannot neccessarily be trusted. Local knowledge is important.
 
-- Create a feedback form on nofish.no. Create link to it on each score, tide and detail, to add data for that point to the feedback. Each feedback should be sent to nofish@vage.com.
+- Create a feedback form on nofish.no. Create link to it on the end of each line with score, tide and detail, to add data for that point to the feedback. Each feedback should be sent to nofish@vage.com and added as an issue on github.
 
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
 - Link directly to **fishing rules** by species from Fiskeridirektoratet.
 
-- Find a way to show the VHF working channel, emergency channel (16) and phone number to Kystradioen (120)
+- Find a way to show the VHF working channel, emergency channel (16) and create hyperlink with phone number to Kystradioen (120)
 
 - Implment an **API** so others can collect next best fishing times based on coordinates.
 - Find a better way to determine if the coordinate is land or sea.
