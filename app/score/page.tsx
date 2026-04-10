@@ -105,7 +105,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
       </Header>
 
       <main className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="bg-white rounded-lg shadow-lg" style={{ padding: '2rem 1.5rem' }}>
           <div className="mb-6 border-b border-gray-200 pb-4">
             {locationData && (
               <h2 className="text-2xl font-bold text-ocean-900 mb-1">

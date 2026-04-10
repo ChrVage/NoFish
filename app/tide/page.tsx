@@ -109,7 +109,7 @@ export default async function TidePage({ searchParams }: PageProps) {
       </Header>
 
       <main className="max-w-lg mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="bg-white rounded-lg shadow-lg" style={{ padding: '2rem 1.5rem' }}>
           <div className="mb-6 border-b border-gray-200 pb-4">
             {locationData && (
               <>
