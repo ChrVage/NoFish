@@ -371,7 +371,11 @@ export default async function ScorePage({ searchParams }: PageProps) {
                         <td className="py-2 text-center tabular-nums text-xs font-normal text-gray-600">
                           {safetyScore}%
                         </td>
-                        <td className="py-2 text-center tabular-nums text-xs text-gray-600">
+                        <td className="py-2 text-center tabular-nums text-xs text-gray-600" style={
+                          reasons.filter(r => r.category === 'fishing').every(r => r.tone === 'good')
+                            ? { color: '#15803d', fontWeight: 700 }
+                            : {}
+                        }>
                           {fishingScore}%
                         </td>
                         <td className="py-2 text-xs">
