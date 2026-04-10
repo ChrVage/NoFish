@@ -18,7 +18,13 @@ Found in the [README.md](README.md) file.
 
 - If you go from score-page to details-page, the frames around the higest scores should also be around the times in the details view.
 
-- Improve location name logic.
+- I want to use Kartverket's Open Stedsnavn API, like how the weather service yr.no finds specific small islets, skerries, and underwater tops from a given coordinate 
+Step 1: Please read the OpenAPI specification here: https://api.kartverket.no/stedsnavn/v1/openapi.json to understand the exact required parameters for the /punkt endpoint. 
+Step 2: Ensure you specify the correct coordinate system parameter (EPSG:4326) so the API accepts standard lat/lon. Include an appropriate search radius.
+Step 3: Add logic to handle the JSON response. Instead of just picking the first result, prioritize highly localized place names. You should sort and filter the array by distance, and prioritize the navneobjekttype (object type) for micro-locations (e.g., 'skjær', 'grunne', 'flu', 'holme', 'båe') over larger municipal or regional names.
+Step 4: Use these names consistently in the map-popup, and also the details pages. 
+
+- When inspecting a location at sea, there should be a warning in the header of the details page that indicates the end of the civil twilight for that location. If there are any dangerous conditions forecasted before that time, the time and the condition should be indicated like in the Score page.
 
 - Explore possibilities to tune fish score to the depth where clicked.
 
@@ -36,8 +42,11 @@ Found in the [README.md](README.md) file.
 
 - Explore possibilities for changing boat size and fish species to tune for
 
+- Create a beter Icon and logo https://realfavicongenerator.net/
+
 - SEO to make sure people find the site when I am happy with it.
 
+### Later
 - Add possibility for fish logging, and add weather to the log,so that you can know in which conditions you fish the fish.
 
 ## Instructions for response
