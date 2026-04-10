@@ -253,15 +253,6 @@ export default async function DetailsPage({ searchParams }: PageProps) {
 
           {/* Forecast table */}
           <div className="mb-6">
-            {/* Accuracy legend */}
-            <div className="flex items-center gap-2 mb-3 px-1 flex-wrap">
-              <span className="text-xs font-medium text-gray-400 tracking-wide mr-1">Confidence:</span>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full border" style={{ backgroundColor: '#f0fdf4', color: '#166534', borderColor: '#bbf7d0' }}>High</span>
-              <span className="text-[10px] text-gray-300 select-none">›</span>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full border" style={{ backgroundColor: '#fffbeb', color: '#92400e', borderColor: '#fde68a' }}>Medium</span>
-              <span className="text-[10px] text-gray-300 select-none">›</span>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full border" style={{ backgroundColor: '#fed7aa', color: '#9a3412', borderColor: '#fb923c' }}>Low</span>
-            </div>
             <ForecastTable forecasts={forecasts} timezone={timezone} hideOceanData={isLand} highlightTimes={htStr ? htStr.split(',') : undefined} />
           </div>
 
