@@ -130,16 +130,31 @@ function PopupContent({ lat, lng, loading, name, elevation, isSea, showScore, sh
   );
 }
 
+interface SearchResult {
+  name: string;
+  type: string;
+  municipality: string;
+  lat: number;
+  lng: number;
+}
+
 export default function Map() {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const seaChartLayerRef = useRef<L.TileLayer | null>(null);
+  const openMarkerFnRef = useRef<((lat: number, lng: number) => void) | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [showSeaChart, setShowSeaChart] = useState(false);
   const seaChartManualRef = useRef(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchHighlight, setSearchHighlight] = useState(-1);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchBoxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -344,6 +359,8 @@ export default function Map() {
       return tempMarker;
     };
 
+    openMarkerFnRef.current = openMarkerAt;
+
     // If returning from a detail page, restore the marker + popup
     let restoreTimer: ReturnType<typeof setTimeout> | null = null;
     if (hasRestore) {
@@ -423,6 +440,88 @@ export default function Map() {
     }
   }, [showSeaChart]);
 
+  // Close search suggestions on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const COORD_RE = /^\s*(-?\d+(?:\.\d+)?)\s*[,\s]\s*(-?\d+(?:\.\d+)?)\s*$/;
+
+  const handleSearchInput = (value: string) => {
+    setSearchQuery(value);
+    setSearchHighlight(-1);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    if (value.length < 2) { setSearchResults([]); setSearchOpen(false); return; }
+
+    // Check for coordinate input first
+    const coordMatch = value.match(COORD_RE);
+    if (coordMatch) {
+      const lat = parseFloat(coordMatch[1]);
+      const lng = parseFloat(coordMatch[2]);
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        setSearchResults([{ name: `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`, type: 'Coordinate', municipality: '', lat, lng }]);
+        setSearchOpen(true);
+        return;
+      }
+    }
+
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(value)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const items: SearchResult[] = data.results ?? [];
+          setSearchResults(items);
+          setSearchOpen(items.length > 0);
+        }
+      } catch { /* ignore */ }
+    }, 300);
+  };
+
+  const selectSearchResult = (result: SearchResult) => {
+    setSearchQuery('');
+    setSearchResults([]);
+    setSearchOpen(false);
+    mapRef.current?.flyTo([result.lat, result.lng], 13, { duration: 1.2 });
+    // Open marker after fly completes
+    setTimeout(() => { openMarkerFnRef.current?.(result.lat, result.lng); }, 600);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (!searchOpen || searchResults.length === 0) {
+      if (e.key === 'Enter') {
+        const coordMatch = searchQuery.match(COORD_RE);
+        if (coordMatch) {
+          const lat = parseFloat(coordMatch[1]);
+          const lng = parseFloat(coordMatch[2]);
+          if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            selectSearchResult({ name: '', type: 'Coordinate', municipality: '', lat, lng });
+          }
+        }
+      }
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSearchHighlight(i => Math.min(i + 1, searchResults.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSearchHighlight(i => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const idx = searchHighlight >= 0 ? searchHighlight : 0;
+      selectSearchResult(searchResults[idx]);
+    } else if (e.key === 'Escape') {
+      setSearchOpen(false);
+    }
+  };
+
   const handleMyLocation = () => {
     const MIN_LOCATION_ZOOM = 10;
     const GEOLOCATION_TIMEOUT_MS = 10000;
@@ -468,12 +567,84 @@ export default function Map() {
     <div className="relative w-full h-full">
       <div ref={mapContainerRef} className="map-container w-full h-full" />
       
-      {/* Map instructions overlay */}
-      <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 max-w-xs z-[1000]">
-        <h3 className="text-ocean-700 font-semibold mb-2">🎣 Select your fishing spot</h3>
-        <p className="text-sm text-gray-700">
-          Click to analyze a location, or double-click to zoom in.
-        </p>
+      {/* Search bar — top center */}
+      <div
+        ref={searchBoxRef}
+        style={{ position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', zIndex: 1100, width: '100%', maxWidth: '380px', padding: '0 12px' }}
+      >
+        <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <svg style={{ position: 'absolute', left: '12px', width: '16px', height: '16px', color: '#9ca3af', pointerEvents: 'none' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8" />
+              <path strokeLinecap="round" d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => handleSearchInput(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              onFocus={() => { if (searchResults.length > 0) setSearchOpen(true); }}
+              placeholder="Search place or coordinates…"
+              aria-label="Search for a place or enter coordinates"
+              aria-expanded={searchOpen}
+              aria-haspopup="listbox"
+              aria-autocomplete="list"
+              role="combobox"
+              style={{
+                width: '100%',
+                padding: '10px 12px 10px 36px',
+                fontSize: '14px',
+                color: '#1f2937',
+                background: '#fff',
+                border: 'none',
+                borderRadius: '24px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                outline: 'none',
+              }}
+            />
+          </div>
+          {searchOpen && searchResults.length > 0 && (
+            <ul
+              role="listbox"
+              style={{
+                position: 'absolute', left: 0, right: 0, marginTop: '4px',
+                background: '#fff', borderRadius: '12px',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+                overflow: 'hidden', listStyle: 'none', padding: 0,
+                zIndex: 1200,
+              }}
+            >
+              {searchResults.map((r, i) => (
+                <li
+                  key={`${r.lat}-${r.lng}-${r.name}`}
+                  role="option"
+                  aria-selected={i === searchHighlight}
+                  onMouseDown={() => selectSearchResult(r)}
+                  onMouseEnter={() => setSearchHighlight(i)}
+                  style={{
+                    padding: '10px 16px',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    background: i === searchHighlight ? '#f0f9ff' : '#fff',
+                    borderBottom: i < searchResults.length - 1 ? '1px solid #f3f4f6' : 'none',
+                    display: 'flex', alignItems: 'baseline', gap: '6px',
+                  }}
+                >
+                  <svg style={{ width: '14px', height: '14px', color: '#6b7280', flexShrink: 0, alignSelf: 'center' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontWeight: 500, color: '#1f2937' }}>{r.name}</span>
+                    <span style={{ fontSize: '11px', color: '#9ca3af' }}>
+                      {[r.type, r.municipality].filter(Boolean).join(' · ')}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       {/* Sea chart toggle — top right */}

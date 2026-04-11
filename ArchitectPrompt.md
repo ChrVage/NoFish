@@ -9,7 +9,15 @@ Please review the code based on the following prioritized criteria:
 2. API efficiency & Data handling: Efficient fetching and aggregation of multiple external APIs server-side, robust error handling, and clean execution of data interpolation (e.g., transforming 3-hour wave data into 1-hour intervals).
 3. Security: Verification that API calls and keys remain strictly server-side, safe handling of client inputs (coordinates), and adherence to the strict security headers (CSP, HSTS, no-sniff) defined in the project.
 4. User experience & Responsiveness: Mobile-first considerations, especially ensuring that the large forecast tables and map popups are highly readable and responsive on small screens. Make sure UX is intuitive enough so that users don't need any instructions. Adapt and shorten all instructions to accomodate users with special interest to details.
-5. WCAG (Accessibility): Proper semantic HTML, correct ARIA roles (crucial for the map and data tables), and full keyboard navigability.
+5. WCAG (Accessibility): Proper semantic HTML, correct ARIA roles (crucial for the map and data tables), and full keyboard navigability. 
+6. Design. 
+    Buttons and icons
+        Background light grey / gray-100 / #f3f4f6
+        Foreground dark gray / gray-800 /  #1f2937
+    Selected/pressed button
+        Background grey / gray-400 / #9ca3af
+        Foreground white / #ffffff
+    Text and borders: dark gray / gray-800 /  #1f2937
 
 ## Reason for existing
 Found in the [README.md](README.md) file.
@@ -46,8 +54,3 @@ Found in the [README.md](README.md) file.
 Provide a brief summary of the overall code quality in the context of the NoFish architecture, reason to exist and future plans.
 
 Identify and explain the **single most important** change in detail. Why is it critical for performance, security, or UX?
-
-
-# Commands
-' npm run dev
-' vercel --prod
