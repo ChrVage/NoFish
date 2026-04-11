@@ -230,15 +230,18 @@ export default async function ScorePage({ searchParams }: PageProps) {
                     return (
                       <div key={idx} style={{ border: '1px solid #d1d5db', borderRadius: '8px', padding: '12px 16px', backgroundColor: '#f9fafb' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <span
+                          <a
+                            href={`#t-${scoredForecasts[w.start].forecast.time}`}
                             style={{
                               display: 'inline-block', minWidth: '48px', textAlign: 'center',
                               borderRadius: '6px', padding: '4px 8px', fontSize: '14px', fontWeight: 800,
                               color: getScoreColor(avg), backgroundColor: getScoreBg(avg),
+                              textDecoration: 'none', cursor: 'pointer',
                             }}
+                            title="Jump to this window in the table"
                           >
                             {avg}%
-                          </span>
+                          </a>
                           <span style={{ fontSize: '14px', fontWeight: 600 }}>
                             {dateFmt.format(startDate)}{' '}
                             {timeFmt.format(startDate)}–{timeFmt.format(endHour)}
@@ -343,7 +346,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                     }
 
                     rows.push(
-                      <tr key={forecast.time} style={{ verticalAlign: 'top' }}>
+                      <tr key={forecast.time} id={`t-${forecast.time}`} style={{ verticalAlign: 'top', scrollMarginTop: '4rem' }}>
                         <td className="py-2 text-sm font-medium tabular-nums whitespace-nowrap" style={getTimeColumnStyle(forecast.sunPhaseSegments)}>
                           {formatTime(forecast.time)}
                         </td>
