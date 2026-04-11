@@ -15,11 +15,9 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## Future plans 
-- Consider adding CI pipeline (e.g., GitHub Actions) that calls npm test.
-
 - Remove the non-technical readme, such as readme-data and readme-score pages, and add them as a page on nofish.no, instead of locked in GitHub. Update the links on the pages to reflect the new pages. Split the Readme.md into a part that stays on Github, with a very short "reason to exist", and links to readme-technical (that also includes readme-architecture). The other part of the Readme.md should be moved to a page on Nofish that explains the webpage and it's purpose. In the readme-data page now moved to nofish.no it should be clearly stated that current is forecast only, and cannot neccessarily be trusted. Local knowledge is important.
 
-- Create a feedback form on nofish.no. Create link to it on the end of each line with score, tide and detail, to add data for that point to the feedback. Each feedback should be sent to nofish@vage.com and added as an issue on github.
+- Create a feedback form on nofish.no. Create a suitable icon with link to it on the end of each line with score, tide and detail. Clicing the line adds data for that point to the feedback. Each feedback should be added as an issue on github with a feedback template.
 
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
 - Link directly to **fishing rules** by species from Fiskeridirektoratet.
@@ -33,7 +31,7 @@ Found in the [README.md](README.md) file.
 
 - Also support Norwegian language.
 
-- Create a beter Icon and logo https://realfavicongenerator.net/
+- Create a colour palette, then a better icon and logo https://realfavicongenerator.net/
 
 - SEO to make sure people find the site when I am happy with it.
 
