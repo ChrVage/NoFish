@@ -63,10 +63,10 @@ async function fetchElevation(lat: number, lng: number): Promise<{ elevation: nu
   try {
     const url = `https://ws.geonorge.no/hoydedata/v1/punkt?nord=${lat}&ost=${lng}&koordsys=4258`;
     const res = await fetch(url);
-    if (!res.ok) return null;
+    if (!res.ok) {return null;}
     const data: GeonorgeElevationResponse = await res.json();
     const pt = data.punkter?.[0];
-    if (!pt || pt.z === undefined) return null;
+    if (pt?.z === undefined) {return null;}
     return { elevation: pt.z, terrain: pt.terreng ?? '' };
   } catch {
     return null;
@@ -132,7 +132,7 @@ const LAND_PRIORITY_PREFIXES: [string, number][] = [
 function placeTypePriority(type: string, isSea: boolean): number {
   const table = isSea ? SEA_PRIORITY_PREFIXES : LAND_PRIORITY_PREFIXES;
   for (const [prefix, prio] of table) {
-    if (type.startsWith(prefix)) return prio;
+    if (type.startsWith(prefix)) {return prio;}
   }
   // At sea: unlisted types (land settlements etc.) get 999 so sea features win
   return isSea ? 999 : 50;
@@ -160,19 +160,19 @@ async function fetchKartverketPlaceName(
     try {
       const url = `${baseUrl}?nord=${lat}&ost=${lng}&koordsys=4258&radius=${radius}&treffPerSide=${limit}&utkoordsys=4258`;
       const res = await fetch(url);
-      if (!res.ok) return null;
+      if (!res.ok) {return null;}
       const data: KartverketPunktResponse = await res.json();
-      if (!data.navn || data.navn.length === 0) return null;
+      if (!data.navn || data.navn.length === 0) {return null;}
 
       // Filter out inactive places
       const active = data.navn.filter(e => e.stedstatus === 'aktiv');
-      if (active.length === 0) return null;
+      if (active.length === 0) {return null;}
 
       // Sort by type priority then distance
       return active.sort((a, b) => {
         const pa = placeTypePriority(a.navneobjekttype, isSea);
         const pb = placeTypePriority(b.navneobjekttype, isSea);
-        if (pa !== pb) return pa - pb;
+        if (pa !== pb) {return pa - pb;}
         return a.meterFraPunkt - b.meterFraPunkt;
       });
     } catch {
@@ -207,7 +207,7 @@ async function fetchNominatimName(lat: number, lng: number): Promise<{ name: str
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
       { headers: { 'User-Agent': 'NoFish/1.0 (fishing conditions app)' } },
     );
-    if (!response.ok) return null;
+    if (!response.ok) {return null;}
     const data = await response.json();
     const address = data.address || {};
     return {
@@ -239,7 +239,7 @@ export async function reverseGeocode(
   const cacheKey = `geo8:${lat.toFixed(4)}:${lng.toFixed(4)}`;
 
   const cached = await getCached<GeocodingResult>(cacheKey);
-  if (cached) return cached;
+  if (cached) {return cached;}
 
   return withInflight<GeocodingResult | null>(cacheKey, async () => {
     try {

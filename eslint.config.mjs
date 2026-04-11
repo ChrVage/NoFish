@@ -14,6 +14,14 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
   {
+    languageOptions: {
+      parserOptions: {
+        projectService: {
+          allowDefaultProject: ['*.mjs'],
+        },
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
     rules: {
       // Stricter TypeScript rules
       "@typescript-eslint/no-unused-vars": [
@@ -45,7 +53,7 @@ const eslintConfig = defineConfig([
       "no-unused-vars": "off", // Using @typescript-eslint/no-unused-vars instead
       "prefer-const": "error",
       "no-var": "error",
-      "eqeqeq": ["error", "always"],
+      "eqeqeq": ["error", "always", { "null": "ignore" }],
       "curly": ["error", "all"],
       "no-debugger": "error",
     },

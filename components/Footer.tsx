@@ -12,7 +12,7 @@ export default function HeaderMenu() {
         setOpen(false);
       }
     }
-    if (open) document.addEventListener('mousedown', handleClickOutside);
+    if (open) {document.addEventListener('mousedown', handleClickOutside);}
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open]);
 

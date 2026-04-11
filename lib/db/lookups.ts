@@ -21,7 +21,7 @@ export interface LookupRecord {
  * Memoized: the DDL round-trip to Neon fires only once per process lifetime.
  */
 export function ensureTable(): Promise<void> {
-  if (_tableInit) return _tableInit;
+  if (_tableInit) {return _tableInit;}
   const sql = getSql();
   _tableInit = (async () => {
     await sql`

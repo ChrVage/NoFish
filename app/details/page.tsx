@@ -81,8 +81,8 @@ export default async function DetailsPage({ searchParams }: PageProps) {
         let hi = t;
         for (let i = 0; i < 12; i++) {
           const mid = new Date((lo.getTime() + hi.getTime()) / 2);
-          if (solarPosition(mid, lat, lng).elevation >= -6) lo = mid;
-          else hi = mid;
+          if (solarPosition(mid, lat, lng).elevation >= -6) {lo = mid;}
+          else {hi = mid;}
         }
         civilTwilightEnd = new Date((lo.getTime() + hi.getTime()) / 2);
         break;
@@ -96,7 +96,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
       const allDangers: { time: string; reasons: string[]; count: number }[] = [];
       for (const f of forecasts) {
         const fMs = new Date(f.time).getTime();
-        if (fMs >= cutoffMs) break;
+        if (fMs >= cutoffMs) {break;}
         const { reasons } = computeFishingScore(f, depth);
         const dangerReasons = reasons.filter(r => r.tone === 'danger').map(r => r.text);
         if (dangerReasons.length > 0) {

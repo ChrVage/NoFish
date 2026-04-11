@@ -41,7 +41,7 @@ function PopupContent({ lat, lng, loading, name, elevation, isSea, showScore, sh
   const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
 
   const handleClick = (key: string) => {
-    if (navigatingTo) return;
+    if (navigatingTo) {return;}
     setNavigatingTo(key);
     onNavigate(key);
   };
@@ -147,7 +147,10 @@ export default function Map() {
   const searchParams = useSearchParams();
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
-  const [showSeaChart, setShowSeaChart] = useState(false);
+  const [showSeaChart, setShowSeaChart] = useState(() => {
+    const z = parseInt(searchParams.get('zoom') ?? '', 10);
+    return !isNaN(z) && z >= 13;
+  });
   const seaChartManualRef = useRef(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -157,7 +160,7 @@ export default function Map() {
   const searchBoxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    if (!mapContainerRef.current || mapRef.current) {return;}
 
     // Restore position/zoom when returning from a detail page
     const restoreLat = parseFloat(searchParams.get('lat') ?? '');
@@ -219,12 +222,12 @@ export default function Map() {
 
     const openMarkerAt = (lat: number, lng: number) => {
       // Guard: bail if navigating away or the map has already been removed
-      if (navigating) return;
-      if (!map.getContainer().isConnected) return;
+      if (navigating) {return;}
+      if (!map.getContainer().isConnected) {return;}
 
       // Abort any in-flight fetch from a previous click so its result can never
       // add a stale dot/line after we've already moved on
-      if (activeFetchController) activeFetchController.abort();
+      if (activeFetchController) {activeFetchController.abort();}
       activeFetchController = new AbortController();
       const { signal } = activeFetchController;
 
@@ -267,7 +270,7 @@ export default function Map() {
       }).openPopup();
 
       // Fetch location name and ocean forecast grid point in parallel
-      (async () => {
+      void (async () => {
         try {
           const [geoResponse, oceanResponse] = await Promise.all([
             fetch(`/api/geocoding?lat=${lat}&lon=${lng}`, { signal }),
@@ -336,7 +339,7 @@ export default function Map() {
           tempMarker.getPopup()?.update();
         } catch (error) {
           // Ignore aborted fetches (user clicked a new spot before this resolved)
-          if (error instanceof DOMException && error.name === 'AbortError') return;
+          if (error instanceof DOMException && error.name === 'AbortError') {return;}
           console.error('Map fetch error:', error);
           flushSync(() => {
             popupRoot.render(
@@ -352,7 +355,7 @@ export default function Map() {
       // the previous popup during a flushSync render of the new one.
       tempMarker.on('popupclose', () => {
         setTimeout(() => popupRoot.unmount(), 0);
-        if (activePopupRoot === popupRoot) activePopupRoot = null;
+        if (activePopupRoot === popupRoot) {activePopupRoot = null;}
         map.removeLayer(tempMarker);
       });
 
@@ -374,7 +377,7 @@ export default function Map() {
     let singleClickTimer: ReturnType<typeof setTimeout> | null = null;
 
     map.on('click', (e: L.LeafletMouseEvent) => {
-      if (singleClickTimer !== null) clearTimeout(singleClickTimer);
+      if (singleClickTimer !== null) {clearTimeout(singleClickTimer);}
       singleClickTimer = setTimeout(() => {
         singleClickTimer = null;
         openMarkerAt(e.latlng.lat, e.latlng.lng);
@@ -405,10 +408,6 @@ export default function Map() {
       prevZoom = zoom;
     };
     map.on('zoomend', updateSeaChartForZoom);
-    // Set initial state based on starting zoom
-    if (initialZoom >= SEA_CHART_AUTO_ZOOM) {
-      setShowSeaChart(true);
-    }
 
     mapRef.current = map;
 
@@ -418,9 +417,9 @@ export default function Map() {
         // Defer unmount to avoid "unmount while rendering" React error
         setTimeout(() => root.unmount(), 0);
       }
-      if (restoreTimer !== null) clearTimeout(restoreTimer);
-      if (singleClickTimer !== null) clearTimeout(singleClickTimer);
-      if (activeFetchController) activeFetchController.abort();
+      if (restoreTimer !== null) {clearTimeout(restoreTimer);}
+      if (singleClickTimer !== null) {clearTimeout(singleClickTimer);}
+      if (activeFetchController) {activeFetchController.abort();}
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -432,7 +431,7 @@ export default function Map() {
   useEffect(() => {
     const map = mapRef.current;
     const layer = seaChartLayerRef.current;
-    if (!map || !layer) return;
+    if (!map || !layer) {return;}
     if (showSeaChart) {
       layer.addTo(map);
     } else {
@@ -456,7 +455,7 @@ export default function Map() {
   const handleSearchInput = (value: string) => {
     setSearchQuery(value);
     setSearchHighlight(-1);
-    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    if (searchTimerRef.current) {clearTimeout(searchTimerRef.current);}
     if (value.length < 2) { setSearchResults([]); setSearchOpen(false); return; }
 
     // Check for coordinate input first
@@ -583,11 +582,10 @@ export default function Map() {
               value={searchQuery}
               onChange={(e) => handleSearchInput(e.target.value)}
               onKeyDown={handleSearchKeyDown}
-              onFocus={() => { if (searchResults.length > 0) setSearchOpen(true); }}
+              onFocus={() => { if (searchResults.length > 0) {setSearchOpen(true);} }}
               placeholder="Search place or coordinates…"
               aria-label="Search for a place or enter coordinates"
-              aria-expanded={searchOpen}
-              aria-haspopup="listbox"
+              aria-expanded={searchOpen}            aria-controls="search-suggestions"              aria-haspopup="listbox"
               aria-autocomplete="list"
               role="combobox"
               style={{
@@ -606,6 +604,7 @@ export default function Map() {
           {searchOpen && searchResults.length > 0 && (
             <ul
               role="listbox"
+              id="search-suggestions"
               style={{
                 position: 'absolute', left: 0, right: 0, marginTop: '4px',
                 background: '#fff', borderRadius: '12px',

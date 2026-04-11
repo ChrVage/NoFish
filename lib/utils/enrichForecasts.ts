@@ -7,7 +7,7 @@ export type EnrichedForecast = HourlyForecast & { isInterpolatedWave?: boolean }
  * gaps in wave height / direction so every row within the wave range has a value.
  */
 export function enrichForecasts(forecasts: HourlyForecast[]): EnrichedForecast[] {
-  if (!forecasts.length) return [];
+  if (!forecasts.length) {return [];}
 
   // Find last 1-hour interval row from MET (where gap to next row jumps from ~1h to ~6h)
   let lastHourlyIndex = forecasts.length - 1;
@@ -21,7 +21,7 @@ export function enrichForecasts(forecasts: HourlyForecast[]): EnrichedForecast[]
   for (let i = forecasts.length - 1; i >= 0; i--) {
     if (forecasts[i].waveHeight !== undefined) { lastWaveIndex = i; break; }
   }
-  if (lastWaveIndex < 0) return forecasts.slice(0, lastHourlyIndex + 1);
+  if (lastWaveIndex < 0) {return forecasts.slice(0, lastHourlyIndex + 1);}
 
   // Trim at whichever comes first: end of hourly MET data or end of wave data
   const cutoffIndex = Math.min(lastHourlyIndex, lastWaveIndex);
@@ -40,7 +40,7 @@ export function enrichForecasts(forecasts: HourlyForecast[]): EnrichedForecast[]
   // Collect indices with real wave data
   const realIndices: number[] = [];
   for (let i = 0; i < result.length; i++) {
-    if (result[i].waveHeight !== undefined) realIndices.push(i);
+    if (result[i].waveHeight !== undefined) {realIndices.push(i);}
   }
 
   // Backfill leading hours before the first real wave data point
@@ -58,7 +58,7 @@ export function enrichForecasts(forecasts: HourlyForecast[]): EnrichedForecast[]
   for (let k = 0; k < realIndices.length - 1; k++) {
     const a = realIndices[k];
     const b = realIndices[k + 1];
-    if (b - a <= 1) continue;
+    if (b - a <= 1) {continue;}
 
     const tA = new Date(result[a].time).getTime();
     const tB = new Date(result[b].time).getTime();
@@ -73,8 +73,8 @@ export function enrichForecasts(forecasts: HourlyForecast[]): EnrichedForecast[]
 
       if (dA !== undefined && dB !== undefined) {
         let diff = dB - dA;
-        if (diff > 180) diff -= 360;
-        if (diff < -180) diff += 360;
+        if (diff > 180) {diff -= 360;}
+        if (diff < -180) {diff += 360;}
         result[i].waveDirection = ((dA + t * diff) % 360 + 360) % 360;
       }
 

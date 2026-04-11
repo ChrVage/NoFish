@@ -10,7 +10,7 @@ const sunPhaseColors: Record<string, [number, number, number]> = {
 export function getTimeColumnStyle(
   segments: { phase: string; fraction: number }[] | undefined,
 ): React.CSSProperties {
-  if (!segments || segments.length === 0) return {};
+  if (!segments || segments.length === 0) {return {};}
 
   let r = 0, g = 0, b = 0;
   for (const seg of segments) {

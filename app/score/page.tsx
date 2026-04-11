@@ -31,7 +31,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
     getCombinedForecast(lat, lng, isSea !== undefined ? { isSea } : undefined),
   ]);
 
-  const { forecasts: rawForecasts, currentForecastLat, currentForecastLng, currentForecastDistanceKm } = weatherResult;
+  const { forecasts: rawForecasts, currentForecastLat, currentForecastLng: _currentForecastLng, currentForecastDistanceKm: _currentForecastDistanceKm } = weatherResult;
   const forecasts = enrichForecasts(rawForecasts);
   const hasOceanData = forecasts.some(f => f.waveHeight !== undefined);
   const hasCurrentData = currentForecastLat !== undefined;
@@ -48,7 +48,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
 
   // Set of row indices within a best-window (for highlighting)
   const bestWindowIndices = new Set<number>();
-  bestWindows.forEach(w => { for (let j = 0; j < w.len; j++) bestWindowIndices.add(w.start + j); });
+  bestWindows.forEach(w => { for (let j = 0; j < w.len; j++) {bestWindowIndices.add(w.start + j);} });
 
   // Comma-separated ISO times for best-window rows (passed to details via URL)
   const highlightTimes = Array.from(bestWindowIndices)
@@ -126,7 +126,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
 
               const buildDescription = (w: (typeof bestWindows)[0]) => {
                 const hours = [];
-                for (let j = 0; j < w.len; j++) hours.push(scoredForecasts[w.start + j]);
+                for (let j = 0; j < w.len; j++) {hours.push(scoredForecasts[w.start + j]);}
                 const avg = Math.round(w.avg);
                 const safetyAvg = Math.round(hours.reduce((s, h) => s + h.safetyScore, 0) / hours.length);
                 const fishingAvg = Math.round(hours.reduce((s, h) => s + h.fishingScore, 0) / hours.length);
@@ -140,13 +140,13 @@ export default async function ScorePage({ searchParams }: PageProps) {
                   const f = h.forecast;
                   const t = timeFmt.format(new Date(f.time));
                   lines.push(`${t}  —  Score ${h.score}%`);
-                  if (f.windSpeed !== undefined) lines.push(`  Wind: ${f.windSpeed.toFixed(1)} m/s${f.windGust ? ` (gust ${f.windGust.toFixed(1)})` : ''}`);
-                  if (f.waveHeight !== undefined) lines.push(`  Waves: ${f.waveHeight.toFixed(1)} m${f.wavePeriod !== undefined ? ` · ${f.wavePeriod.toFixed(1)}s period` : ''}`);
-                  if (f.currentSpeed !== undefined) lines.push(`  Current: ${f.currentSpeed.toFixed(2)} m/s`);
-                  if (f.temperature !== undefined) lines.push(`  Air: ${f.temperature.toFixed(1)}°C${f.seaTemperature !== undefined ? `  Sea: ${f.seaTemperature.toFixed(1)}°C` : ''}`);
-                  if (f.pressure !== undefined) lines.push(`  Pressure: ${f.pressure.toFixed(0)} hPa`);
-                  if (f.tidePhase) lines.push(`  Tide: ${f.tidePhase}`);
-                  if (f.moonPhase) lines.push(`  Moon: ${f.moonPhase}`);
+                  if (f.windSpeed !== undefined) {lines.push(`  Wind: ${f.windSpeed.toFixed(1)} m/s${f.windGust ? ` (gust ${f.windGust.toFixed(1)})` : ''}`);}
+                  if (f.waveHeight !== undefined) {lines.push(`  Waves: ${f.waveHeight.toFixed(1)} m${f.wavePeriod !== undefined ? ` · ${f.wavePeriod.toFixed(1)}s period` : ''}`);}
+                  if (f.currentSpeed !== undefined) {lines.push(`  Current: ${f.currentSpeed.toFixed(2)} m/s`);}
+                  if (f.temperature !== undefined) {lines.push(`  Air: ${f.temperature.toFixed(1)}°C${f.seaTemperature !== undefined ? `  Sea: ${f.seaTemperature.toFixed(1)}°C` : ''}`);}
+                  if (f.pressure !== undefined) {lines.push(`  Pressure: ${f.pressure.toFixed(0)} hPa`);}
+                  if (f.tidePhase) {lines.push(`  Tide: ${f.tidePhase}`);}
+                  if (f.moonPhase) {lines.push(`  Moon: ${f.moonPhase}`);}
                 }
                 lines.push('', `Location: ${mapsUrl}`);
                 return lines.join('\n');
@@ -154,7 +154,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
 
               const buildIcs = (w: (typeof bestWindows)[0]) => {
                 const hours = [];
-                for (let j = 0; j < w.len; j++) hours.push(scoredForecasts[w.start + j]);
+                for (let j = 0; j < w.len; j++) {hours.push(scoredForecasts[w.start + j]);}
                 const start = new Date(hours[0].forecast.time);
                 const last = new Date(hours[hours.length - 1].forecast.time);
                 const end = new Date(last.getTime() + 3600000);
@@ -182,7 +182,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
 
               const buildGoogleUrl = (w: (typeof bestWindows)[0]) => {
                 const hours = [];
-                for (let j = 0; j < w.len; j++) hours.push(scoredForecasts[w.start + j]);
+                for (let j = 0; j < w.len; j++) {hours.push(scoredForecasts[w.start + j]);}
                 const start = new Date(hours[0].forecast.time);
                 const last = new Date(hours[hours.length - 1].forecast.time);
                 const end = new Date(last.getTime() + 3600000);
@@ -201,7 +201,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
 
               const buildOutlookUrl = (w: (typeof bestWindows)[0]) => {
                 const hours = [];
-                for (let j = 0; j < w.len; j++) hours.push(scoredForecasts[w.start + j]);
+                for (let j = 0; j < w.len; j++) {hours.push(scoredForecasts[w.start + j]);}
                 const start = new Date(hours[0].forecast.time);
                 const last = new Date(hours[hours.length - 1].forecast.time);
                 const end = new Date(last.getTime() + 3600000);

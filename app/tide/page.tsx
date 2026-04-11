@@ -43,7 +43,7 @@ export default async function TidePage({ searchParams }: PageProps) {
 
   // Match each event to the best forecast value from the 10-min forecast data
   function findForecast(eventTime: string, flag: 'high' | 'low', predictions: TidePrediction[]): number | null {
-    if (predictions.length === 0) return null;
+    if (predictions.length === 0) {return null;}
     const eventMs = new Date(eventTime).getTime();
     const MAX_GAP_MS = 15 * 60 * 1000; // must be within 15 min
 
@@ -57,7 +57,7 @@ export default async function TidePage({ searchParams }: PageProps) {
       }
     }
 
-    if (bestDiff > MAX_GAP_MS) return null;
+    if (bestDiff > MAX_GAP_MS) {return null;}
 
     const bestMs = new Date(predictions[bestIdx].time).getTime();
     let neighborIdx: number;
@@ -76,6 +76,7 @@ export default async function TidePage({ searchParams }: PageProps) {
 
   const predictions = tidePageData?.forecasts ?? [];
 
+  // eslint-disable-next-line react-hooks/purity -- server component renders once
   const nowMs = Date.now();
   const futureEvents = events.filter((e) => new Date(e.time).getTime() > nowMs);
 
@@ -155,7 +156,7 @@ export default async function TidePage({ searchParams }: PageProps) {
                 {(() => {
                   const level = tidePageData?.currentLevel;
                   const levelTime = tidePageData?.currentLevelTime;
-                  if (level == null || !levelTime) return null;
+                  if (level == null || !levelTime) {return null;}
                   const hhmm = new Intl.DateTimeFormat('en-GB', {
                     weekday: 'short', day: 'numeric', month: 'short',
                     hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone,

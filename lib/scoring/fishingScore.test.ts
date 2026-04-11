@@ -23,10 +23,10 @@ function mkForecast(overrides: Partial<HourlyForecast> = {}): HourlyForecast {
 function dangerTexts(reasons: { text: string; tone: string }[]): string[] {
   return reasons.filter(r => r.tone === 'danger').map(r => r.text);
 }
-function safetyReasons(reasons: { text: string; tone: string; category: string }[]) {
+function _safetyReasons(reasons: { text: string; tone: string; category: string }[]) {
   return reasons.filter(r => r.category === 'safety');
 }
-function fishingReasons(reasons: { text: string; tone: string; category: string }[]) {
+function _fishingReasons(reasons: { text: string; tone: string; category: string }[]) {
   return reasons.filter(r => r.category === 'fishing');
 }
 
@@ -78,7 +78,7 @@ describe('computeFishingScore', () => {
     });
 
     it('no current data → factor defaults to 1.0 (no penalty)', () => {
-      const withCurrent = computeFishingScore(mkForecast({ currentSpeed: 0.40 }));
+      const _withCurrent = computeFishingScore(mkForecast({ currentSpeed: 0.40 }));
       const withoutCurrent = computeFishingScore(mkForecast());
       // Without current data, the current factor is neutral
       // fishingScore should still be reasonable
@@ -399,7 +399,7 @@ describe('findBestWindows', () => {
     const windows = findBestWindows(mkScored([80, 90, 80], [1]));
     expect(windows.every(w => {
       for (let j = 0; j < w.len; j++) {
-        if (w.start + j === 1) return false;
+        if (w.start + j === 1) {return false;}
       }
       return true;
     })).toBe(true);

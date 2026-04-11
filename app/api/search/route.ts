@@ -52,12 +52,12 @@ export async function GET(request: NextRequest) {
 
     for (const entry of data.navn ?? []) {
       const pt = entry.representasjonspunkt;
-      if (!pt || pt.nord == null || pt.øst == null) continue;
+      if (pt?.nord == null || pt.øst == null) {continue;}
 
       const name = entry.skrivemåte;
       const municipality = entry.kommuner?.[0]?.kommunenavn ?? '';
       const key = `${name}|${municipality}|${pt.nord.toFixed(3)}`;
-      if (seen.has(key)) continue;
+      if (seen.has(key)) {continue;}
       seen.add(key);
 
       results.push({
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
         lng: pt.øst,
       });
 
-      if (results.length >= 6) break;
+      if (results.length >= 6) {break;}
     }
 
     return NextResponse.json({ results }, { headers: CACHE_HEADERS });

@@ -43,7 +43,7 @@ const _inflight = new Map<string, Promise<unknown>>();
  */
 export function withInflight<T>(key: string, fn: () => Promise<T>): Promise<T> {
   const existing = _inflight.get(key);
-  if (existing) return existing as Promise<T>;
+  if (existing) {return existing as Promise<T>;}
   const p = fn().finally(() => _inflight.delete(key));
   _inflight.set(key, p);
   return p;
@@ -53,7 +53,7 @@ export function withInflight<T>(key: string, fn: () => Promise<T>): Promise<T> {
  * Return cached data for `key` if it exists and has not expired, otherwise null.
  */
 export async function getCached<T>(key: string): Promise<T | null> {
-  if (!process.env.DATABASE_URL) return null;
+  if (!process.env.DATABASE_URL) {return null;}
   try {
     const sql = getSql();
     const rows = await sql`
@@ -78,7 +78,7 @@ export async function setCached(
   data: unknown,
   ttlHours: number
 ): Promise<void> {
-  if (!process.env.DATABASE_URL) return;
+  if (!process.env.DATABASE_URL) {return;}
   try {
     await ensureCacheTable();
     const sql = getSql();

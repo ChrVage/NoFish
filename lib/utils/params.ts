@@ -3,7 +3,7 @@
  * Returns `undefined` if the value is absent or not a valid integer.
  */
 export function parseZoomParam(zoomStr?: string): number | undefined {
-  if (zoomStr === undefined) return undefined;
+  if (zoomStr === undefined) {return undefined;}
   const zoom = parseInt(zoomStr, 10);
   return isNaN(zoom) ? undefined : zoom;
 }
@@ -22,9 +22,9 @@ export function buildLocationUrl(
   const lat = typeof opts.lat === 'number' ? opts.lat.toFixed(4) : opts.lat;
   const lng = typeof opts.lng === 'number' ? opts.lng.toFixed(4) : opts.lng;
   const params = new URLSearchParams({ lat, lng });
-  if (opts.zoom !== undefined) params.set('zoom', String(opts.zoom));
-  if (opts.sea !== undefined) params.set('sea', opts.sea);
-  if (opts.ht) params.set('ht', opts.ht);
+  if (opts.zoom !== undefined) {params.set('zoom', String(opts.zoom));}
+  if (opts.sea !== undefined) {params.set('sea', opts.sea);}
+  if (opts.ht) {params.set('ht', opts.ht);}
   const prefix = page ? `/${page}` : '/';
   return `${prefix}?${params.toString()}`;
 }

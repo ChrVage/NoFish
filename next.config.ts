@@ -13,11 +13,11 @@ function getBuildVersion(): string {
   } catch { /* git not available or failed */ }
 
   // Fallback: Vercel exposes the commit SHA at build time
-  if (!sha) sha = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? '';
+  if (!sha) {sha = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? '';}
 
-  if (count && count !== '0' && sha) return `${count} (${sha})`;
-  if (count && count !== '0') return count;
-  if (sha) return sha;
+  if (count && count !== '0' && sha) {return `${count} (${sha})`;}
+  if (count && count !== '0') {return count;}
+  if (sha) {return sha;}
   return '0';
 }
 

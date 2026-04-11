@@ -54,3 +54,5 @@ Found in the [README.md](README.md) file.
 Provide a brief summary of the overall code quality in the context of the NoFish architecture, reason to exist and future plans.
 
 Identify and explain the **single most important** change in detail. Why is it critical for performance, security, or UX?
+
+Run vitest and eslint before answering.

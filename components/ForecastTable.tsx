@@ -15,37 +15,37 @@ interface ForecastTableProps {
 
 // Weather symbol mapping (MET Norway symbol codes)
 const getWeatherSymbol = (symbolCode: string | undefined) => {
-  if (!symbolCode) return '❓';
+  if (!symbolCode) {return '❓';}
   
   const code = symbolCode.toLowerCase();
-  if (code.includes('clearsky')) return '☀️';
-  if (code.includes('fair')) return '🌤️';
-  if (code.includes('partlycloudy')) return '⛅';
-  if (code.includes('cloudy')) return '☁️';
-  if (code.includes('lightrain') || code.includes('rainshowers')) return '🌦️';
-  if (code.includes('rain')) return '🌧️';
-  if (code.includes('heavyrain')) return '⛈️';
-  if (code.includes('sleet')) return '🌨️';
-  if (code.includes('snow')) return '❄️';
-  if (code.includes('fog')) return '🌫️';
-  if (code.includes('thunder')) return '⚡';
+  if (code.includes('clearsky')) {return '☀️';}
+  if (code.includes('fair')) {return '🌤️';}
+  if (code.includes('partlycloudy')) {return '⛅';}
+  if (code.includes('cloudy')) {return '☁️';}
+  if (code.includes('lightrain') || code.includes('rainshowers')) {return '🌦️';}
+  if (code.includes('rain')) {return '🌧️';}
+  if (code.includes('heavyrain')) {return '⛈️';}
+  if (code.includes('sleet')) {return '🌨️';}
+  if (code.includes('snow')) {return '❄️';}
+  if (code.includes('fog')) {return '🌫️';}
+  if (code.includes('thunder')) {return '⚡';}
   return '🌥️';
 };
 
 const getWeatherLabel = (symbolCode: string | undefined): string => {
-  if (!symbolCode) return 'Unknown weather';
+  if (!symbolCode) {return 'Unknown weather';}
   const code = symbolCode.toLowerCase();
-  if (code.includes('clearsky')) return 'Clear sky';
-  if (code.includes('fair')) return 'Fair';
-  if (code.includes('partlycloudy')) return 'Partly cloudy';
-  if (code.includes('cloudy')) return 'Cloudy';
-  if (code.includes('lightrain') || code.includes('rainshowers')) return 'Light rain';
-  if (code.includes('heavyrain')) return 'Heavy rain';
-  if (code.includes('rain')) return 'Rain';
-  if (code.includes('sleet')) return 'Sleet';
-  if (code.includes('snow')) return 'Snow';
-  if (code.includes('fog')) return 'Fog';
-  if (code.includes('thunder')) return 'Thunder';
+  if (code.includes('clearsky')) {return 'Clear sky';}
+  if (code.includes('fair')) {return 'Fair';}
+  if (code.includes('partlycloudy')) {return 'Partly cloudy';}
+  if (code.includes('cloudy')) {return 'Cloudy';}
+  if (code.includes('lightrain') || code.includes('rainshowers')) {return 'Light rain';}
+  if (code.includes('heavyrain')) {return 'Heavy rain';}
+  if (code.includes('rain')) {return 'Rain';}
+  if (code.includes('sleet')) {return 'Sleet';}
+  if (code.includes('snow')) {return 'Snow';}
+  if (code.includes('fog')) {return 'Fog';}
+  if (code.includes('thunder')) {return 'Thunder';}
   return 'Cloudy';
 };
 
@@ -62,7 +62,7 @@ const DirectionArrow = ({
   isFromDirection?: boolean;
   className?: string
 }) => {
-  if (degrees === undefined) return <span aria-hidden="true">—</span>;
+  if (degrees === undefined) {return <span aria-hidden="true">—</span>;}
 
   const cardinals = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   const cardinal = cardinals[Math.round(degrees / 45) % 8];
@@ -129,21 +129,21 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, high
   };
 
   const formatValue = (value: number | undefined, decimals: number = 1, unit: string = '') => {
-    if (value === undefined || value === null) return '—';
+    if (value === undefined || value === null) {return '—';}
     return `${value.toFixed(decimals)}${unit}`;
   };
 
   // Format wind as "10.5 (15.0) m/s" where (15.0) is the gust
   const formatWind = (speed: number | undefined, gust: number | undefined) => {
-    if (speed === undefined) return <span>—</span>;
+    if (speed === undefined) {return <span>—</span>;}
     const gustPart = gust !== undefined
       ? <> ({gust.toFixed(1)})</>
       : null;
     return <><strong>{speed.toFixed(1)}</strong>{gustPart}{' m/s'}</>;
   };
 
-  const getDirectionLabel = (degrees: number | undefined, isToDirection: boolean = false) => {
-    if (degrees === undefined) return '—';
+  const _getDirectionLabel = (degrees: number | undefined, isToDirection: boolean = false) => {
+    if (degrees === undefined) {return '—';}
     const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     const index = Math.round(degrees / 45) % 8;
     const direction = directions[index];

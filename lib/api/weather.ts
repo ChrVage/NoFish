@@ -107,7 +107,7 @@ export async function getTideForecast(
   // Cache key matches the API's own precision (integer lat/lon)
   const tideCacheKey = `tide:${lat.toFixed(0)}:${lng.toFixed(0)}`;
   const cachedTide = await getCached<TideXMLResponse>(tideCacheKey);
-  if (cachedTide) return cachedTide;
+  if (cachedTide) {return cachedTide;}
 
   return withInflight<TideXMLResponse | null>(tideCacheKey, async () => {
     try {
@@ -161,7 +161,7 @@ export async function getTidePageData(
 ): Promise<TidePageData | null> {
   const cacheKey = `tideall:${lat.toFixed(0)}:${lng.toFixed(0)}`;
   const cached = await getCached<TidePageData>(cacheKey);
-  if (cached) return cached;
+  if (cached) {return cached;}
 
   return withInflight<TidePageData | null>(cacheKey, async () => {
     try {
@@ -238,8 +238,8 @@ function parseTideAllXML(xmlText: string): TidePageData {
   const location = locationdata?.location;
   if (location) {
     stationName = location.name;
-    if (location.lat != null) stationLat = parseFloat(String(location.lat));
-    if (location.lon != null) stationLng = parseFloat(String(location.lon));
+    if (location.lat != null) {stationLat = parseFloat(String(location.lat));}
+    if (location.lon != null) {stationLng = parseFloat(String(location.lon));}
   }
 
   // Extract prediction data, forecast data, and observation data
@@ -308,7 +308,7 @@ function findClosestEntry<T extends { forecastTime?: string | null }>(
   let best: T | undefined;
   let bestDiff = toleranceMs;
   for (const e of entries) {
-    if (!e?.forecastTime) continue;
+    if (!e?.forecastTime) {continue;}
     const diff = Math.abs(new Date(e.forecastTime).getTime() - targetMs);
     if (diff < bestDiff) {
       bestDiff = diff;
@@ -480,14 +480,14 @@ function parseTideXML(
   const location = locationdata?.location;
   if (location) {
     stationName = location.name;
-    if (location.lat != null) stationLat = parseFloat(String(location.lat));
-    if (location.lon != null) stationLng = parseFloat(String(location.lon));
+    if (location.lat != null) {stationLat = parseFloat(String(location.lat));}
+    if (location.lon != null) {stationLng = parseFloat(String(location.lon));}
   }
 
   const events: TideEvent[] = [];
   for (const block of locationdata?.data ?? []) {
     for (const wl of block.waterlevel ?? []) {
-      if (wl.flag !== 'high' && wl.flag !== 'low') continue;
+      if (wl.flag !== 'high' && wl.flag !== 'low') {continue;}
       events.push({
         time: wl.time,
         value: parseFloat(wl.value),
@@ -596,8 +596,8 @@ function calculateTidePhase(
     if (nextLabel && prevLabel) {
       return nextSlots <= prevSlots ? nextLabel : prevLabel;
     }
-    if (nextLabel) return nextLabel;
-    if (prevLabel) return prevLabel;
+    if (nextLabel) {return nextLabel;}
+    if (prevLabel) {return prevLabel;}
   }
 
   // 4. Fall back to Rising / Falling
@@ -608,8 +608,8 @@ function calculateTidePhase(
     return prevEvent.flag === 'high' ? 'Falling' : 'Rising';
   }
   if (prevEvent && nextEvent) {
-    if (prevEvent.flag === 'low' && nextEvent.flag === 'high') return 'Rising';
-    if (prevEvent.flag === 'high' && nextEvent.flag === 'low') return 'Falling';
+    if (prevEvent.flag === 'low' && nextEvent.flag === 'high') {return 'Rising';}
+    if (prevEvent.flag === 'high' && nextEvent.flag === 'low') {return 'Falling';}
   }
 
   return '—';
@@ -686,7 +686,7 @@ export function solarPosition(
     (Math.sin(decl * _rad) - Math.sin(elevation * _rad) * Math.sin(lat * _rad)) /
     (Math.cos(elevation * _rad) * Math.cos(lat * _rad));
   let azimuth = Math.acos(Math.max(-1, Math.min(1, cosAz))) * _deg;
-  if (Math.sin(LHA * _rad) > 0) azimuth = 360 - azimuth;
+  if (Math.sin(LHA * _rad) > 0) {azimuth = 360 - azimuth;}
 
   return { elevation, azimuth };
 }
@@ -694,9 +694,9 @@ export function solarPosition(
 type SunPhaseName = 'day' | 'civil' | 'nautical' | 'night';
 
 function getSunPhaseName(elevation: number): SunPhaseName {
-  if (elevation >= 0) return 'day';
-  if (elevation >= -6) return 'civil';
-  if (elevation >= -12) return 'nautical';
+  if (elevation >= 0) {return 'day';}
+  if (elevation >= -6) {return 'civil';}
+  if (elevation >= -12) {return 'nautical';}
   return 'night'; // astronomical twilight and full night
 }
 
@@ -721,15 +721,15 @@ function findSolarNoon(
   let prevAz = solarPosition(windowStart, lat, lng).azimuth;
   for (let m = 1; m <= windowMinutes; m++) {
     const t = new Date(windowStart.getTime() + m * 60_000);
-    if (t >= windowEnd) break;
+    if (t >= windowEnd) {break;}
     const az = solarPosition(t, lat, lng).azimuth;
     if ((prevAz < 180 && az >= 180) || (prevAz <= 180 && az > 180)) {
       let lo = new Date(t.getTime() - 60_000);
       let hi = t;
       for (let i = 0; i < 10; i++) {
         const mid = new Date((lo.getTime() + hi.getTime()) / 2);
-        if (solarPosition(mid, lat, lng).azimuth < 180) lo = mid;
-        else hi = mid;
+        if (solarPosition(mid, lat, lng).azimuth < 180) {lo = mid;}
+        else {hi = mid;}
       }
       return new Date((lo.getTime() + hi.getTime()) / 2);
     }
@@ -765,15 +765,15 @@ function calculateSunPhase(
 
   for (let m = 1; m <= windowMinutes; m++) {
     const t = new Date(windowStart.getTime() + m * 60_000);
-    if (t >= windowEnd) break;
+    if (t >= windowEnd) {break;}
     const p = getSunPhaseName(solarPosition(t, lat, lng).elevation);
     if (p !== prevPhase) {
       let lo = new Date(t.getTime() - 60_000);
       let hi = t;
       for (let i = 0; i < 10; i++) {
         const bMid = new Date((lo.getTime() + hi.getTime()) / 2);
-        if (getSunPhaseName(solarPosition(bMid, lat, lng).elevation) === prevPhase) lo = bMid;
-        else hi = bMid;
+        if (getSunPhaseName(solarPosition(bMid, lat, lng).elevation) === prevPhase) {lo = bMid;}
+        else {hi = bMid;}
       }
       transitions.push({ time: new Date((lo.getTime() + hi.getTime()) / 2), to: p });
       prevPhase = p;
@@ -835,7 +835,7 @@ function formatTimeHHMM(utcDate: Date, timezone: string): string {
 /** Reference new moon: 6 January 2000 18:14 UTC */
 const NEW_MOON_EPOCH_MS = Date.UTC(2000, 0, 6, 18, 14, 0);
 /** Average synodic month in milliseconds */
-const SYNODIC_MONTH_MS = 29.53058770576 * 86_400_000;
+const _SYNODIC_MONTH_MS = 29.53058770576 * 86_400_000;
 
 /**
  * Calculate moon phase label for a given UTC date.
@@ -845,14 +845,14 @@ function calculateMoonPhase(date: Date): string {
   const daysSinceEpoch = (date.getTime() - NEW_MOON_EPOCH_MS) / 86_400_000;
   const age = ((daysSinceEpoch % 29.53058770576) + 29.53058770576) % 29.53058770576;
 
-  if (age < 1.85)  return '🌑 New Moon';
-  if (age < 7.38)  return '🌒 Waxing Crescent';
-  if (age < 9.23)  return '🌓 First Quarter';
-  if (age < 14.77) return '🌔 Waxing Gibbous';
-  if (age < 16.61) return '🌕 Full Moon';
-  if (age < 22.15) return '🌖 Waning Gibbous';
-  if (age < 23.99) return '🌗 Last Quarter';
-  if (age < 27.68) return '🌘 Waning Crescent';
+  if (age < 1.85)  {return '🌑 New Moon';}
+  if (age < 7.38)  {return '🌒 Waxing Crescent';}
+  if (age < 9.23)  {return '🌓 First Quarter';}
+  if (age < 14.77) {return '🌔 Waxing Gibbous';}
+  if (age < 16.61) {return '🌕 Full Moon';}
+  if (age < 22.15) {return '🌖 Waning Gibbous';}
+  if (age < 23.99) {return '🌗 Last Quarter';}
+  if (age < 27.68) {return '🌘 Waning Crescent';}
   return '🌑 New Moon';
 }
 
@@ -891,7 +891,7 @@ export async function getCombinedForecast(
   // Cache key uses 2 dp (≈1 km) — forecast resolution doesn't need more
   const weatherCacheKey = `weather:${lat.toFixed(2)}:${lng.toFixed(2)}`;
   const cachedWeather = await getCached<CombinedForecastResult>(weatherCacheKey);
-  if (cachedWeather) return cachedWeather;
+  if (cachedWeather) {return cachedWeather;}
 
   return withInflight(weatherCacheKey, async () => {
     // Skip ocean-related API calls for inland points (saves 4 upstream requests)

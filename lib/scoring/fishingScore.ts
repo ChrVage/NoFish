@@ -91,10 +91,10 @@ export function getDepthProfile(depth: number | undefined): DepthProfile {
     return { currentMu: 0.40, currentSigma: 0.22, tideSpread: 0.75, moonSpread: 0.82, dawnDuskBonus: 0.70 };
   }
   const d = Math.abs(depth); // ensure positive
-  if (d < 30)  return { currentMu: 0.25, currentSigma: 0.18, tideSpread: 1.00, moonSpread: 1.00, dawnDuskBonus: 1.00 };
-  if (d < 100) return { currentMu: 0.35, currentSigma: 0.20, tideSpread: 0.90, moonSpread: 0.90, dawnDuskBonus: 0.90 };
-  if (d < 200) return { currentMu: 0.40, currentSigma: 0.22, tideSpread: 0.75, moonSpread: 0.82, dawnDuskBonus: 0.70 };
-  if (d < 400) return { currentMu: 0.45, currentSigma: 0.25, tideSpread: 0.60, moonSpread: 0.70, dawnDuskBonus: 0.30 };
+  if (d < 30)  {return { currentMu: 0.25, currentSigma: 0.18, tideSpread: 1.00, moonSpread: 1.00, dawnDuskBonus: 1.00 };}
+  if (d < 100) {return { currentMu: 0.35, currentSigma: 0.20, tideSpread: 0.90, moonSpread: 0.90, dawnDuskBonus: 0.90 };}
+  if (d < 200) {return { currentMu: 0.40, currentSigma: 0.22, tideSpread: 0.75, moonSpread: 0.82, dawnDuskBonus: 0.70 };}
+  if (d < 400) {return { currentMu: 0.45, currentSigma: 0.25, tideSpread: 0.60, moonSpread: 0.70, dawnDuskBonus: 0.30 };}
   return              { currentMu: 0.50, currentSigma: 0.28, tideSpread: 0.50, moonSpread: 0.60, dawnDuskBonus: 0.10 };
 }
 
@@ -131,18 +131,18 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
     // Gaussian centred at depth-adjusted peak, σ from depth profile
     currentFactor = gaussian(cs, dp.currentMu, dp.currentSigma);
     // Floor for dead water (< 0.1 m/s → max 0.15)
-    if (cs < 0.1) currentFactor = Math.min(currentFactor, 0.15);
+    if (cs < 0.1) {currentFactor = Math.min(currentFactor, 0.15);}
     // Rapid drop above 1.0 m/s
-    if (cs > 1.0) currentFactor *= Math.max(0, 1 - (cs - 1.0) / 0.5);
+    if (cs > 1.0) {currentFactor *= Math.max(0, 1 - (cs - 1.0) / 0.5);}
 
     const sweetLo = dp.currentMu - dp.currentSigma * 0.7;
     const sweetHi = dp.currentMu + dp.currentSigma * 0.7;
-    if (cs >= sweetLo && cs <= sweetHi) good(`Current ${cs.toFixed(2)} m/s — sweet spot`, 'fishing');
-    else if (cs < 0.15) bad(`Current ${cs.toFixed(2)} m/s — dead water`, 'fishing');
-    else if (cs > 1.0) danger(`⚠️ Current ${cs.toFixed(2)} m/s — unfishable`, 'fishing');
-    else if (cs > 0.7) bad(`Current ${cs.toFixed(2)} m/s — gear drag`, 'fishing');
-    else if (cs < sweetLo) bad(`Current ${cs.toFixed(2)} m/s — slow`, 'fishing');
-    else good(`Current ${cs.toFixed(2)} m/s`, 'fishing');
+    if (cs >= sweetLo && cs <= sweetHi) {good(`Current ${cs.toFixed(2)} m/s — sweet spot`, 'fishing');}
+    else if (cs < 0.15) {bad(`Current ${cs.toFixed(2)} m/s — dead water`, 'fishing');}
+    else if (cs > 1.0) {danger(`⚠️ Current ${cs.toFixed(2)} m/s — unfishable`, 'fishing');}
+    else if (cs > 0.7) {bad(`Current ${cs.toFixed(2)} m/s — gear drag`, 'fishing');}
+    else if (cs < sweetLo) {bad(`Current ${cs.toFixed(2)} m/s — slow`, 'fishing');}
+    else {good(`Current ${cs.toFixed(2)} m/s`, 'fishing');}
   }
 
   // ═══ 2. WIND & DRIFT — safety + wind-current interaction ═════════════
@@ -178,7 +178,7 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
         // Wind blowing into the current = opposing = good
         const windTo = (f.windDirection + 180) % 360;
         let angleDiff = Math.abs(windTo - f.currentDirection);
-        if (angleDiff > 180) angleDiff = 360 - angleDiff;
+        if (angleDiff > 180) {angleDiff = 360 - angleDiff;}
 
         if (angleDiff > 120) {
           // Wind opposing current
@@ -187,8 +187,8 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
             // Strong wind against strong current — dangerous steep breaking waves
             const severity = lerp01(ws, 8, 14) * lerp01(cs, 0.5, 1.0);
             windFactor *= Math.max(0.15, 1 - severity * 0.8);
-            if (severity > 0.5) danger(`⚠️ Wind against strong current — dangerous seas`, 'safety');
-            else bad('Wind opposing strong current — steep chop', 'safety');
+            if (severity > 0.5) {danger(`⚠️ Wind against strong current — dangerous seas`, 'safety');}
+            else {bad('Wind opposing strong current — steep chop', 'safety');}
           } else {
             // Light/moderate wind opposing current — slows drift, helps bottom contact
             const bonus = 0.1 * (ws / 8);
@@ -203,9 +203,9 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
         }
       }
 
-      if (ws <= 3) good(`Light wind ${ws.toFixed(1)} m/s`, 'safety');
+      if (ws <= 3) {good(`Light wind ${ws.toFixed(1)} m/s`, 'safety');}
       else if (ws <= 7) { /* neutral */ }
-      else bad(`Wind ${ws.toFixed(1)} m/s`, 'safety');
+      else {bad(`Wind ${ws.toFixed(1)} m/s`, 'safety');}
 
       // Gust penalty
       if (ws >= 10 && gs > 15) {
@@ -233,19 +233,19 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
     const tp = f.tidePhase.toLowerCase();
     // Base factors at full spread (tideSpread=1.0)
     let baseTide = 0.80;
-    if (tp.includes('rising'))        baseTide = 1.00;
-    else if (tp.includes('falling'))  baseTide = 0.95;
-    else if (tp.match(/[+-]1h/))      baseTide = 0.85;
-    else if (tp.match(/[+-]2h/))      baseTide = 0.75;
-    else if (tp.match(/^(hi|lo)\b/i) || tp.includes('(')) baseTide = 0.55;
+    if (tp.includes('rising'))        {baseTide = 1.00;}
+    else if (tp.includes('falling'))  {baseTide = 0.95;}
+    else if (tp.match(/[+-]1h/))      {baseTide = 0.85;}
+    else if (tp.match(/[+-]2h/))      {baseTide = 0.75;}
+    else if (tp.match(/^(hi|lo)\b/i) || tp.includes('(')) {baseTide = 0.55;}
 
     // Compress toward 1.0 based on tideSpread: factor = 1 - spread * (1 - base)
     tideFactor = 1.0 - dp.tideSpread * (1.0 - baseTide);
 
-    if (tp.includes('rising'))          good('Rising tide — fish active', 'fishing');
-    else if (tp.includes('falling'))    good('Falling tide', 'fishing');
-    else if (tp.match(/[+-]1h/))        good('Tide turning', 'fishing');
-    else if (tp.match(/^(hi|lo)\b/i) || tp.includes('(')) bad('Slack tide', 'fishing');
+    if (tp.includes('rising'))          {good('Rising tide — fish active', 'fishing');}
+    else if (tp.includes('falling'))    {good('Falling tide', 'fishing');}
+    else if (tp.match(/[+-]1h/))        {good('Tide turning', 'fishing');}
+    else if (tp.match(/^(hi|lo)\b/i) || tp.includes('(')) {bad('Slack tide', 'fishing');}
   }
 
   // ═══ 4. MOON PHASE — tidal amplitude modifier (spread adapted) ═════
@@ -344,7 +344,7 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
       good('Calm seas', 'safety');
     } else if (wh <= 1.0) {
       waveFactor = 1.0 - 0.4 * sigmoid01(wh, 0.5, 1.0);
-      if (wh <= 0.7) good('Low waves', 'safety');
+      if (wh <= 0.7) {good('Low waves', 'safety');}
     } else if (wh <= 2.0) {
       waveFactor = 0.6 - 0.5 * sigmoid01(wh, 1.0, 2.0);
       if (wh > 1.5) {
@@ -474,18 +474,18 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
 // ── Score display helpers ───────────────────────────────────────────────────
 
 export function getScoreColor(score: number): string {
-  if (score >= 70) return '#166534'; // green-800
-  if (score >= 50) return '#15803d'; // green-700
-  if (score >= 35) return '#92400e'; // amber-800
-  if (score >= 20) return '#c2410c'; // orange-700
+  if (score >= 70) {return '#166534';} // green-800
+  if (score >= 50) {return '#15803d';} // green-700
+  if (score >= 35) {return '#92400e';} // amber-800
+  if (score >= 20) {return '#c2410c';} // orange-700
   return '#991b1b';                  // red-800
 }
 
 export function getScoreBg(score: number): string {
-  if (score >= 70) return '#f0fdf4'; // green-50
-  if (score >= 50) return '#fefce8'; // yellow-50
-  if (score >= 35) return '#fffbeb'; // amber-50
-  if (score >= 20) return '#fff7ed'; // orange-50
+  if (score >= 70) {return '#f0fdf4';} // green-50
+  if (score >= 50) {return '#fefce8';} // yellow-50
+  if (score >= 35) {return '#fffbeb';} // amber-50
+  if (score >= 20) {return '#fff7ed';} // orange-50
   return '#fef2f2';                  // red-50
 }
 
@@ -500,7 +500,7 @@ export function getScoreBg(score: number): string {
  * If every hour in the forecast has a danger reason, "No safe fishing periods" is shown.
  */
 export function findBestWindows(scoredForecasts: ScoredForecast[]): BestWindow[] {
-  if (scoredForecasts.length === 0) return [];
+  if (scoredForecasts.length === 0) {return [];}
 
   // A window is eligible only if none of its hours have a danger-tone reason
   const hasDanger = (idx: number) =>
@@ -515,18 +515,18 @@ export function findBestWindows(scoredForecasts: ScoredForecast[]): BestWindow[]
       for (let j = 0; j < len; j++) {
         if (hasDanger(i + j)) { dangerInWindow = true; break; }
       }
-      if (dangerInWindow) continue;
+      if (dangerInWindow) {continue;}
 
       let sum = 0;
-      for (let j = 0; j < len; j++) sum += scoredForecasts[i + j].score;
+      for (let j = 0; j < len; j++) {sum += scoredForecasts[i + j].score;}
       const avg = sum / len;
       candidates.push({ start: i, len, avg });
-      if (avg > topAvg) topAvg = avg;
+      if (avg > topAvg) {topAvg = avg;}
     }
   }
 
   // No safe windows at all — every hour has a danger condition
-  if (candidates.length === 0) return [];
+  if (candidates.length === 0) {return [];}
 
   // Among windows within 5 points of the best, pick the longest (then highest avg)
   const viable = candidates
@@ -540,7 +540,7 @@ export function findBestWindows(scoredForecasts: ScoredForecast[]): BestWindow[]
     );
     if (!overlaps) {
       bestWindows.push(c);
-      if (bestWindows.length === 2) break;
+      if (bestWindows.length === 2) {break;}
     }
   }
 
@@ -554,7 +554,7 @@ export function findBestWindows(scoredForecasts: ScoredForecast[]): BestWindow[]
     if (prev.start + prev.len >= curr.start) {
       const newLen = curr.start + curr.len - prev.start;
       let sum = 0;
-      for (let j = 0; j < newLen; j++) sum += scoredForecasts[prev.start + j].score;
+      for (let j = 0; j < newLen; j++) {sum += scoredForecasts[prev.start + j].score;}
       prev.len = newLen;
       prev.avg = sum / newLen;
       bestWindows.splice(i, 1);

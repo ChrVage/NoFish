@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 interface ErrorFallbackProps {
   error: Error & { digest?: string };
   reset: () => void;
@@ -32,12 +34,12 @@ export default function ErrorFallback({ error, reset, pageName }: ErrorFallbackP
           >
             Try again
           </button>
-          <a
+          <Link
             href="/"
             className="text-sm text-ocean-600 hover:text-ocean-800 underline"
           >
             Back to map
-          </a>
+          </Link>
         </div>
       </div>
     </div>

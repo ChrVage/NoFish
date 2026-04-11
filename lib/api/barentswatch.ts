@@ -178,7 +178,7 @@ export async function getWaveGridPoint(
 ): Promise<WaveGridPoint | null> {
   const cacheKey = `wavepoint:${lat.toFixed(2)}:${lng.toFixed(2)}`;
   const cached = await getCached<WaveGridPointCache>(cacheKey);
-  if (cached !== null) return cached.point;
+  if (cached !== null) {return cached.point;}
 
   return withInflight<WaveGridPoint | null>(cacheKey, async () => {
     const waveForecast = await getWaveForecast(lat, lng);
