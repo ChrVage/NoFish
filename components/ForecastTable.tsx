@@ -2,6 +2,7 @@
 
 import React from 'react';
 import type { EnrichedForecast } from '@/lib/utils/enrichForecasts';
+import { getTimeColumnStyle } from '@/lib/utils/sunPhaseStyle';
 
 interface ForecastTableProps {
   forecasts: EnrichedForecast[];
@@ -87,38 +88,6 @@ const DirectionArrow = ({
     </svg>
   );
 };
-
-// ── Sun-phase background colour for the Time column ────────────────────────────
-const sunPhaseColors: Record<string, [number, number, number]> = {
-  day:       [255, 255, 255], // white
-  civil:     [190, 195, 210], // light grey-blue
-  nautical:  [30,  50,  90],  // dark blue
-  night:     [0,   0,   0],   // black
-};
-
-function getTimeColumnStyle(
-  segments: { phase: string; fraction: number }[] | undefined,
-): React.CSSProperties {
-  if (!segments || segments.length === 0) return {};
-
-  // Blend RGB weighted by fraction
-  let r = 0, g = 0, b = 0;
-  for (const seg of segments) {
-    const c = sunPhaseColors[seg.phase] ?? [128, 128, 128];
-    r += c[0] * seg.fraction;
-    g += c[1] * seg.fraction;
-    b += c[2] * seg.fraction;
-  }
-  r = Math.round(r);
-  g = Math.round(g);
-  b = Math.round(b);
-
-  // Use white text when the background is dark
-  const luminance = (r * 0.299 + g * 0.587 + b * 0.114);
-  const textColor = luminance < 140 ? '#ffffff' : '#111827';
-
-  return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: textColor };
-}
 
 export default function ForecastTable({ forecasts, timezone, hideOceanData, highlightTimes }: ForecastTableProps) {
   if (!forecasts || forecasts.length === 0) {
