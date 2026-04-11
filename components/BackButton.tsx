@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
+import { buildLocationUrl } from '@/lib/utils/params';
 
 const buttonStyle: React.CSSProperties = {
   display: 'flex',
@@ -27,9 +28,7 @@ export default function BackButton() {
     const lng = searchParams.get('lng');
     const zoom = searchParams.get('zoom');
     if (lat && lng) {
-      const params = new URLSearchParams({ lat, lng });
-      if (zoom) params.set('zoom', zoom);
-      router.push(`/?${params.toString()}`);
+      router.push(buildLocationUrl('', { lat, lng, zoom: zoom ?? undefined }));
     } else {
       router.push('/');
     }

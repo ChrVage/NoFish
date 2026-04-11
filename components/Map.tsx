@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { flushSync } from 'react-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { buildLocationUrl } from '@/lib/utils/params';
 
 // ── Popup content (rendered via createRoot into a Leaflet popup) ────────────
 
@@ -231,11 +232,10 @@ export default function Map() {
       const navigate = (page: string) => {
         navigating = true;
         const zoom = map.getZoom();
-        const seaParam = isLand ? '&sea=0' : '&sea=1';
+        const sea = isLand ? '0' : '1';
         // Update current history entry so browser-back restores map position
-        const mapUrl = `/?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}`;
-        window.history.replaceState(window.history.state, '', mapUrl);
-        router.push(`/${page}?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}${seaParam}`);
+        window.history.replaceState(window.history.state, '', buildLocationUrl('', { lat, lng, zoom }));
+        router.push(buildLocationUrl(page as 'score' | 'details' | 'tide', { lat, lng, zoom, sea }));
       };
 
       // Initial render — show loading state with all buttons visible
@@ -439,19 +439,18 @@ export default function Map() {
         const lat4 = latitude.toFixed(4);
         const lng4 = longitude.toFixed(4);
         const zoom = Math.max(mapRef.current?.getZoom() ?? MIN_LOCATION_ZOOM, MIN_LOCATION_ZOOM);
-        let seaParam = '';
+        let sea: string | undefined;
         try {
           const res = await fetch(`/api/geocoding?lat=${lat4}&lon=${lng4}`);
           if (res.ok) {
             const result = await res.json();
-            seaParam = result.isSea === false ? '&sea=0' : '&sea=1';
+            sea = result.isSea === false ? '0' : '1';
           }
         } catch { /* navigate without sea hint */ }
         setLocating(false);
         // Update current history entry so browser-back restores map position
-        const mapUrl = `/?lat=${lat4}&lng=${lng4}&zoom=${zoom}`;
-        window.history.replaceState(window.history.state, '', mapUrl);
-        router.push(`/details?lat=${lat4}&lng=${lng4}&zoom=${zoom}${seaParam}`);
+        window.history.replaceState(window.history.state, '', buildLocationUrl('', { lat: lat4, lng: lng4, zoom }));
+        router.push(buildLocationUrl('details', { lat: lat4, lng: lng4, zoom, sea }));
       },
       (err) => {
         setLocating(false);
