@@ -69,3 +69,7 @@
     margin: 8px;
   }
 }
+
+@keyframes popup-spin {
+  to { transform: rotate(360deg); }
+}

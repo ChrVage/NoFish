@@ -37,6 +37,14 @@ interface PopupContentProps {
 }
 
 function PopupContent({ lat, lng, loading, name, elevation, isSea, showScore, showTide, onNavigate }: PopupContentProps) {
+  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
+
+  const handleClick = (key: string) => {
+    if (navigatingTo) return;
+    setNavigatingTo(key);
+    onNavigate(key);
+  };
+
   const buttons: { key: string; label: string; ariaLabel: string; icon: React.ReactNode }[] = [];
 
   if (showScore) {
@@ -84,21 +92,38 @@ function PopupContent({ lat, lng, loading, name, elevation, isSea, showScore, sh
         {lat.toFixed(4)}°N, {lng.toFixed(4)}°E
       </div>
       <div style={{ display: 'flex', borderRadius: '0.5rem', overflow: 'hidden' }}>
-        {buttons.map((btn, i) => (
-          <button
-            key={btn.key}
-            type="button"
-            onClick={() => onNavigate(btn.key)}
-            aria-label={btn.ariaLabel}
-            style={{
-              ...popupButtonStyle,
-              borderRight: i < buttons.length - 1 ? '2px solid white' : 'none',
-            }}
-          >
-            {btn.icon}
-            <span style={{ fontSize: '0.75rem' }}>{btn.label}</span>
-          </button>
-        ))}
+        {buttons.map((btn, i) => {
+          const isThis = navigatingTo === btn.key;
+          const disabled = navigatingTo !== null;
+          return (
+            <button
+              key={btn.key}
+              type="button"
+              onClick={() => handleClick(btn.key)}
+              disabled={disabled}
+              aria-label={btn.ariaLabel}
+              style={{
+                ...popupButtonStyle,
+                borderRight: i < buttons.length - 1 ? '2px solid white' : 'none',
+                opacity: disabled && !isThis ? 0.45 : 1,
+                cursor: disabled ? 'default' : 'pointer',
+              }}
+            >
+              {isThis ? (
+                <div style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{
+                    width: 22, height: 22,
+                    border: '3px solid rgba(56,189,248,0.25)',
+                    borderTopColor: '#0ea5e9',
+                    borderRadius: '50%',
+                    animation: 'popup-spin 0.7s linear infinite',
+                  }} />
+                </div>
+              ) : btn.icon}
+              <span style={{ fontSize: '0.75rem' }}>{btn.label}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
