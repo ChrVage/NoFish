@@ -207,6 +207,9 @@ export default function Map() {
         navigating = true;
         const zoom = map.getZoom();
         const seaParam = isLand ? '&sea=0' : '&sea=1';
+        // Update current history entry so browser-back restores map position
+        const mapUrl = `/?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}`;
+        window.history.replaceState(window.history.state, '', mapUrl);
         router.push(`/${page}?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}&zoom=${zoom}${seaParam}`);
       };
 
@@ -239,7 +242,7 @@ export default function Map() {
             const result = await geoResponse.json();
             const d = result.data;
             const placeName = d?.name || d?.municipality || d?.displayName || `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
-            popupName = d?.municipality && d.name && d.name !== d.municipality
+            popupName = d?.municipality && d.municipality !== 'Unknown municipality' && d.name && d.name !== d.municipality
               ? `${d.name}, ${d.municipality}`
               : placeName;
             elevation = result.elevation as number | undefined;
@@ -406,11 +409,24 @@ export default function Map() {
     setLocating(true);
     setLocationError(null);
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocating(false);
+      async (position) => {
         const { latitude, longitude } = position.coords;
+        const lat4 = latitude.toFixed(4);
+        const lng4 = longitude.toFixed(4);
         const zoom = Math.max(mapRef.current?.getZoom() ?? MIN_LOCATION_ZOOM, MIN_LOCATION_ZOOM);
-        router.push(`/details?lat=${latitude.toFixed(4)}&lng=${longitude.toFixed(4)}&zoom=${zoom}`);
+        let seaParam = '';
+        try {
+          const res = await fetch(`/api/geocoding?lat=${lat4}&lon=${lng4}`);
+          if (res.ok) {
+            const result = await res.json();
+            seaParam = result.isSea === false ? '&sea=0' : '&sea=1';
+          }
+        } catch { /* navigate without sea hint */ }
+        setLocating(false);
+        // Update current history entry so browser-back restores map position
+        const mapUrl = `/?lat=${lat4}&lng=${lng4}&zoom=${zoom}`;
+        window.history.replaceState(window.history.state, '', mapUrl);
+        router.push(`/details?lat=${lat4}&lng=${lng4}&zoom=${zoom}${seaParam}`);
       },
       (err) => {
         setLocating(false);

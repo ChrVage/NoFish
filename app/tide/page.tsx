@@ -114,9 +114,10 @@ export default async function TidePage({ searchParams }: PageProps) {
             {locationData && (
               <>
                 <h2 className="text-2xl font-bold text-ocean-900 mb-1">
-                  Forecast for: {locationData.name !== locationData.municipality
-                    ? `${locationData.name}, ${locationData.municipality}`
-                    : locationData.municipality}
+                  Forecast for: {locationData.name}
+                  {locationData.municipality && locationData.municipality !== 'Unknown municipality' && locationData.municipality !== locationData.name && (
+                    <span className="text-lg font-normal text-gray-500">, {locationData.municipality}</span>
+                  )}
                 </h2>
               </>
             )}

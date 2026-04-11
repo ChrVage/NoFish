@@ -144,9 +144,9 @@ export default async function ScorePage({ searchParams }: PageProps) {
               const dateFmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short', timeZone: timezone });
               const timeFmt = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone });
               const locationName = locationData
-                ? (locationData.name !== locationData.municipality
+                ? (locationData.municipality && locationData.municipality !== 'Unknown municipality' && locationData.name !== locationData.municipality
                     ? `${locationData.name}, ${locationData.municipality}`
-                    : locationData.municipality)
+                    : locationData.name || locationData.municipality || `${lat.toFixed(4)}, ${lng.toFixed(4)}`)
                 : `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
               const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
               const icsDateFmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');

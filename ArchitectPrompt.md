@@ -8,13 +8,16 @@ Please review the code based on the following prioritized criteria:
 1. Good architecture and Next.js best practices: Clean code, DRY principles, proper separation of server vs. client components, and efficient state management (especially regarding map interactions and zoom state).
 2. API efficiency & Data handling: Efficient fetching and aggregation of multiple external APIs server-side, robust error handling, and clean execution of data interpolation (e.g., transforming 3-hour wave data into 1-hour intervals).
 3. Security: Verification that API calls and keys remain strictly server-side, safe handling of client inputs (coordinates), and adherence to the strict security headers (CSP, HSTS, no-sniff) defined in the project.
-4. User experience & Responsiveness: Mobile-first considerations, especially ensuring that the large forecast tables and map popups are highly readable and responsive on small screens.
+4. User experience & Responsiveness: Mobile-first considerations, especially ensuring that the large forecast tables and map popups are highly readable and responsive on small screens. Make sure UX is intuitive enough so that users don't need any instructions. Adapt and shorten all instructions to accomodate users with special interest to details.
 5. WCAG (Accessibility): Proper semantic HTML, correct ARIA roles (crucial for the map and data tables), and full keyboard navigability.
 
 ## Reason for existing
 Found in the [README.md](README.md) file.
 
 ## Future plans 
+- Show some action when one of the buttons in the pop-up is pressed. Like a spinning wheel, so that we're not tempted to click again.
+
+
 
 - Consider adding CI pipeline (e.g., GitHub Actions) that calls npm test.
 
@@ -32,12 +35,17 @@ Found in the [README.md](README.md) file.
 
 - Explore possibilities for changing boat size and fish species to tune for (fish species will help adapt the depth. But polloch could be large at the bottom and small higher up.) 
 
+- Also support Norwegian language.
+
 - Create a beter Icon and logo https://realfavicongenerator.net/
 
 - SEO to make sure people find the site when I am happy with it.
 
 ### Later
-- Add possibility for fish logging, and add weather to the log,so that you can know in which conditions you fish the fish.
+
+- Functionality for subscribing to calendar appointments with good fishing times.
+
+- Add possibility for fish logging, and add weather to the log,so that you can know in which conditions you fish the fish. Send mail after fishing appointment.
 
 ## Instructions for response
 
