@@ -130,15 +130,11 @@ export default async function ScorePage({ searchParams }: PageProps) {
                 </span>
               )}
             </p>
-            {hasCurrentData ? (
-              <p className="text-xs text-green-700 mt-1">
-                ✓ Ocean current forecast included ({currentForecastDistanceKm !== undefined ? `${currentForecastDistanceKm.toFixed(1)} km` : '—'} from grid point)
-              </p>
-            ) : hasOceanData ? (
+            {!hasCurrentData && hasOceanData && (
               <p className="text-xs text-amber-600 mt-1">
                 ⚠ No reliable current forecast — current speed not included in score
               </p>
-            ) : null}
+            )}
             <h3 className="text-sm font-bold text-ocean-900 mt-3">Best fishing windows:</h3>
             {bestWindows.length > 0 ? (() => {
               const dateFmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short', timeZone: timezone });
