@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCombinedForecast } from '@/lib/api/weather';
+import { validateCoordinates } from '@/lib/utils/validation';
+import { checkRateLimit } from '@/lib/utils/rateLimit';
 import type { HourlyForecast } from '@/types/weather';
 
 export interface WeatherApiResponse {
@@ -11,55 +13,28 @@ export interface WeatherApiResponse {
   metadata?: Record<string, never>;
 }
 
+const RATE_LIMIT = { name: 'weather', limit: 30, windowSeconds: 60 };
+
 export async function GET(request: NextRequest) {
   try {
+    const limited = checkRateLimit(request, RATE_LIMIT);
+    if (limited) {return limited;}
+
     const searchParams = request.nextUrl.searchParams;
-    const lat = searchParams.get('lat');
-    const lon = searchParams.get('lon');
-
-    if (!lat || !lon) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Missing required parameters: lat and lon',
-        } as WeatherApiResponse,
-        { status: 400 }
-      );
-    }
-
-    const latitude = parseFloat(lat);
-    const longitude = parseFloat(lon);
-
-    if (isNaN(latitude) || isNaN(longitude)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Invalid coordinates',
-        } as WeatherApiResponse,
-        { status: 400 }
-      );
-    }
-
-    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Coordinates out of range: lat must be −90–90, lon must be −180–180',
-        } as WeatherApiResponse,
-        { status: 400 }
-      );
-    }
+    const result = validateCoordinates(searchParams.get('lat'), searchParams.get('lon'));
+    if (result instanceof NextResponse) {return result;}
+    const { lat: latitude, lng: longitude } = result;
 
     // Fetch combined weather, ocean, and tide forecast
-    const result = await getCombinedForecast(latitude, longitude);
+    const forecast = await getCombinedForecast(latitude, longitude);
 
     return NextResponse.json(
       {
         success: true,
-        data: result.forecasts,
-        oceanForecastLat: result.oceanForecastLat,
-        oceanForecastLng: result.oceanForecastLng,
-        metadata: result.metadata,
+        data: forecast.forecasts,
+        oceanForecastLat: forecast.oceanForecastLat,
+        oceanForecastLng: forecast.oceanForecastLng,
+        metadata: forecast.metadata,
       } as WeatherApiResponse,
       { status: 200, headers: { 'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=1800' } }
     );

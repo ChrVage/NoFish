@@ -157,6 +157,7 @@ export default function Map() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchHighlight, setSearchHighlight] = useState(-1);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchAbortRef = useRef<AbortController | null>(null);
   const searchBoxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -456,6 +457,7 @@ export default function Map() {
     setSearchQuery(value);
     setSearchHighlight(-1);
     if (searchTimerRef.current) {clearTimeout(searchTimerRef.current);}
+    if (searchAbortRef.current) {searchAbortRef.current.abort();}
     if (value.length < 2) { setSearchResults([]); setSearchOpen(false); return; }
 
     // Check for coordinate input first
@@ -471,15 +473,19 @@ export default function Map() {
     }
 
     searchTimerRef.current = setTimeout(async () => {
+      const controller = new AbortController();
+      searchAbortRef.current = controller;
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(value)}`);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(value)}`, { signal: controller.signal });
         if (res.ok) {
           const data = await res.json();
           const items: SearchResult[] = data.results ?? [];
           setSearchResults(items);
           setSearchOpen(items.length > 0);
         }
-      } catch { /* ignore */ }
+      } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') {return;}
+      }
     }, 300);
   };
 

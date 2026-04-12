@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/utils/rateLimit';
 
 interface KartverketSkrivemate {
   skrivemåte: string;
@@ -22,8 +23,12 @@ export interface SearchResult {
 }
 
 const CACHE_HEADERS = { 'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800' };
+const RATE_LIMIT = { name: 'search', limit: 30, windowSeconds: 60 };
 
 export async function GET(request: NextRequest) {
+  const limited = checkRateLimit(request, RATE_LIMIT);
+  if (limited) {return limited;}
+
   const q = request.nextUrl.searchParams.get('q')?.trim();
 
   if (!q || q.length < 2) {

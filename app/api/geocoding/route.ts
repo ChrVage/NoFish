@@ -1,28 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { reverseGeocode } from '@/lib/api/geocoding';
+import { validateCoordinates } from '@/lib/utils/validation';
+import { checkRateLimit } from '@/lib/utils/rateLimit';
+
+const RATE_LIMIT = { name: 'geocoding', limit: 60, windowSeconds: 60 };
 
 export async function GET(request: NextRequest) {
+  const limited = checkRateLimit(request, RATE_LIMIT);
+  if (limited) {return limited;}
+
   const searchParams = request.nextUrl.searchParams;
-  const lat = searchParams.get('lat');
-  const lon = searchParams.get('lon');
-
-  if (!lat || !lon) {
-    return NextResponse.json({ success: false, error: 'Missing required parameters: lat and lon' }, { status: 400 });
-  }
-
-  const latitude = parseFloat(lat);
-  const longitude = parseFloat(lon);
-
-  if (isNaN(latitude) || isNaN(longitude)) {
-    return NextResponse.json({ success: false, error: 'Invalid coordinates' }, { status: 400 });
-  }
-
-  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-    return NextResponse.json(
-      { success: false, error: 'Coordinates out of range: lat must be −90–90, lon must be −180–180' },
-      { status: 400 }
-    );
-  }
+  const result = validateCoordinates(searchParams.get('lat'), searchParams.get('lon'));
+  if (result instanceof NextResponse) {return result;}
+  const { lat: latitude, lng: longitude } = result;
 
   try {
     const data = await reverseGeocode(latitude, longitude);
