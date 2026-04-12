@@ -15,7 +15,8 @@ Please review the code based on the following prioritized criteria:
 4. Security: Verification that API calls and keys remain strictly server-side, safe handling of client inputs (coordinates), and adherence to the strict security headers (CSP, HSTS, no-sniff) defined in the project.
 5. User experience & Responsiveness: Mobile-first considerations, especially ensuring that the large forecast tables and map popups are highly readable and responsive on small screens. Make sure UX is intuitive enough so that users don't need any instructions. Adapt and shorten all instructions to accomodate users with special interest to details. No cookies if it can be avoided.
 6. WCAG (Accessibility): Proper semantic HTML, correct ARIA roles (crucial for the map and data tables), and full keyboard navigability. 
-7. Design. 
+7. Design
+    Everything should look beautiful and consistent.
     Buttons and icons
         Background light grey / gray-100 / #f3f4f6
         Foreground dark gray / gray-800 /  #1f2937
@@ -29,8 +30,6 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## To implement before release 
-- Implment use statistics. Show them on nofish.no/statistics. Maybe it is possible to use functionality from Vercel?
-
 - Remove the non-technical readme, such as readme-data and readme-score pages, and add them as a page on nofish.no, instead of locked in GitHub. Update the links on the pages to reflect the new pages. Split the Readme.md into a part that stays on Github, with a very short "reason to exist", and links to readme-technical (that also includes readme-architecture). The other part of the Readme.md should be moved to a page on Nofish that explains the webpage and it's purpose. In the readme-data page now moved to nofish.no it should be clearly stated that current is forecast only, and cannot neccessarily be trusted. Local knowledge is important.
 
 - Create a feedback form on nofish.no. Create a suitable icon with link to it on the end of each line with score, tide and detail. Clicing the line adds data for that point to the feedback. Each feedback should be added as an issue on github with a feedback template.

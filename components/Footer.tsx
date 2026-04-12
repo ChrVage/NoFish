@@ -70,6 +70,14 @@ export default function HeaderMenu() {
           >
             Feedback
           </a>
+          <a
+            href="/statistics"
+            style={{ color: '#000000', fontWeight: 700, textDecoration: 'none', display: 'block', padding: '12px 24px', fontSize: '14px', whiteSpace: 'nowrap' }}
+            className="hover:bg-gray-100 transition-colors"
+            onClick={() => setOpen(false)}
+          >
+            Statistics
+          </a>
           <div
             style={{ color: '#9ca3af', fontSize: '12px', padding: '8px 24px 4px', borderTop: '1px solid #e5e7eb', marginTop: '4px' }}
           >
