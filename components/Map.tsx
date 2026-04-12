@@ -566,12 +566,12 @@ export default function Map() {
     <div className="relative w-full h-full">
       <div ref={mapContainerRef} className="map-container w-full h-full" />
       
-      {/* Search bar — top center */}
-      <div
-        ref={searchBoxRef}
-        style={{ position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', zIndex: 1100, width: '100%', maxWidth: '380px', padding: '0 12px' }}
-      >
-        <div style={{ position: 'relative' }}>
+      {/* Top bar — search + sea chart toggle in one row */}
+      <div style={{ position: 'absolute', top: '12px', left: '52px', right: '12px', zIndex: 1100, display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div
+          ref={searchBoxRef}
+          style={{ position: 'relative', flex: '1 1 0', minWidth: 0, maxWidth: '300px' }}
+        >
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <svg style={{ position: 'absolute', left: '12px', width: '16px', height: '16px', color: '#9ca3af', pointerEvents: 'none' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="8" />
@@ -585,12 +585,14 @@ export default function Map() {
               onFocus={() => { if (searchResults.length > 0) {setSearchOpen(true);} }}
               placeholder="Search place or coordinates…"
               aria-label="Search for a place or enter coordinates"
-              aria-expanded={searchOpen}            aria-controls="search-suggestions"              aria-haspopup="listbox"
+              aria-expanded={searchOpen}
+              aria-controls="search-suggestions"
+              aria-haspopup="listbox"
               aria-autocomplete="list"
               role="combobox"
               style={{
                 width: '100%',
-                padding: '10px 12px 10px 36px',
+                padding: '8px 12px 8px 36px',
                 fontSize: '14px',
                 color: '#1f2937',
                 background: '#fff',
@@ -644,10 +646,8 @@ export default function Map() {
             </ul>
           )}
         </div>
-      </div>
 
-      {/* Sea chart toggle — top right */}
-      <div style={{ position: 'absolute', top: '16px', right: '12px', zIndex: 1100 }}>
+        {/* Sea chart toggle */}
         <button
           type="button"
           onClick={() => { seaChartManualRef.current = true; setShowSeaChart(v => !v); }}
@@ -664,6 +664,7 @@ export default function Map() {
             fontWeight: 500,
             cursor: 'pointer',
             boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+            flexShrink: 0,
           }}
         >
           <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
