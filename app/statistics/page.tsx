@@ -131,8 +131,7 @@ export default async function StatisticsPage() {
             }}
           >
             <h2 className="text-sm font-bold text-gray-700 tracking-tight mb-5">Visitors per week</h2>
-            <div className="overflow-x-auto">
-              <div className="flex items-end gap-1 sm:gap-2" style={{ minWidth: `${stats.weekly.length * 52}px` }}>
+              <div className="flex items-end gap-1 sm:gap-2">
                 {stats.weekly.map((w, i) => {
                   const pct = Math.max((w.count / maxWeekly) * 100, 4);
                   const barH = Math.round((pct / 100) * 130);
@@ -143,7 +142,7 @@ export default async function StatisticsPage() {
                     <div
                       key={w.week_start}
                       className="flex-1 flex flex-col items-center group"
-                      style={{ minWidth: '38px' }}
+                      style={{ minWidth: 0 }}
                     >
                       <span
                         className="text-[10px] font-bold tabular-nums mb-1 transition-colors"
@@ -174,7 +173,6 @@ export default async function StatisticsPage() {
                   );
                 })}
               </div>
-            </div>
           </section>
         )}
 
