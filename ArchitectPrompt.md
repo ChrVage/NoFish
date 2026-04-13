@@ -33,8 +33,6 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## To implement before release 
-- Remove the non-technical readme, such as readme-data and readme-score pages, and add them as a page on nofish.no, instead of locked in GitHub. Update the links on the pages to reflect the new pages. Split the Readme.md into a part that stays on Github, with a very short why the project exists, what the solution does and how to use it. The readme.md links to readme-technical (that also includes readme-architecture). The other part of the Readme.md should be moved to nofish.no/about that explains the webpage and it's purpose. In the readme-data page now moved to nofish.no/data with all columns explained. It should be clearly stated that current is forecast only, and cannot neccessarily be trusted. Local knowledge is important.
-
 - Create a feedback form on nofish.no. Create a suitable icon with link to it on the end of each line with score, tide and detail. Clicing the line adds data for that point to the feedback. Each feedback should be added as an issue on github with a feedback template.
 
 - Use UV warning in the locationforecast. If the level is above 1, add it to the safety info, but it shouldn't affect safety score. If the level is 3 or higher, remind the user to wear sunscreen.
