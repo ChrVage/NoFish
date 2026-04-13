@@ -9,49 +9,51 @@ export async function GET() {
     const sql = getSql();
     await ensureTable();
 
-    const [totalRow, dailyRows, municipalityRows, countryRows] = await Promise.all([
+    const [totalRow, weeklyRows, kpiRow, cityRows] = await Promise.all([
       sql`SELECT COUNT(*)::int AS total FROM lookups`,
 
       sql`
-        SELECT created_at::date AS day, COUNT(*)::int AS count
+        SELECT date_trunc('week', created_at)::date AS week_start,
+               COUNT(*)::int AS count
         FROM lookups
-        WHERE created_at >= NOW() - INTERVAL '30 days'
-        GROUP BY day
-        ORDER BY day
+        WHERE created_at >= date_trunc('week', NOW()) - INTERVAL '11 weeks'
+        GROUP BY date_trunc('week', created_at)::date
+        ORDER BY week_start
       `,
 
       sql`
-        SELECT municipality, COUNT(*)::int AS count
+        SELECT
+          COUNT(*) FILTER (WHERE created_at::date = CURRENT_DATE)::int AS today,
+          COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::int AS last7,
+          COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '14 days'
+                             AND created_at < NOW() - INTERVAL '7 days')::int AS prev7
         FROM lookups
-        WHERE municipality IS NOT NULL AND municipality != '' AND municipality != 'Unknown municipality'
-        GROUP BY municipality
-        ORDER BY count DESC
-        LIMIT 10
+        WHERE created_at >= NOW() - INTERVAL '14 days'
       `,
 
       sql`
-        SELECT geo_country AS country, COUNT(*)::int AS count
+        SELECT geo_city AS city, COUNT(*)::int AS count
         FROM lookups
-        WHERE geo_country IS NOT NULL AND geo_country != ''
-        GROUP BY geo_country
+        WHERE geo_city IS NOT NULL AND geo_city != ''
+        GROUP BY geo_city
         ORDER BY count DESC
         LIMIT 10
       `,
     ]);
 
+    const kpi = kpiRow[0] ?? { today: 0, last7: 0, prev7: 0 };
     return NextResponse.json(
       {
         total: totalRow[0]?.total ?? 0,
-        daily: dailyRows.map((r: Record<string, unknown>) => ({
-          day: r.day,
+        todayCount: kpi.today ?? 0,
+        last7: kpi.last7 ?? 0,
+        prev7: kpi.prev7 ?? 0,
+        weekly: weeklyRows.map((r: Record<string, unknown>) => ({
+          week_start: r.week_start,
           count: r.count,
         })),
-        topMunicipalities: municipalityRows.map((r: Record<string, unknown>) => ({
-          name: r.municipality,
-          count: r.count,
-        })),
-        topCountries: countryRows.map((r: Record<string, unknown>) => ({
-          country: r.country,
+        topCities: cityRows.map((r: Record<string, unknown>) => ({
+          city: r.city,
           count: r.count,
         })),
       },
