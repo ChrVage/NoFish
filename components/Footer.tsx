@@ -51,9 +51,7 @@ export default function HeaderMenu() {
           style={{ right: '0px', minWidth: '180px', backgroundColor: '#ffffff', border: '1px solid #e5e7eb' }}
         >
           <a
-            href="https://github.com/ChrVage/NoFish/blob/main/README.md"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/about"
             style={{ color: '#000000', fontWeight: 700, textDecoration: 'none', display: 'block', padding: '12px 24px', fontSize: '14px', whiteSpace: 'nowrap' }}
             className="hover:bg-gray-100 transition-colors"
             onClick={() => setOpen(false)}
@@ -105,9 +103,7 @@ export function Footer({ showColumnRef }: { showColumnRef?: boolean } = {}) {
     <div style={{ display: 'flex', justifyContent: 'center' }} className="mt-4">
       <div style={{ display: 'flex', borderRadius: '0.5rem', overflow: 'hidden' }}>
         <a
-          href="https://github.com/ChrVage/NoFish/blob/main/README.md"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/about"
           style={{ ...linkStyle, borderRight: '2px solid white' }}
         >
           <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,9 +113,7 @@ export function Footer({ showColumnRef }: { showColumnRef?: boolean } = {}) {
         </a>
         {showColumnRef && (
           <a
-            href="https://github.com/ChrVage/NoFish/blob/main/readme-data.md"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/data"
             style={{ ...linkStyle, borderRight: '2px solid white' }}
           >
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">

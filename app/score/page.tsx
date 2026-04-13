@@ -402,9 +402,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
           <div style={{ display: 'flex', justifyContent: 'center' }} className="mt-6">
             <div style={{ display: 'flex', borderRadius: '0.5rem', overflow: 'hidden' }}>
               <a
-                href="https://github.com/ChrVage/NoFish/blob/main/readme-score.md"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/score/about"
                 style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.75rem', textDecoration: 'none', backgroundColor: '#f3f4f6', color: '#1f2937', borderRight: '2px solid white' }}
               >
                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -413,9 +411,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                 <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>About Fishing Score</span>
               </a>
               <a
-                href="https://github.com/ChrVage/NoFish/blob/main/README.md"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/about"
                 style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.75rem', textDecoration: 'none', backgroundColor: '#f3f4f6', color: '#1f2937', borderRight: '2px solid white' }}
               >
                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">

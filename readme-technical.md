@@ -177,5 +177,145 @@ Vercel automatically provisions and renews a Let's Encrypt TLS certificate for e
 
 ---
 
-> See [readme-architecture.md](readme-architecture.md) for project structure and data flow.
-> See [readme-data.md](readme-data.md) for data source accuracy ratings and column reference.
+---
+
+# Architecture
+
+> Project structure, component responsibilities, navigation model, and data flow.
+
+---
+
+## Project Structure
+
+```
+app/
+  layout.tsx            # Root layout — metadata, JSON-LD structured data
+  page.tsx              # Home page — full-screen interactive map
+  globals.css           # Global styles (Tailwind base + custom scrollbar); light-mode only
+  about/
+    page.tsx            # About NoFish — purpose and usage
+  data/
+    page.tsx            # Data column reference and source quality
+  score/
+    about/
+      page.tsx          # Fishing score algorithm documentation
+  details/
+    page.tsx            # Server component — 10-day hourly forecast table
+    loading.tsx         # Streaming skeleton shown while server fetches data
+  score/
+    page.tsx            # Server component — fishing score table (0–100%) with per-hour ratings
+  tide/
+    page.tsx            # Server component — high/low tide event table (10 days)
+  api/
+    geocoding/
+      route.ts          # GET /api/geocoding?lat=&lon= — thin proxy to lib/api/geocoding.ts
+    weather/
+      route.ts          # GET /api/weather?lat=&lon= — returns full HourlyForecast[] + ocean grid coordinates
+    ocean-point/
+      route.ts          # GET /api/ocean-point?lat=&lon= — returns only oceanForecastLat/Lng (used by map)
+
+components/
+  BackButton.tsx        # Client component — reads lat/lng/zoom from search params, navigates back to /?lat=&lng=&zoom=
+  Footer.tsx            # Inline button bar on sub-pages — "About NoFish" and "Feedback" links
+  ForecastTable.tsx     # Hourly forecast table; columns grouped by API source
+  Map.tsx               # Leaflet map; click → marker + popup
+  PageNav.tsx           # Header nav buttons (Score / Details / Tides)
+
+lib/
+  api/
+    barentswatch.ts     # OAuth2 token management + getWaveForecast() + getSeaCurrentForecast()
+    weather.ts          # getCombinedForecast() — fetches and merges all API sources
+    geocoding.ts        # reverseGeocode() — Nominatim with rich name fallback chain
+  db/
+    index.ts            # Neon SQL client (reads DATABASE_URL)
+    lookups.ts          # insertLookup() + ensureTable()
+    cache.ts            # forecast_cache table — getCached() / setCached() / withInflight()
+  utils/
+    distance.ts         # haversineDistance / formatDistance
+    timezone.ts         # getTimezone / getTimezoneLabel via tz-lookup
+    enrichForecasts.ts  # Trims at last hourly MET row; interpolates Barentswatch 3-h wave data
+
+public/                 # Static assets (OG image, favicons)
+types/
+  weather.ts            # TypeScript interfaces for API responses, HourlyForecast, etc.
+```
+
+---
+
+## Navigation Model
+
+All coordinate state lives in URL search params (`?lat=…&lng=…`). No global state, no context.
+
+### Map popup buttons and PageNav
+
+| Button | Route | Condition |
+|---|---|---|
+| Score | `/score?lat=…&lng=…&zoom=…` | Ocean data available (grid point ≤ 1 km) |
+| Details | `/details?lat=…&lng=…&zoom=…` | Always shown |
+| Tides | `/tide?lat=…&lng=…&zoom=…` | Ocean data available (grid point ≤ 1 km) |
+
+The current page's button is shown as a non-clickable grey span in `PageNav`. Score and Tides are hidden when the ocean forecast grid point is more than 1 km away.
+
+### Back navigation
+
+`BackButton` reads `lat`, `lng`, and `zoom` from the current page's search params and navigates to `/?lat=…&lng=…&zoom=…`. On detail pages it is rendered as the `🎣 NoFish` logo — the entire logo is the back button.
+
+---
+
+## Data Flow
+
+### Map click → popup
+
+```
+User clicks map
+  └─ Map.tsx (client)
+       ├─ Parallel fetch:
+       │    ├─ GET /api/geocoding?lat=&lon=
+       │    └─ GET /api/ocean-point?lat=&lon=
+       └─ Popup shows location name, blue dot + line to ocean grid point
+```
+
+### Detail/Tide page (Server Component)
+
+```
+  Page server render
+       ├─ lib/utils/timezone.ts → IANA timezone
+       ├─ lib/api/geocoding.ts → cache hit / miss → Nominatim
+       ├─ lib/api/weather.ts
+       │    getCombinedForecast() → parallel:
+       │         ├─ MET Norway Locationforecast 2.0
+       │         ├─ Barentswatch Waveforecast (OAuth2)
+       │         ├─ Barentswatch Sea Current (OAuth2)
+       │         ├─ MET Norway Oceanforecast 2.0 (sea temp)
+       │         └─ Kartverket Tide API (XML)
+       │    Returns: CombinedForecastResult
+       └─ after(): lib/db/lookups.ts → Neon (production only)
+```
+
+### withInflight deduplication
+
+`withInflight(key, fn)` ensures only one external fetch fires for N concurrent requests with the same cold-cache key.
+
+---
+
+## Cache Keys and TTLs
+
+| Data | Key pattern | Precision | TTL |
+|---|---|---|---|
+| Geocoding | `geo3:{lat.2dp}:{lng.2dp}` | ≈1 km | 30 days |
+| Weather + ocean | `weather:{lat.2dp}:{lng.2dp}` | ≈1 km | 1 hour |
+| Tides (events) | `tide:{lat.0dp}:{lng.0dp}` | Integer | 6 hours |
+| Tides (page data) | `tideall:{lat.0dp}:{lng.0dp}` | Integer | 6 hours |
+
+---
+
+## Security
+
+Set in `next.config.ts` via `headers()`:
+
+| Header | Value |
+|---|---|
+| `Content-Security-Policy` | `default-src 'self'`; `script-src 'self' 'unsafe-inline'`; `img-src` allows OSM tile hosts; `connect-src 'self'` only |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `DENY` |
+| `Referrer-Policy` | `no-referrer-when-downgrade` |
