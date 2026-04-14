@@ -1,30 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
 
 export default function HeaderMenu() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const menuItemStyle: React.CSSProperties = {
-    color: '#000000',
-    fontWeight: 700,
-    textDecoration: 'none',
-    display: 'block',
-    padding: '12px 24px',
-    fontSize: '14px',
-    whiteSpace: 'nowrap',
-    width: '100%',
-    textAlign: 'left',
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-  };
-
-  function navigateTo(path: string) {
-    setOpen(false);
-    window.location.assign(path);
-  }
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -37,7 +17,7 @@ export default function HeaderMenu() {
   }, [open]);
 
   return (
-    <div ref={menuRef} className="relative z-[1200]">
+    <div ref={menuRef} className="relative z-20">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -68,32 +48,16 @@ export default function HeaderMenu() {
       {open && (
         <div
           className="absolute mt-2 rounded-lg shadow-2xl py-3"
-          style={{ top: '100%', right: '0px', minWidth: '180px', backgroundColor: '#ffffff', border: '1px solid #e5e7eb' }}
+          style={{ right: '0px', minWidth: '180px', backgroundColor: '#ffffff', border: '1px solid #e5e7eb' }}
         >
-          <button
-            type="button"
-            style={menuItemStyle}
+          <a
+            href="/about"
+            style={{ color: '#000000', fontWeight: 700, textDecoration: 'none', display: 'block', padding: '12px 24px', fontSize: '14px', whiteSpace: 'nowrap' }}
             className="hover:bg-gray-100 transition-colors"
-            onClick={() => navigateTo('/about')}
+            onClick={() => setOpen(false)}
           >
             About NoFish
-          </button>
-          <button
-            type="button"
-            style={menuItemStyle}
-            className="hover:bg-gray-100 transition-colors"
-            onClick={() => navigateTo('/score/about')}
-          >
-            Fishing Score
-          </button>
-          <button
-            type="button"
-            style={menuItemStyle}
-            className="hover:bg-gray-100 transition-colors"
-            onClick={() => navigateTo('/data')}
-          >
-            Data
-          </button>
+          </a>
           <a
             href="https://github.com/ChrVage/NoFish/issues/new/choose"
             target="_blank"
@@ -104,14 +68,14 @@ export default function HeaderMenu() {
           >
             Feedback
           </a>
-          <button
-            type="button"
-            style={menuItemStyle}
+          <a
+            href="/statistics"
+            style={{ color: '#000000', fontWeight: 700, textDecoration: 'none', display: 'block', padding: '12px 24px', fontSize: '14px', whiteSpace: 'nowrap' }}
             className="hover:bg-gray-100 transition-colors"
-            onClick={() => navigateTo('/statistics')}
+            onClick={() => setOpen(false)}
           >
             Statistics
-          </button>
+          </a>
           <div
             style={{ color: '#9ca3af', fontSize: '12px', padding: '8px 24px 4px', borderTop: '1px solid #e5e7eb', marginTop: '4px' }}
           >
@@ -138,7 +102,7 @@ export function Footer({ showColumnRef }: { showColumnRef?: boolean } = {}) {
   return (
     <div style={{ display: 'flex', justifyContent: 'center' }} className="mt-4">
       <div style={{ display: 'flex', borderRadius: '0.5rem', overflow: 'hidden' }}>
-        <Link
+        <a
           href="/about"
           style={{ ...linkStyle, borderRight: '2px solid white' }}
         >
@@ -146,9 +110,9 @@ export function Footer({ showColumnRef }: { showColumnRef?: boolean } = {}) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>About NoFish</span>
-        </Link>
+        </a>
         {showColumnRef && (
-          <Link
+          <a
             href="/data"
             style={{ ...linkStyle, borderRight: '2px solid white' }}
           >
@@ -156,7 +120,7 @@ export function Footer({ showColumnRef }: { showColumnRef?: boolean } = {}) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Column Reference</span>
-          </Link>
+          </a>
         )}
         <a
           href="https://github.com/ChrVage/NoFish/issues/new/choose"
