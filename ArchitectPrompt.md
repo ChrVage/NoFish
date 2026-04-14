@@ -5,7 +5,7 @@ Please review the provided code for my web application, "NoFish" — a marine we
 
 ## This solution exist because:
 The purpose is to give small boat fishers access to data from sources with the best quality - about safety and fishing coniditions on the Norwegian coast.
-The application shoul also supply data about the weather on land for simplicity.
+The application should also supply data about the weather on land for simplicity.
 
 ## Review rules
 Please review the code based on the following prioritized criteria:
