@@ -341,10 +341,10 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
     const wh = f.waveHeight;
     if (wh <= 0.5) {
       waveFactor = 1.0;
-      good('Calm seas', 'safety');
+      good(`Calm seas ${wh.toFixed(1)}m`, 'safety');
     } else if (wh <= 1.0) {
       waveFactor = 1.0 - 0.4 * sigmoid01(wh, 0.5, 1.0);
-      if (wh <= 0.7) {good('Low waves', 'safety');}
+      if (wh <= 0.7) {good(`Low waves ${wh.toFixed(1)}m`, 'safety');}
     } else if (wh <= 2.0) {
       waveFactor = 0.6 - 0.5 * sigmoid01(wh, 1.0, 2.0);
       if (wh > 1.5) {
