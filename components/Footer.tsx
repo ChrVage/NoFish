@@ -47,7 +47,7 @@ export default function HeaderMenu() {
 
       {open && (
         <div
-          className="absolute mt-2 rounded-lg shadow-2xl py-3"
+          className="absolute mt-2 rounded-lg shadow-2xl pb-3"
           style={{ right: '0px', minWidth: '180px', backgroundColor: '#ffffff', border: '1px solid #e5e7eb' }}
         >
           <a

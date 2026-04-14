@@ -33,8 +33,8 @@ export default function Home() {
         </div>
       </Header>
 
-      {/* Main content */}
-      <div className="flex-1 min-h-0 relative overflow-hidden">
+      {/* Main content — z-0 creates a stacking context so map overlays stay below the header menu */}
+      <div className="flex-1 min-h-0 relative overflow-hidden z-0">
         <Map />
       </div>
     </div>
