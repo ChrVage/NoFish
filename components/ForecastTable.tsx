@@ -3,6 +3,7 @@
 import React from 'react';
 import type { EnrichedForecast } from '@/lib/utils/enrichForecasts';
 import { getTimeColumnStyle } from '@/lib/utils/sunPhaseStyle';
+import FeedbackButton from '@/components/FeedbackButton';
 
 interface ForecastTableProps {
   forecasts: EnrichedForecast[];
@@ -11,6 +12,10 @@ interface ForecastTableProps {
   hideOceanData?: boolean;
   /** ISO time strings of best-scoring hours to highlight with a blue outline. */
   highlightTimes?: string[];
+  /** Coordinates and location name for feedback items. */
+  lat?: number;
+  lng?: number;
+  locationName?: string;
 }
 
 // Weather symbol mapping (MET Norway symbol codes)
@@ -89,7 +94,7 @@ const DirectionArrow = ({
   );
 };
 
-export default function ForecastTable({ forecasts, timezone, hideOceanData, highlightTimes }: ForecastTableProps) {
+export default function ForecastTable({ forecasts, timezone, hideOceanData, highlightTimes, lat, lng, locationName }: ForecastTableProps) {
   if (!forecasts || forecasts.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-8 text-center">
@@ -214,6 +219,12 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, high
               >
                 Calculated
               </th>
+              {/* Feedback */}
+              <th
+                colSpan={1}
+                scope="colgroup"
+                className="px-4 py-1 text-center font-semibold"
+              />
             </tr>
 
             {/* Column header row */}
@@ -286,6 +297,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, high
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-yellow-900/20">
                 Moon
               </th>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-medium tracking-wider" aria-label="Feedback" />
             </tr>
           </thead>
 
@@ -307,7 +319,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, high
               })();
 
               // Count total columns for separator rows
-              const totalCols = 8 + (hasOceanData ? 7 : 0) + 1;
+              const totalCols = 8 + (hasOceanData ? 7 : 0) + 1 + 1;
 
               const rows: React.ReactNode[] = [];
 
@@ -419,6 +431,23 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, high
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700">
                   {forecast.moonPhase ?? '—'}
+                </td>
+                <td className="px-2 py-3 text-center">
+                  {lat !== undefined && lng !== undefined && (
+                    <FeedbackButton item={{
+                      id: `details-${forecast.time}`,
+                      page: 'Details',
+                      time: formatTime(forecast.time),
+                      lat,
+                      lng,
+                      locationName,
+                      summary: [
+                        forecast.windSpeed !== undefined ? `Wind ${forecast.windSpeed.toFixed(1)} m/s` : null,
+                        forecast.waveHeight !== undefined ? `Waves ${forecast.waveHeight.toFixed(1)} m` : null,
+                        forecast.temperature !== undefined ? `Temp ${forecast.temperature.toFixed(1)}°C` : null,
+                      ].filter(Boolean).join(', ') || '—',
+                    }} />
+                  )}
                 </td>
               </tr>
               );

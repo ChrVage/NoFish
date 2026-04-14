@@ -9,6 +9,8 @@ import PageNav from '@/components/PageNav';
 import { enrichForecasts } from '@/lib/utils/enrichForecasts';
 import { computeFishingScore, findBestWindows, getScoreColor, getScoreBg } from '@/lib/scoring/fishingScore';
 import { getTimeColumnStyle } from '@/lib/utils/sunPhaseStyle';
+import FeedbackButton from '@/components/FeedbackButton';
+import FeedbackBanner from '@/components/FeedbackBanner';
 
 interface PageProps {
   searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string }>;
@@ -320,6 +322,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                     <th rowSpan={2} className="pb-2">Time</th>
                     <th colSpan={3} className="pb-0">Score</th>
                     <th colSpan={2} className="pb-0">Why</th>
+                    <th rowSpan={2} className="pb-2" aria-label="Feedback" />
                   </tr>
                   <tr className="border-b border-gray-200 text-xs text-gray-400 text-left">
                     <th className="pb-2">Total</th>
@@ -340,7 +343,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                     if (isMidnight) {
                       rows.push(
                         <tr key={`midnight-${forecast.time}`} aria-hidden="true">
-                          <td colSpan={6} style={{ height: '3px', padding: 0, backgroundColor: '#d1d5db' }} />
+                          <td colSpan={7} style={{ height: '3px', padding: 0, backgroundColor: '#d1d5db' }} />
                         </tr>
                       );
                     }
@@ -389,6 +392,17 @@ export default async function ScorePage({ searchParams }: PageProps) {
                             ));
                           })()}
                         </td>
+                        <td className="py-2 text-center">
+                          <FeedbackButton item={{
+                            id: `score-${forecast.time}`,
+                            page: 'Score',
+                            time: formatTime(forecast.time),
+                            lat,
+                            lng,
+                            locationName: locationData?.name,
+                            summary: `Score ${score}% (Safety ${safetyScore}%, Fishing ${fishingScore}%)`,
+                          }} />
+                        </td>
                       </tr>
                     );
 
@@ -435,6 +449,8 @@ export default async function ScorePage({ searchParams }: PageProps) {
 
         </div>
       </main>
+
+      <FeedbackBanner />
     </div>
   );
 }

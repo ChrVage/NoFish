@@ -8,6 +8,8 @@ import Header from '@/components/Header';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
 import { Footer } from '@/components/Footer';
+import FeedbackButton from '@/components/FeedbackButton';
+import FeedbackBanner from '@/components/FeedbackBanner';
 import type { TidePrediction } from '@/types/weather';
 
 interface PageProps {
@@ -150,6 +152,7 @@ export default async function TidePage({ searchParams }: PageProps) {
                   <th className="pb-2">Time</th>
                   <th className="pb-2 text-right">Level</th>
                   <th className="pb-2 text-left">Type</th>
+                  <th className="pb-2" aria-label="Feedback" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -170,6 +173,7 @@ export default async function TidePage({ searchParams }: PageProps) {
                       <td className="py-2 text-right tabular-nums whitespace-nowrap"
                           style={isLowest ? { fontWeight: 700 } : undefined}>{level.toFixed(1)} cm</td>
                       <td className="py-2 text-xs text-gray-400">Last observation{trend && ` – ${trend}`}</td>
+                      <td />
                     </tr>
                   );
                 })()}
@@ -197,6 +201,17 @@ export default async function TidePage({ searchParams }: PageProps) {
                       <td className="py-2 font-semibold">
                         {event.flag === 'high' ? 'High' : 'Low'}
                       </td>
+                      <td className="py-2 text-center">
+                        <FeedbackButton item={{
+                          id: `tide-${event.time}`,
+                          page: 'Tide',
+                          time: timeFormatter.format(new Date(event.time)),
+                          lat,
+                          lng,
+                          locationName: locationData?.name,
+                          summary: `${event.flag === 'high' ? 'High' : 'Low'} tide, ${pred.toFixed(1)} cm`,
+                        }} />
+                      </td>
                     </tr>
                   );
                 })}
@@ -220,6 +235,8 @@ export default async function TidePage({ searchParams }: PageProps) {
 
         </div>
       </main>
+
+      <FeedbackBanner />
     </div>
   );
 }

@@ -33,8 +33,6 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## To implement before release 
-- Create a feedback form on nofish.no. Create a suitable icon with link to it on the end of each line with score, tide and detail. Clicing the line adds data for that point to the feedback. Each feedback should be added as an issue on github with a feedback template.
-
 - Use UV warning in the locationforecast. If the level is above 1, add it to the safety info, but it shouldn't affect safety score. If the level is 3 or higher, remind the user to wear sunscreen.
 
 - Find a better way to determine if the coordinate is land or sea.

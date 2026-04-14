@@ -1,0 +1,23 @@
+name: Feedback
+description: Report inaccurate data or provide feedback about NoFish
+title: "Feedback: "
+labels: ["feedback"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What did you notice? What looks wrong or could be improved?
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: Location name and coordinates (auto-filled when submitted from the app)
+  - type: textarea
+    id: data-points
+    attributes:
+      label: Selected Data Points
+      description: Data points flagged from the forecast pages (auto-filled when submitted from the app)
+      render: text

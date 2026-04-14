@@ -14,6 +14,7 @@ import Header from '@/components/Header';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
 import { Footer } from '@/components/Footer';
+import FeedbackBanner from '@/components/FeedbackBanner';
 
 interface PageProps {
   searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string; ht?: string }>;
@@ -256,7 +257,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
 
           {/* Forecast table */}
           <div className="mb-6">
-            <ForecastTable forecasts={forecasts} timezone={timezone} hideOceanData={isLand} highlightTimes={htStr ? htStr.split(',') : undefined} />
+            <ForecastTable forecasts={forecasts} timezone={timezone} hideOceanData={isLand} highlightTimes={htStr ? htStr.split(',') : undefined} lat={lat} lng={lng} locationName={locationData?.name} />
           </div>
 
           <p className="text-xs text-gray-400 mt-6">
@@ -297,6 +298,8 @@ export default async function DetailsPage({ searchParams }: PageProps) {
 
         </div>
       </main>
+
+      <FeedbackBanner />
     </div>
   );
 }
