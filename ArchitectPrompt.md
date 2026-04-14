@@ -47,7 +47,7 @@ Found in the [README.md](README.md) file.
 
 - Create a colour palette, then a better icon and logo https://realfavicongenerator.net/
 
-- Explore wich license is right for this project.
+- Explore which license is right for this project.
 
 - SEO to make sure people find the site when I am happy with it.
 
