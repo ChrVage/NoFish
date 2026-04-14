@@ -395,7 +395,7 @@ export function combineForecasts(
       cloudCover: entry.data.instant.details.cloud_area_fraction,
       pressure: entry.data.instant.details.air_pressure_at_sea_level,
       precipitation: entry.data.next_1_hours?.details.precipitation_amount,
-      symbolCode: entry.data.next_1_hours?.summary.symbol_code ||
+      symbolCode: entry.data.next_1_hours?.summary.symbol_code ??
                   entry.data.next_6_hours?.summary.symbol_code,
     };
 

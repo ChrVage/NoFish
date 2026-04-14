@@ -66,10 +66,10 @@ export default async function ScorePage({ searchParams }: PageProps) {
       timeZone: timezone,
     });
     const parts = formatter.formatToParts(date);
-    const weekday = parts.find(p => p.type === 'weekday')?.value || '';
-    const day = parts.find(p => p.type === 'day')?.value || '';
-    const hour = parts.find(p => p.type === 'hour')?.value || '00';
-    const minute = parts.find(p => p.type === 'minute')?.value || '00';
+    const weekday = parts.find(p => p.type === 'weekday')?.value ?? '';
+    const day = parts.find(p => p.type === 'day')?.value ?? '';
+    const hour = parts.find(p => p.type === 'hour')?.value ?? '00';
+    const minute = parts.find(p => p.type === 'minute')?.value ?? '00';
     return `${weekday}. ${day}. ${hour}:${minute}`;
   };
 

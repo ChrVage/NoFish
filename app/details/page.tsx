@@ -125,9 +125,9 @@ export default async function DetailsPage({ searchParams }: PageProps) {
   const ipAddress = (forwarded ? forwarded.split(',')[0].trim() : reqHeaders.get('x-real-ip')) ?? undefined;
   const userAgent = reqHeaders.get('user-agent') ?? undefined;
   // Vercel injects these automatically on every request
-  const geoCountry = reqHeaders.get('x-vercel-ip-country') || undefined;
-  const geoRegion  = reqHeaders.get('x-vercel-ip-country-region') || undefined;
-  const geoCityRaw = reqHeaders.get('x-vercel-ip-city') || undefined;
+  const geoCountry = reqHeaders.get('x-vercel-ip-country') ?? undefined;
+  const geoRegion  = reqHeaders.get('x-vercel-ip-country-region') ?? undefined;
+  const geoCityRaw = reqHeaders.get('x-vercel-ip-city') ?? undefined;
   const geoCity    = geoCityRaw
     ? (() => { try { return decodeURIComponent(geoCityRaw); } catch { return geoCityRaw; } })()
     : undefined;

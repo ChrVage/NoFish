@@ -160,14 +160,14 @@ export default function Map() {
   const searchAbortRef = useRef<AbortController | null>(null);
   const searchBoxRef = useRef<HTMLDivElement>(null);
 
+  // Extract search params before the effect so they appear in the dependency array
+  const restoreLat = parseFloat(searchParams.get('lat') ?? '');
+  const restoreLng = parseFloat(searchParams.get('lng') ?? '');
+  const restoreZoom = parseInt(searchParams.get('zoom') ?? '', 10);
+  const hasRestore = !isNaN(restoreLat) && !isNaN(restoreLng);
+
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) {return;}
-
-    // Restore position/zoom when returning from a detail page
-    const restoreLat = parseFloat(searchParams.get('lat') ?? '');
-    const restoreLng = parseFloat(searchParams.get('lng') ?? '');
-    const restoreZoom = parseInt(searchParams.get('zoom') ?? '', 10);
-    const hasRestore = !isNaN(restoreLat) && !isNaN(restoreLng);
 
     const initialCenter: [number, number] = hasRestore
       ? [restoreLat, restoreLng]
@@ -285,7 +285,7 @@ export default function Map() {
           if (geoResponse.ok) {
             const result = await geoResponse.json();
             const d = result.data;
-            const placeName = d?.name || d?.municipality || d?.displayName || `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
+            const placeName = d?.name ?? d?.municipality ?? d?.displayName ?? `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
             popupName = d?.municipality && d.municipality !== 'Unknown municipality' && d.name && d.name !== d.municipality
               ? `${d.name}, ${d.municipality}`
               : placeName;
@@ -426,7 +426,7 @@ export default function Map() {
         mapRef.current = null;
       }
     };
-  }, [router]);
+  }, [router, restoreLat, restoreLng, restoreZoom, hasRestore]);
 
   // Toggle Kartverket sea chart overlay
   useEffect(() => {

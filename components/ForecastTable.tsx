@@ -120,10 +120,10 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, high
     });
     
     const parts = formatter.formatToParts(date);
-    const weekday = parts.find(p => p.type === 'weekday')?.value || '';
-    const day = parts.find(p => p.type === 'day')?.value || '';
-    const hour = parts.find(p => p.type === 'hour')?.value || '00';
-    const minute = parts.find(p => p.type === 'minute')?.value || '00';
+    const weekday = parts.find(p => p.type === 'weekday')?.value ?? '';
+    const day = parts.find(p => p.type === 'day')?.value ?? '';
+    const hour = parts.find(p => p.type === 'hour')?.value ?? '00';
+    const minute = parts.find(p => p.type === 'minute')?.value ?? '00';
     
     return `${weekday}. ${day}. ${hour}:${minute}`;
   };
@@ -410,15 +410,15 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, high
                 {/* ── Kartverket cell ── */}
                 {hasOceanData && (
                   <td className="px-4 py-3 text-sm text-gray-700 border-l-2 border-purple-300/50 border-r-2 border-r-purple-200">
-                    {forecast.tidePhase || '—'}
+                    {forecast.tidePhase ?? '—'}
                   </td>
                 )}
                 {/* ── Calculated cell ── */}
                 <td className="px-4 py-3 text-sm text-gray-700 border-l-2 border-yellow-200" style={getTimeColumnStyle(forecast.sunPhaseSegments)}>
-                  {forecast.sunPhase || '—'}
+                  {forecast.sunPhase ?? '—'}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700">
-                  {forecast.moonPhase || '—'}
+                  {forecast.moonPhase ?? '—'}
                 </td>
               </tr>
               );

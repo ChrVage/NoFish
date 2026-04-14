@@ -1,11 +1,12 @@
 import Header from '@/components/Header';
+import Image from 'next/image';
 
 export default function Loading() {
   return (
     <div className="min-h-screen bg-ocean-50">
       <Header>
         <div className="max-w-7xl mx-auto flex items-center gap-2">
-          <img src="/NoFish.png" alt="NoFish" width={32} height={32} className="rounded-full" />
+          <Image src="/NoFish.png" alt="NoFish" width={32} height={32} className="rounded-full" />
           <h1 className="text-lg font-bold">NoFish</h1>
         </div>
       </Header>

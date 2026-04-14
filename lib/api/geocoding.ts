@@ -209,20 +209,20 @@ async function fetchNominatimName(lat: number, lng: number): Promise<{ name: str
     );
     if (!response.ok) {return null;}
     const data = await response.json();
-    const address = data.address || {};
+    const address = data.address ?? {};
     return {
       name:
-        address.village || address.town || address.city || address.hamlet ||
-        address.locality || address.suburb || address.neighbourhood ||
-        address.body_of_water || address.bay || address.fjord || address.strait ||
-        address.sea || address.ocean || address.waterway || address.island ||
-        address.archipelago ||
-        (data.display_name ? data.display_name.split(',')[0].trim() : undefined) ||
+        address.village ?? address.town ?? address.city ?? address.hamlet ??
+        address.locality ?? address.suburb ?? address.neighbourhood ??
+        address.body_of_water ?? address.bay ?? address.fjord ?? address.strait ??
+        address.sea ?? address.ocean ?? address.waterway ?? address.island ??
+        address.archipelago ??
+        (data.display_name ? data.display_name.split(',')[0].trim() : undefined) ??
         'Unnamed location',
-      municipality: address.municipality || address.county || 'Unknown municipality',
-      county: address.county || address.state || '',
-      country: address.country || '',
-      displayName: data.display_name || '',
+      municipality: address.municipality ?? address.county ?? 'Unknown municipality',
+      county: address.county ?? address.state ?? '',
+      country: address.country ?? '',
+      displayName: data.display_name ?? '',
     };
   } catch {
     return null;
@@ -257,11 +257,11 @@ export async function reverseGeocode(
         fetchNominatimName(lat, lng),
       ]);
 
-      const name = kartverket?.name || nominatim?.name || '';
-      const municipality = nominatim?.municipality || '';
-      const county = nominatim?.county || '';
-      const country = nominatim?.country || 'Norway';
-      const displayName = nominatim?.displayName || '';
+      const name = kartverket?.name ?? nominatim?.name ?? '';
+      const municipality = nominatim?.municipality ?? '';
+      const county = nominatim?.county ?? '';
+      const country = nominatim?.country ?? 'Norway';
+      const displayName = nominatim?.displayName ?? '';
       const placeDistanceM = kartverket?.distanceM;
 
       const result: GeocodingResult = {
