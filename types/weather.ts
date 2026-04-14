@@ -58,6 +58,7 @@ export interface LocationForecastTimeseries {
         wind_speed_of_gust?: number;
         wind_speed_percentile_10?: number;
         wind_speed_percentile_90?: number;
+        ultraviolet_index_clear_sky?: number;
       };
     };
     next_1_hours?: {
@@ -165,6 +166,7 @@ export interface HourlyForecast {
   sunPhaseSegments?: { phase: 'day' | 'civil' | 'nautical' | 'night'; fraction: number }[];
   windGust?: number;
   moonPhase?: string; // e.g., "🌑 New Moon", "🌕 Full Moon"
+  uvIndex?: number; // UV index (clear sky), 0–11+
 }
 
 // Kartverket Tide API XML types (high/low tide events)

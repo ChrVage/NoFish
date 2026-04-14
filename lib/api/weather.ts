@@ -397,6 +397,7 @@ export function combineForecasts(
       precipitation: entry.data.next_1_hours?.details.precipitation_amount,
       symbolCode: entry.data.next_1_hours?.summary.symbol_code ??
                   entry.data.next_6_hours?.summary.symbol_code,
+      uvIndex: entry.data.instant.details.ultraviolet_index_clear_sky,
     };
 
     // Add Barentswatch wave data if available

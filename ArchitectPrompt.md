@@ -33,11 +33,9 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## To implement before release 
-- Use UV warning in the locationforecast. If the level is above 1, add it to the safety info, but it shouldn't affect safety score. If the level is 3 or higher, remind the user to wear sunscreen.
-
 - Find a better way to determine if the coordinate is land or sea.
 - Improve location logic, differentiate between land and sea.
-
+- When clicking on the score in the score page, jump to details on the same time.
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
 - Link directly to **fishing rules** by species from Fiskeridirektoratet.
 

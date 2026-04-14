@@ -460,6 +460,29 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
     }
   }
 
+  // ═══ 11. UV INDEX — informational safety warning (no score effect) ════
+  //
+  //   UV ≥ 1 → show info in safety reasons
+  //   UV ≥ 3 → remind to wear sunscreen
+  //   UV ≥ 6 → strong UV warning
+  //   UV ≥ 8 → very high UV warning
+  //   Does not affect the safety score — purely informational.
+  //
+  if (f.uvIndex !== undefined && f.uvIndex > 1) {
+    const uv = Math.round(f.uvIndex);
+    if (uv < 2) {
+      // rounds to 1 or less — skip display
+    } else if (uv >= 8) {
+      reasons.push({ text: `☀️ UV ${uv} — very high! Wear sunscreen`, tone: 'danger', category: 'safety' });
+    } else if (uv >= 6) {
+      reasons.push({ text: `☀️ UV ${uv} — high, wear sunscreen`, tone: 'bad', category: 'safety' });
+    } else if (uv >= 3) {
+      reasons.push({ text: `☀️ UV ${uv} — wear sunscreen`, tone: 'bad', category: 'safety' });
+    } else {
+      reasons.push({ text: `UV ${uv}`, tone: 'good', category: 'safety' });
+    }
+  }
+
   // ═══ COMBINE — multiply factors, scale to 0–100 ══════════════════════
   const safetyRaw = windFactor * waveFactor * lightFactor * wavePeriodFactor;
   const fishingRaw = currentFactor * tideFactor * moonFactor * precipFactor * tempFactor * pressureFactor * lightFishingFactor;
