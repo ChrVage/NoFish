@@ -7,11 +7,10 @@ import Header from '@/components/Header';
 import BackButton from '@/components/BackButton';
 
 function FeedbackContent() {
-  const [items, setItemsState] = useState<FeedbackItem[]>([]);
+  const [items, setItemsState] = useState<FeedbackItem[]>(() => getFeedbackItems());
   const [comment, setComment] = useState('');
 
   useEffect(() => {
-    setItemsState(getFeedbackItems());
     const sync = () => setItemsState(getFeedbackItems());
     window.addEventListener('feedback-updated', sync);
     return () => window.removeEventListener('feedback-updated', sync);
@@ -25,7 +24,7 @@ function FeedbackContent() {
 
   const handleSubmit = () => {
     const locationInfo = items.length > 0
-      ? (items[0].locationName || `${items[0].lat.toFixed(4)}, ${items[0].lng.toFixed(4)}`)
+      ? (items[0].locationName ?? `${items[0].lat.toFixed(4)}, ${items[0].lng.toFixed(4)}`)
       : 'Unknown';
 
     const title = items.length > 0

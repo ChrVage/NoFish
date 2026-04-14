@@ -15,10 +15,14 @@ export interface FeedbackItem {
 const STORAGE_KEY = 'nofish-feedback-items';
 
 export function getFeedbackItems(): FeedbackItem[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {
+    return [];
+  }
   try {
-    return JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '[]');
-  } catch { return []; }
+    return JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? '[]');
+  } catch {
+    return [];
+  }
 }
 
 export function setFeedbackItems(items: FeedbackItem[]) {
@@ -32,14 +36,13 @@ export function clearFeedbackItems() {
 }
 
 export default function FeedbackButton({ item }: { item: FeedbackItem }) {
-  const [selected, setSelected] = useState(false);
+  const [selected, setSelected] = useState(() => getFeedbackItems().some(i => i.id === item.id));
 
   const sync = useCallback(() => {
     setSelected(getFeedbackItems().some(i => i.id === item.id));
   }, [item.id]);
 
   useEffect(() => {
-    sync();
     window.addEventListener('feedback-updated', sync);
     return () => window.removeEventListener('feedback-updated', sync);
   }, [sync]);
@@ -50,8 +53,11 @@ export default function FeedbackButton({ item }: { item: FeedbackItem }) {
       onClick={() => {
         const items = getFeedbackItems();
         const idx = items.findIndex(i => i.id === item.id);
-        if (idx >= 0) items.splice(idx, 1);
-        else items.push(item);
+        if (idx >= 0) {
+          items.splice(idx, 1);
+        } else {
+          items.push(item);
+        }
         setFeedbackItems(items);
       }}
       title={selected ? 'Remove from feedback' : 'Flag for feedback'}

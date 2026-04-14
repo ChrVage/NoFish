@@ -13,7 +13,9 @@ export default function FeedbackBanner() {
     return () => window.removeEventListener('feedback-updated', sync);
   }, []);
 
-  if (count === 0) return null;
+  if (count === 0) {
+    return null;
+  }
 
   return (
     <div
