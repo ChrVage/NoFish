@@ -13,6 +13,7 @@ import FeedbackButton from '@/components/FeedbackButton';
 import FeedbackBanner from '@/components/FeedbackBanner';
 import BookingButton, { type BookingEntry } from '@/components/BookingButton';
 import BookingBanner from '@/components/BookingBanner';
+import HashScroller from '@/components/HashScroller';
 
 interface PageProps {
   searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string }>;
@@ -331,6 +332,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
 
       <FeedbackBanner />
       <BookingBanner />
+      <HashScroller />
     </div>
   );
 }

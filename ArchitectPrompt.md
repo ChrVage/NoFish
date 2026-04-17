@@ -32,8 +32,11 @@ Please review the code based on the following prioritized criteria:
 ## Reason for existing
 Found in the [README.md](README.md) file.
 
-## To implement before release 
-- In the calendar-invite, instead of writing down details on the times - link to the time in the details page. Make sure the back-button will show the correct location in the map.
+## To implement before release
+- Run the full architectprompt.
+
+- Review if the position of the links between the pages should be placed better for avoiding clicking errors.
+- Review if the caching is created so that we can flip between details and score without loading more data when both pages have been visited.
 
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
 - Link directly to **fishing rules** by species from Fiskeridirektoratet.

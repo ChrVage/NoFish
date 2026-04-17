@@ -11,30 +11,26 @@ function gcalDate(d: Date) {
   return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z/, 'Z');
 }
 
+function buildDetailsUrl(group: BookingEntry[]): string {
+  const loc = group[0];
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://nofish.app';
+  return `${origin}/score?lat=${loc.lat.toFixed(4)}&lng=${loc.lng.toFixed(4)}&zoom=12#t-${group[0].time}`;
+}
+
 function buildDescription(group: BookingEntry[]): string {
   const avgScore = Math.round(group.reduce((s, e) => s + e.score, 0) / group.length);
   const safetyAvg = Math.round(group.reduce((s, e) => s + e.safetyScore, 0) / group.length);
   const fishingAvg = Math.round(group.reduce((s, e) => s + e.fishingScore, 0) / group.length);
-  const timeFmt = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' });
+  const loc = group[0];
 
   const lines: string[] = [
     `NoFish Score: ${avgScore}%`,
     `  Safety: ${safetyAvg}%  |  Fishing: ${fishingAvg}%`,
     '',
+    `Details: ${buildDetailsUrl(group)}`,
+    '',
+    `Map: https://www.google.com/maps?q=${loc.lat},${loc.lng}`,
   ];
-  for (const h of group) {
-    const t = timeFmt.format(new Date(h.time));
-    lines.push(`${t}  —  Score ${h.score}%`);
-    if (h.windSpeed !== undefined) {lines.push(`  Wind: ${h.windSpeed.toFixed(1)} m/s${h.windGust ? ` (gust ${h.windGust.toFixed(1)})` : ''}`);}
-    if (h.waveHeight !== undefined) {lines.push(`  Waves: ${h.waveHeight.toFixed(1)} m${h.wavePeriod !== undefined ? ` · ${h.wavePeriod.toFixed(1)}s period` : ''}`);}
-    if (h.currentSpeed !== undefined) {lines.push(`  Current: ${h.currentSpeed.toFixed(2)} m/s`);}
-    if (h.temperature !== undefined) {lines.push(`  Air: ${h.temperature.toFixed(1)}°C${h.seaTemperature !== undefined ? `  Sea: ${h.seaTemperature.toFixed(1)}°C` : ''}`);}
-    if (h.pressure !== undefined) {lines.push(`  Pressure: ${h.pressure.toFixed(0)} hPa`);}
-    if (h.tidePhase) {lines.push(`  Tide: ${h.tidePhase}`);}
-    if (h.moonPhase) {lines.push(`  Moon: ${h.moonPhase}`);}
-  }
-  const loc = group[0];
-  lines.push('', `Location: https://www.google.com/maps?q=${loc.lat},${loc.lng}`);
   return lines.join('\n');
 }
 
@@ -50,6 +46,7 @@ function buildIcsForGroups(groups: BookingEntry[][]): string {
     const avg = Math.round(group.reduce((s, e) => s + e.score, 0) / group.length);
     const loc = group[0];
     const desc = buildDescription(group).replace(/\n/g, '\\n');
+    const detailsUrl = buildDetailsUrl(group);
     return [
       'BEGIN:VEVENT',
       `DTSTART:${icsDate(start)}`,
@@ -58,7 +55,7 @@ function buildIcsForGroups(groups: BookingEntry[][]): string {
       `DESCRIPTION:${desc}`,
       `LOCATION:${loc.locationName}`,
       `GEO:${loc.lat};${loc.lng}`,
-      `URL:https://www.google.com/maps?q=${loc.lat},${loc.lng}`,
+      `URL:${detailsUrl}`,
       `UID:nofish-${start.getTime()}@nofish`,
       'END:VEVENT',
     ].join('\r\n');

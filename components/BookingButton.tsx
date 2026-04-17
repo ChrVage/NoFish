@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 /** A single selected hour entry stored in sessionStorage */
 export interface BookingEntry {
@@ -63,6 +63,7 @@ export function groupEntries(entries: BookingEntry[]): BookingEntry[][] {
 
 export default function BookingButton({ entry }: { entry: BookingEntry }) {
   const [selected, setSelected] = useState(() => getBookingEntries().some(e => e.time === entry.time));
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   const sync = useCallback(() => {
     setSelected(getBookingEntries().some(e => e.time === entry.time));
@@ -73,8 +74,22 @@ export default function BookingButton({ entry }: { entry: BookingEntry }) {
     return () => window.removeEventListener('booking-updated', sync);
   }, [sync]);
 
+  // Apply highlight to parent <tr> when selected
+  useEffect(() => {
+    const tr = btnRef.current?.closest('tr');
+    if (!tr) return;
+    if (selected) {
+      tr.style.backgroundColor = '#ecfdf5';
+      tr.style.boxShadow = 'inset 0 0 0 2px #059669';
+    } else {
+      tr.style.backgroundColor = '';
+      tr.style.boxShadow = '';
+    }
+  }, [selected]);
+
   return (
     <button
+      ref={btnRef}
       type="button"
       onClick={() => {
         const entries = getBookingEntries();
