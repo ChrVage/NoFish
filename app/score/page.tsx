@@ -120,13 +120,13 @@ export default async function ScorePage({ searchParams }: PageProps) {
                 ⚠ No reliable current forecast — current speed not included in score
               </p>
             )}
-            <h3 className="text-sm font-bold text-ocean-900 mt-3">Best fishing windows:</h3>
+            <h3 className="text-sm font-bold text-ocean-900 mt-2" style={{ marginBottom: '2px' }}>Best fishing windows:</h3>
             {bestWindows.length > 0 ? (() => {
               const dateFmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short', timeZone: timezone });
               const timeFmt = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone });
 
               return (
-                <div style={{ marginTop: '0.25rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
                   {bestWindows.map((w, idx) => {
                     const startDate = new Date(scoredForecasts[w.start].forecast.time);
                     const lastDate = new Date(scoredForecasts[w.start + w.len - 1].forecast.time);
@@ -136,7 +136,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                       <a
                         key={idx}
                         href={`#t-${scoredForecasts[w.start].forecast.time}`}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0', textDecoration: 'none', color: 'inherit' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '2px 0', textDecoration: 'none', color: 'inherit' }}
                         title="Jump to this window in the table"
                       >
                         <span style={{ fontSize: '12px', color: '#9ca3af', width: '16px', textAlign: 'right', flexShrink: 0 }}>{idx + 1}.</span>
