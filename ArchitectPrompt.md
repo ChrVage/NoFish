@@ -33,9 +33,13 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## To implement before release 
-- Find a better way to determine if the coordinate is land or sea.
-- Improve location logic, differentiate between land and sea.
-- When clicking on the score in the score page, jump to details on the same time.
+
+- Make fishing recommendation one line. If the recommended time is the first line, there should be another line too, if possible.
+
+- Change to top three times on score page, keep the link to the lines in 4he table. Create flag for adding to calendar similar functionality as flag. Each continuous time slot will be possible to add as separate calendar slot.
+
+- When clicking on the score in the score page, jump to details-page on the same time.
+
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
 - Link directly to **fishing rules** by species from Fiskeridirektoratet.
 
@@ -46,6 +50,8 @@ Found in the [README.md](README.md) file.
 - Also support Norwegian language.
 
 - Create a colour palette, then a better icon and logo https://realfavicongenerator.net/
+
+- Create possibility to choose email for those without GitHub account. The email link could use a link with specified subject and body. It should be sent to feedback@nofish.no.
 
 - Explore which license is right for this project.
 

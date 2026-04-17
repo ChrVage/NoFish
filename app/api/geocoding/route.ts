@@ -23,6 +23,8 @@ export async function GET(request: NextRequest) {
         elevation: data?.elevation,
         terrain: data?.terrain,
         isSea: data?.isSea,
+        objectType: data?.objectType,
+        kommuneNr: data?.kommuneNr,
       },
       { headers: { 'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800' } }
     );
