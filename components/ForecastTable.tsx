@@ -337,8 +337,9 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, high
               rows.push(
               <tr
                 key={forecast.time}
+                id={`t-${forecast.time}`}
                 className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-                style={isLastHourly ? { boxShadow: '0 3px 0 -1px #9ca3af, 0 6px 0 -1px #9ca3af' } : undefined}
+                style={{ scrollMarginTop: '4rem', ...(isLastHourly ? { boxShadow: '0 3px 0 -1px #9ca3af, 0 6px 0 -1px #9ca3af' } : undefined) }}
               >
                 <td
                   className="px-4 py-3 text-sm font-medium sticky left-0 z-10"

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { getCombinedForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
 import { getTimezone } from '@/lib/utils/timezone';
-import { parseZoomParam } from '@/lib/utils/params';
+import { parseZoomParam, buildLocationUrl } from '@/lib/utils/params';
 import Header from '@/components/Header';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
@@ -227,7 +227,13 @@ export default async function ScorePage({ searchParams }: PageProps) {
                           } satisfies BookingEntry} />
                         </td>
                         <td className="py-2 text-center text-sm tabular-nums" style={{ color: getScoreColor(score), backgroundColor: getScoreBg(score), fontWeight: 800, ...(bestWindowIndices.has(i) ? { outline: '2px solid #2563eb', outlineOffset: '-1px', borderRadius: '4px' } : {}) }}>
-                          {score}%
+                          <a
+                            href={`${buildLocationUrl('details', { lat, lng, zoom: validZoom, sea: seaStr, ht: forecast.time })}#t-${forecast.time}`}
+                            style={{ color: 'inherit', textDecoration: 'none' }}
+                            title="View details for this hour"
+                          >
+                            {score}%
+                          </a>
                         </td>
                         <td className="py-2 text-center tabular-nums text-xs font-normal text-gray-600">
                           {safetyScore}%
