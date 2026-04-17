@@ -33,12 +33,7 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## To implement before release 
-
-- Make fishing recommendation one line. If the recommended time is the first line, there should be another line too, if possible.
-
-- Change to top three times on score page, keep the link to the lines in 4he table. Create flag for adding to calendar similar functionality as flag. Each continuous time slot will be possible to add as separate calendar slot.
-
-- When clicking on the score in the score page, jump to details-page on the same time.
+- In the calendar-invite, instead of writing down details on the times - link to the time in the details page. Make sure the back-button will show the correct location in the map.
 
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
 - Link directly to **fishing rules** by species from Fiskeridirektoratet.

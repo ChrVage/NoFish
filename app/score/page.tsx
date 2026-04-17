@@ -11,6 +11,8 @@ import { computeFishingScore, findBestWindows, getScoreColor, getScoreBg } from 
 import { getTimeColumnStyle } from '@/lib/utils/sunPhaseStyle';
 import FeedbackButton from '@/components/FeedbackButton';
 import FeedbackBanner from '@/components/FeedbackBanner';
+import BookingButton, { type BookingEntry } from '@/components/BookingButton';
+import BookingBanner from '@/components/BookingBanner';
 
 interface PageProps {
   searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string }>;
@@ -56,6 +58,11 @@ export default async function ScorePage({ searchParams }: PageProps) {
   const highlightTimes = Array.from(bestWindowIndices)
     .map(i => scoredForecasts[i].forecast.time)
     .join(',');
+
+  // Location name for booking entries
+  const locationName = locationData?.municipality && locationData.municipality !== 'Unknown municipality' && locationData.name !== locationData.municipality
+    ? `${locationData.name}, ${locationData.municipality}`
+    : locationData?.name || locationData?.municipality || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
@@ -117,192 +124,36 @@ export default async function ScorePage({ searchParams }: PageProps) {
             {bestWindows.length > 0 ? (() => {
               const dateFmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short', timeZone: timezone });
               const timeFmt = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone });
-              const locationName = locationData
-                ? (locationData.municipality && locationData.municipality !== 'Unknown municipality' && locationData.name !== locationData.municipality
-                    ? `${locationData.name}, ${locationData.municipality}`
-                    : locationData.name || locationData.municipality || `${lat.toFixed(4)}, ${lng.toFixed(4)}`)
-                : `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-              const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-              const icsDateFmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-              const gcalDateFmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z/, 'Z');
-
-              const buildDescription = (w: (typeof bestWindows)[0]) => {
-                const hours = [];
-                for (let j = 0; j < w.len; j++) {hours.push(scoredForecasts[w.start + j]);}
-                const avg = Math.round(w.avg);
-                const safetyAvg = Math.round(hours.reduce((s, h) => s + h.safetyScore, 0) / hours.length);
-                const fishingAvg = Math.round(hours.reduce((s, h) => s + h.fishingScore, 0) / hours.length);
-
-                const lines: string[] = [
-                  `NoFish Score: ${avg}%`,
-                  `  Safety: ${safetyAvg}%  |  Fishing: ${fishingAvg}%`,
-                  '',
-                ];
-                for (const h of hours) {
-                  const f = h.forecast;
-                  const t = timeFmt.format(new Date(f.time));
-                  lines.push(`${t}  —  Score ${h.score}%`);
-                  if (f.windSpeed !== undefined) {lines.push(`  Wind: ${f.windSpeed.toFixed(1)} m/s${f.windGust ? ` (gust ${f.windGust.toFixed(1)})` : ''}`);}
-                  if (f.waveHeight !== undefined) {lines.push(`  Waves: ${f.waveHeight.toFixed(1)} m${f.wavePeriod !== undefined ? ` · ${f.wavePeriod.toFixed(1)}s period` : ''}`);}
-                  if (f.currentSpeed !== undefined) {lines.push(`  Current: ${f.currentSpeed.toFixed(2)} m/s`);}
-                  if (f.temperature !== undefined) {lines.push(`  Air: ${f.temperature.toFixed(1)}°C${f.seaTemperature !== undefined ? `  Sea: ${f.seaTemperature.toFixed(1)}°C` : ''}`);}
-                  if (f.pressure !== undefined) {lines.push(`  Pressure: ${f.pressure.toFixed(0)} hPa`);}
-                  if (f.tidePhase) {lines.push(`  Tide: ${f.tidePhase}`);}
-                  if (f.moonPhase) {lines.push(`  Moon: ${f.moonPhase}`);}
-                }
-                lines.push('', `Location: ${mapsUrl}`);
-                return lines.join('\n');
-              };
-
-              const buildIcs = (w: (typeof bestWindows)[0]) => {
-                const hours = [];
-                for (let j = 0; j < w.len; j++) {hours.push(scoredForecasts[w.start + j]);}
-                const start = new Date(hours[0].forecast.time);
-                const last = new Date(hours[hours.length - 1].forecast.time);
-                const end = new Date(last.getTime() + 3600000);
-                const avg = Math.round(w.avg);
-                const desc = buildDescription(w).replace(/\n/g, '\\n');
-
-                const ics = [
-                  'BEGIN:VCALENDAR',
-                  'VERSION:2.0',
-                  'PRODID:-//NoFish//Score//EN',
-                  'BEGIN:VEVENT',
-                  `DTSTART:${icsDateFmt(start)}`,
-                  `DTEND:${icsDateFmt(end)}`,
-                  `SUMMARY:🎣 Fishing ${avg}% – ${locationName}`,
-                  `DESCRIPTION:${desc}`,
-                  `LOCATION:${locationName}`,
-                  `GEO:${lat};${lng}`,
-                  `URL:${mapsUrl}`,
-                  `UID:nofish-${start.getTime()}@nofish`,
-                  'END:VEVENT',
-                  'END:VCALENDAR',
-                ].join('\r\n');
-                return `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
-              };
-
-              const buildGoogleUrl = (w: (typeof bestWindows)[0]) => {
-                const hours = [];
-                for (let j = 0; j < w.len; j++) {hours.push(scoredForecasts[w.start + j]);}
-                const start = new Date(hours[0].forecast.time);
-                const last = new Date(hours[hours.length - 1].forecast.time);
-                const end = new Date(last.getTime() + 3600000);
-                const avg = Math.round(w.avg);
-                const desc = buildDescription(w);
-
-                const params = new URLSearchParams({
-                  action: 'TEMPLATE',
-                  text: `🎣 Fishing ${avg}% – ${locationName}`,
-                  dates: `${gcalDateFmt(start)}/${gcalDateFmt(end)}`,
-                  details: desc,
-                  location: `${lat},${lng}`,
-                });
-                return `https://calendar.google.com/calendar/render?${params.toString()}`;
-              };
-
-              const buildOutlookUrl = (w: (typeof bestWindows)[0]) => {
-                const hours = [];
-                for (let j = 0; j < w.len; j++) {hours.push(scoredForecasts[w.start + j]);}
-                const start = new Date(hours[0].forecast.time);
-                const last = new Date(hours[hours.length - 1].forecast.time);
-                const end = new Date(last.getTime() + 3600000);
-                const avg = Math.round(w.avg);
-                const desc = buildDescription(w);
-
-                const params = new URLSearchParams({
-                  path: '/calendar/action/compose',
-                  rru: 'addevent',
-                  subject: `🎣 Fishing ${avg}% – ${locationName}`,
-                  startdt: start.toISOString(),
-                  enddt: end.toISOString(),
-                  body: desc,
-                  location: locationName,
-                });
-                return `https://outlook.live.com/calendar/0/action/compose?${params.toString()}`;
-              };
 
               return (
-                <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ marginTop: '0.25rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                   {bestWindows.map((w, idx) => {
                     const startDate = new Date(scoredForecasts[w.start].forecast.time);
                     const lastDate = new Date(scoredForecasts[w.start + w.len - 1].forecast.time);
                     const endHour = new Date(lastDate.getTime() + 3600000);
                     const avg = Math.round(w.avg);
                     return (
-                      <div key={idx} style={{ border: '1px solid #d1d5db', borderRadius: '8px', padding: '12px 16px', backgroundColor: '#f9fafb' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <a
-                            href={`#t-${scoredForecasts[w.start].forecast.time}`}
-                            style={{
-                              display: 'inline-block', minWidth: '48px', textAlign: 'center',
-                              borderRadius: '6px', padding: '4px 8px', fontSize: '14px', fontWeight: 800,
-                              color: getScoreColor(avg), backgroundColor: getScoreBg(avg),
-                              textDecoration: 'none', cursor: 'pointer',
-                            }}
-                            title="Jump to this window in the table"
-                          >
-                            {avg}%
-                          </a>
-                          <span style={{ fontSize: '14px', fontWeight: 600 }}>
-                            {dateFmt.format(startDate)}{' '}
-                            {timeFmt.format(startDate)}–{timeFmt.format(endHour)}
-                          </span>
-                        </div>
-                        <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#9ca3af' }}>
-                          <span>Add to calendar:</span>
-                          <a
-                            href={buildGoogleUrl(w)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', color: '#4b5563', textDecoration: 'none', fontSize: '12px' }}
-                            title="Google Calendar"
-                          >
-                            <svg width="14" height="14" viewBox="0 0 24 24">
-                              <path d="M18.316 5.684H24v12.632h-5.684V5.684z" fill="#4285F4"/>
-                              <path d="M5.684 18.316H0V5.684h5.684v12.632z" fill="#34A853"/>
-                              <path d="M18.316 24H5.684v-5.684h12.632V24z" fill="#188038"/>
-                              <path d="M5.684 5.684V0h12.632v5.684H5.684z" fill="#FBBC04"/>
-                              <path d="M18.316 5.684H24V0h-5.684v5.684z" fill="#1967D2"/>
-                              <path d="M18.316 18.316H24V24h-5.684v-5.684z" fill="#1967D2"/>
-                              <path d="M5.684 5.684H0V0h5.684v5.684z" fill="#EA4335"/>
-                              <path d="M5.684 18.316H0V24h5.684v-5.684z" fill="#0D652D"/>
-                            </svg>
-                            Google
-                          </a>
-                          <a
-                            href={buildOutlookUrl(w)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', color: '#4b5563', textDecoration: 'none', fontSize: '12px' }}
-                            title="Outlook.com"
-                          >
-                            <svg width="14" height="14" viewBox="0 0 24 24">
-                              <path d="M24 7.387v10.478c0 .23-.08.424-.238.582a.793.793 0 01-.582.238h-8.4v-12.1h8.4c.23 0 .424.08.582.237A.793.793 0 0124 7.387z" fill="#0364B8"/>
-                              <path d="M14.78 6.585v12.1H6l-.002-12.1h8.782z" fill="#0A2767"/>
-                              <path d="M24 7.387L14.78 13.3V6.585h8.4c.23 0 .424.08.582.237A.793.793 0 0124 7.387z" fill="#28A8EA"/>
-                              <path d="M14.78 6.585V13.3L24 7.387a.793.793 0 00-.238-.565.793.793 0 00-.582-.237h-8.4z" fill="#0078D4"/>
-                              <path d="M0 7.75v8.5A1.25 1.25 0 001.25 17.5h8.5a1.25 1.25 0 001.25-1.25v-8.5A1.25 1.25 0 009.75 6.5h-8.5A1.25 1.25 0 000 7.75z" fill="#0078D4"/>
-                              <path d="M5.5 9.5c-1.933 0-3.25 1.455-3.25 3.038 0 1.645 1.36 3.062 3.282 3.062 1.933 0 3.218-1.44 3.218-3.03C8.75 10.91 7.405 9.5 5.5 9.5zm.016 4.956c-1.076 0-1.766-.88-1.766-1.903 0-1.044.72-1.91 1.75-1.91 1.076 0 1.766.897 1.766 1.918 0 1.037-.716 1.895-1.75 1.895z" fill="white"/>
-                            </svg>
-                            Outlook
-                          </a>
-                          <a
-                            href={buildIcs(w)}
-                            download={`fishing-${idx + 1}.ics`}
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', color: '#4b5563', textDecoration: 'none', fontSize: '12px' }}
-                            title="Download .ics (Apple Calendar, etc.)"
-                          >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.5">
-                              <rect x="3" y="3" width="18" height="18" rx="3" />
-                              <path d="M3 8h18" />
-                              <path d="M8 1v4M16 1v4" strokeLinecap="round"/>
-                              <path d="M12 12v5M9.5 14.5L12 17l2.5-2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                            .ics
-                          </a>
-                        </div>
-                      </div>
+                      <a
+                        key={idx}
+                        href={`#t-${scoredForecasts[w.start].forecast.time}`}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0', textDecoration: 'none', color: 'inherit' }}
+                        title="Jump to this window in the table"
+                      >
+                        <span style={{ fontSize: '12px', color: '#9ca3af', width: '16px', textAlign: 'right', flexShrink: 0 }}>{idx + 1}.</span>
+                        <span
+                          style={{
+                            display: 'inline-block', minWidth: '42px', textAlign: 'center',
+                            borderRadius: '4px', padding: '2px 6px', fontSize: '13px', fontWeight: 800,
+                            color: getScoreColor(avg), backgroundColor: getScoreBg(avg),
+                          }}
+                        >
+                          {avg}%
+                        </span>
+                        <span style={{ fontSize: '13px', fontWeight: 500, color: '#374151' }}>
+                          {dateFmt.format(startDate)}{' '}
+                          {timeFmt.format(startDate)}–{timeFmt.format(endHour)}
+                        </span>
+                      </a>
                     );
                   })}
                 </div>
@@ -320,6 +171,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                 <thead>
                   <tr className="text-xs text-gray-400 text-left">
                     <th rowSpan={2} className="pb-2">Time</th>
+                    <th rowSpan={2} className="pb-2" aria-label="Calendar" />
                     <th colSpan={3} className="pb-0">Score</th>
                     <th colSpan={2} className="pb-0">Why</th>
                     <th rowSpan={2} className="pb-2" aria-label="Feedback" />
@@ -343,7 +195,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                     if (isMidnight) {
                       rows.push(
                         <tr key={`midnight-${forecast.time}`} aria-hidden="true">
-                          <td colSpan={7} style={{ height: '3px', padding: 0, backgroundColor: '#d1d5db' }} />
+                          <td colSpan={8} style={{ height: '3px', padding: 0, backgroundColor: '#d1d5db' }} />
                         </tr>
                       );
                     }
@@ -352,6 +204,27 @@ export default async function ScorePage({ searchParams }: PageProps) {
                       <tr key={forecast.time} id={`t-${forecast.time}`} style={{ verticalAlign: 'top', scrollMarginTop: '4rem' }}>
                         <td className="py-2 text-sm font-medium tabular-nums whitespace-nowrap" style={getTimeColumnStyle(forecast.sunPhaseSegments)}>
                           {formatTime(forecast.time)}
+                        </td>
+                        <td className="py-2 text-center">
+                          <BookingButton entry={{
+                            time: forecast.time,
+                            score,
+                            safetyScore,
+                            fishingScore,
+                            windSpeed: forecast.windSpeed,
+                            windGust: forecast.windGust,
+                            waveHeight: forecast.waveHeight,
+                            wavePeriod: forecast.wavePeriod,
+                            currentSpeed: forecast.currentSpeed,
+                            temperature: forecast.temperature,
+                            seaTemperature: forecast.seaTemperature,
+                            pressure: forecast.pressure,
+                            tidePhase: forecast.tidePhase,
+                            moonPhase: forecast.moonPhase,
+                            locationName,
+                            lat,
+                            lng,
+                          } satisfies BookingEntry} />
                         </td>
                         <td className="py-2 text-center text-sm tabular-nums" style={{ color: getScoreColor(score), backgroundColor: getScoreBg(score), fontWeight: 800, ...(bestWindowIndices.has(i) ? { outline: '2px solid #2563eb', outlineOffset: '-1px', borderRadius: '4px' } : {}) }}>
                           {score}%
@@ -451,6 +324,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
       </main>
 
       <FeedbackBanner />
+      <BookingBanner />
     </div>
   );
 }

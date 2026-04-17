@@ -516,8 +516,12 @@ export function getScoreBg(score: number): string {
 
 /**
  * Find best fishing windows (1–3 hours) from a list of scored forecasts.
- * Returns up to 2 non-overlapping windows, sorted by time.
+ * Returns up to 3 non-overlapping windows, sorted by time.
  * Prefers the longest consistent window whose average is within 5 points of the best.
+ *
+ * If the best window starts at the very beginning of the forecast (index 0),
+ * the search widens to topAvg−15 to ensure at least one future alternative is
+ * included when possible, so the user can plan ahead.
  *
  * Windows are only shown when the hours are free of danger-level conditions.
  * If every hour in the forecast has a danger reason, "No safe fishing periods" is shown.
@@ -563,7 +567,24 @@ export function findBestWindows(scoredForecasts: ScoredForecast[]): BestWindow[]
     );
     if (!overlaps) {
       bestWindows.push(c);
-      if (bestWindows.length === 2) {break;}
+      if (bestWindows.length === 3) {break;}
+    }
+  }
+
+  // If the best window starts at index 0 and we have fewer than 2, widen the
+  // threshold to topAvg−15 to find at least one future alternative for planning.
+  if (bestWindows.length < 2 && bestWindows.some(w => w.start === 0)) {
+    const wider = candidates
+      .filter(c => c.avg >= topAvg - 15)
+      .sort((a, b) => b.len - a.len || b.avg - a.avg);
+    for (const c of wider) {
+      if (bestWindows.length >= 3) {break;}
+      const overlaps = bestWindows.some(w =>
+        c.start < w.start + w.len && c.start + c.len > w.start
+      );
+      if (!overlaps) {
+        bestWindows.push(c);
+      }
     }
   }
 
