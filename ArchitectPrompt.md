@@ -33,10 +33,11 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## To implement before release
-- Run the full architectprompt.
+- UX: Tidy up the links in score and detail. Create UX to easily jump back and forth between soore and details pages in a consistent way. Review if the position of the links between the pages should be placed better for avoiding clicking on the wrong link.
 
-- Review if the position of the links between the pages should be placed better for avoiding clicking errors.
 - Review if the caching is created so that we can flip between details and score without loading more data when both pages have been visited.
+
+- when my location is chosen, and it's on land. The score and tide buttons show, this is not neccessary.
 
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
 - Link directly to **fishing rules** by species from Fiskeridirektoratet.

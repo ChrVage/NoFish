@@ -78,7 +78,7 @@ export default async function StatisticsPage() {
 
       <main className="max-w-3xl mx-auto px-4 py-10 space-y-6">
         {/* ─── KPI cards ─── */}
-        <section className="grid grid-cols-3 gap-3 sm:gap-4">
+        <section className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {[
             { value: stats.total, label: 'Total lookups', accent: false },
             { value: stats.last7, label: 'Last 7 days', accent: true },

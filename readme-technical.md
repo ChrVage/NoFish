@@ -37,7 +37,7 @@ All external calls are made **server-side** to avoid CORS issues and comply with
 
 | Route | Purpose |
 |---|---|
-| `GET /api/geocoding?lat=&lon=` | Reverse geocodes coordinates via Nominatim. Returns place name with multi-level fallback. |
+| `GET /api/geocoding?lat=&lon=` | Reverse geocodes coordinates using "Maritime First" strategy (v9): parallel elevation + Kartverket SSR nearby-places fetch, maritime features prioritised for coastal locations, municipality from Kartverket `/sted` endpoint. Nominatim used only as fallback for non-Norwegian locations. Returns place name, elevation, terrain type, sea/land classification, and kommune number. 30-day cacheKartverket SSR nearby-places fetch, maritime features prioritised for coastal locations, municipality from Kartverket `/sted` endpoint. Nominatim used only as fallback for non-Norwegian locations. Returns place name, elevation, terrain type, sea/land classification, and kommune number. 30-day cache. |
 | `GET /api/weather?lat=&lon=` | Returns the full 10-day merged `HourlyForecast[]` array plus ocean grid coordinates. Used by the Details, Score, and Tide pages via server-side direct lib calls; this route is exposed for external consumers. |
 | `GET /api/ocean-point?lat=&lon=` | Returns only `{ oceanForecastLat, oceanForecastLng }`. Used by the map to place the blue dot and determine whether Score/Tide buttons should be shown. Returns `undefined` coordinates when the grid point is more than 1 km away. Cache-backed \u2014 usually a hit when the Details page has already been visited. |
 
@@ -225,7 +225,7 @@ lib/
   api/
     barentswatch.ts     # OAuth2 token management + getWaveForecast() + getSeaCurrentForecast()
     weather.ts          # getCombinedForecast() — fetches and merges all API sources
-    geocoding.ts        # reverseGeocode() — Nominatim with rich name fallback chain
+    geocoding.ts        # reverseGeocode() — "Maritime First" v9: Kartverket SSR + elevation, maritime features prioritised, Nominatim fallbacklevation, maritime features prioritised, Nominatim fallback
   db/
     index.ts            # Neon SQL client (reads DATABASE_URL)
     lookups.ts          # insertLookup() + ensureTable()

@@ -26,7 +26,7 @@ const CSP = [
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://cache.kartverket.no",
-  "font-src 'self' https://fonts.gstatic.com",
+  "font-src 'self'
   "connect-src 'self'",
   "frame-src 'none'",
   "object-src 'none'",

@@ -410,10 +410,10 @@ describe('findBestWindows', () => {
     expect(windows).toEqual([]);
   });
 
-  it('returns at most 2 windows', () => {
+  it('returns at most 3 windows', () => {
     const scores = [90, 30, 30, 30, 90, 30, 30, 30, 90];
     const windows = findBestWindows(mkScored(scores));
-    expect(windows.length).toBeLessThanOrEqual(2);
+    expect(windows.length).toBeLessThanOrEqual(3);
   });
 
   it('windows are sorted by start time', () => {

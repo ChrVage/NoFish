@@ -68,6 +68,18 @@
   .leaflet-popup-content {
     margin: 8px;
   }
+
+  /* Keyboard focus indicators */
+  :focus-visible {
+    outline: 2px solid #0ea5e9;
+    outline-offset: 2px;
+  }
+
+  /* Keyboard focus indicators */
+  :focus-visible {
+    outline: 2px solid #0ea5e9;
+    outline-offset: 2px;
+  }
 }
 
 @keyframes popup-spin {

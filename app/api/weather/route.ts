@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Internal server error',
+        error: 
       } as WeatherApiResponse,
       { status: 500 }
     );
