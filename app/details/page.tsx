@@ -6,7 +6,7 @@ import { reverseGeocode } from '@/lib/api/geocoding';
 import { insertLookup, ensureTable } from '@/lib/db/lookups';
 import { getTimezone } from '@/lib/utils/timezone';
 import { haversineDistance, formatDistance } from '@/lib/utils/distance';
-import { parseZoomParam } from '@/lib/utils/params';
+import { parseZoomParam, buildLocationUrl } from '@/lib/utils/params';
 import { enrichForecasts } from '@/lib/utils/enrichForecasts';
 import { computeFishingScore } from '@/lib/scoring/fishingScore';
 import ForecastTable from '@/components/ForecastTable';
@@ -47,6 +47,8 @@ export default async function DetailsPage({ searchParams }: PageProps) {
   const depth = locationData?.isSea && locationData.elevation !== undefined
     ? Math.abs(locationData.elevation)
     : undefined;
+  const scores = forecasts.map(f => computeFishingScore(f, depth).score);
+  const scoreBaseUrl = buildLocationUrl('score', { lat, lng, zoom: validZoom, sea: seaStr });
   const oceanForecastDistance = oceanForecastLat !== undefined && oceanForecastLng !== undefined
     ? haversineDistance(lat, lng, oceanForecastLat, oceanForecastLng)
     : null;
@@ -257,7 +259,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
 
           {/* Forecast table */}
           <div className="mb-6">
-            <ForecastTable forecasts={forecasts} timezone={timezone} hideOceanData={isLand} highlightTimes={htStr ? htStr.split(',') : undefined} lat={lat} lng={lng} locationName={locationData?.name} />
+            <ForecastTable forecasts={forecasts} timezone={timezone} hideOceanData={isLand} highlightTimes={htStr ? htStr.split(',') : undefined} lat={lat} lng={lng} locationName={locationData?.name} scores={scores} scoreBaseUrl={scoreBaseUrl} />
           </div>
 
           <p className="text-xs text-gray-400 mt-6">

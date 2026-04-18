@@ -1,8 +1,10 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import type { EnrichedForecast } from '@/lib/utils/enrichForecasts';
 import { getTimeColumnStyle } from '@/lib/utils/sunPhaseStyle';
+import { getScoreColor, getScoreBg } from '@/lib/scoring/fishingScore';
 import FeedbackButton from '@/components/FeedbackButton';
 
 interface ForecastTableProps {
@@ -16,6 +18,10 @@ interface ForecastTableProps {
   lat?: number;
   lng?: number;
   locationName?: string;
+  /** Per-row fishing scores (parallel to forecasts). Shown as badge in time column. */
+  scores?: number[];
+  /** Base URL for the score page (without hash). Badges link here with #t-{time}. */
+  scoreBaseUrl?: string;
 }
 
 // Weather symbol mapping (MET Norway symbol codes)
@@ -94,7 +100,7 @@ const DirectionArrow = ({
   );
 };
 
-export default function ForecastTable({ forecasts, timezone, hideOceanData, highlightTimes, lat, lng, locationName }: ForecastTableProps) {
+export default function ForecastTable({ forecasts, timezone, hideOceanData, highlightTimes, lat, lng, locationName, scores, scoreBaseUrl }: ForecastTableProps) {
   if (!forecasts || forecasts.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-8 text-center">
@@ -229,7 +235,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, high
 
             {/* Column header row */}
             <tr>
-              <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider sticky left-0 bg-ocean-700 z-10">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider sticky left-0 bg-ocean-700 z-10 whitespace-nowrap" style={{ width: '1%' }}>
                 Time
               </th>
 
@@ -342,13 +348,35 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, high
                 style={{ scrollMarginTop: '4rem', ...(isLastHourly ? { boxShadow: '0 3px 0 -1px #9ca3af, 0 6px 0 -1px #9ca3af' } : undefined) }}
               >
                 <td
-                  className="px-4 py-3 text-sm font-medium sticky left-0 z-10"
+                  className="pl-4 pr-1 py-3 text-sm font-medium sticky left-0 z-10 whitespace-nowrap"
                   style={{
                     ...getTimeColumnStyle(forecast.sunPhaseSegments),
                     ...(isHighlighted ? { outline: '2px solid #2563eb', outlineOffset: '-1px', borderRadius: '4px' } : undefined),
                   }}
                 >
-                  {formatTime(forecast.time)}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    {formatTime(forecast.time)}
+                    {scores?.[index] !== undefined && scoreBaseUrl && (
+                      <Link
+                        href={`${scoreBaseUrl}&ht=${encodeURIComponent(forecast.time)}#t-${forecast.time}`}
+                        title="View score"
+                        style={{
+                          display: 'inline-block',
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          lineHeight: '1',
+                          padding: '1px 3px',
+                          borderRadius: '3px',
+                          color: getScoreColor(scores[index]),
+                          backgroundColor: getScoreBg(scores[index]),
+                          textDecoration: 'none',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {scores[index]}%
+                      </Link>
+                    )}
+                  </span>
                 </td>
 
                 {/* ── MET Norway Locationforecast cells ── */}

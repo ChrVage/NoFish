@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import { getCombinedForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
 import { getTimezone } from '@/lib/utils/timezone';
@@ -16,11 +17,11 @@ import BookingBanner from '@/components/BookingBanner';
 import HashScroller from '@/components/HashScroller';
 
 interface PageProps {
-  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string }>;
+  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string; ht?: string }>;
 }
 
 export default async function ScorePage({ searchParams }: PageProps) {
-  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr } = await searchParams;
+  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr, ht: htStr } = await searchParams;
   const lat = parseFloat(latStr ?? '');
   const lng = parseFloat(lngStr ?? '');
   const validZoom = parseZoomParam(zoomStr);
@@ -64,6 +65,9 @@ export default async function ScorePage({ searchParams }: PageProps) {
   const locationName = locationData?.municipality && locationData.municipality !== 'Unknown municipality' && locationData.name !== locationData.municipality
     ? `${locationData.name}, ${locationData.municipality}`
     : locationData?.name || locationData?.municipality || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+
+  // Highlight set from ht param (when jumping from details page)
+  const highlightSet = htStr ? new Set(htStr.split(',')) : null;
 
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
@@ -172,13 +176,12 @@ export default async function ScorePage({ searchParams }: PageProps) {
                 <thead>
                   <tr className="text-xs text-gray-400 text-left">
                     <th rowSpan={2} className="pb-2">Time</th>
-                    <th rowSpan={2} className="pb-2" aria-label="Calendar" />
                     <th colSpan={3} className="pb-0">Score</th>
                     <th colSpan={2} className="pb-0">Why</th>
                     <th rowSpan={2} className="pb-2" aria-label="Feedback" />
                   </tr>
                   <tr className="border-b border-gray-200 text-xs text-gray-400 text-left">
-                    <th className="pb-2">Total</th>
+                    <th className="pb-2" aria-label="Calendar" />
                     <th className="pb-2">Safety</th>
                     <th className="pb-2">Fishing</th>
                     <th className="pb-2">Safety</th>
@@ -196,15 +199,38 @@ export default async function ScorePage({ searchParams }: PageProps) {
                     if (isMidnight) {
                       rows.push(
                         <tr key={`midnight-${forecast.time}`} aria-hidden="true">
-                          <td colSpan={8} style={{ height: '3px', padding: 0, backgroundColor: '#d1d5db' }} />
+                          <td colSpan={7} style={{ height: '3px', padding: 0, backgroundColor: '#d1d5db' }} />
                         </tr>
                       );
                     }
 
                     rows.push(
                       <tr key={forecast.time} id={`t-${forecast.time}`} style={{ verticalAlign: 'top', scrollMarginTop: '4rem' }}>
-                        <td className="py-2 text-sm font-medium tabular-nums whitespace-nowrap" style={getTimeColumnStyle(forecast.sunPhaseSegments)}>
-                          {formatTime(forecast.time)}
+                        <td className="py-2 text-sm font-medium tabular-nums whitespace-nowrap" style={{
+                          ...getTimeColumnStyle(forecast.sunPhaseSegments),
+                          ...(highlightSet?.has(forecast.time) ? { outline: '2px solid #2563eb', outlineOffset: '-1px', borderRadius: '4px' } : {}),
+                        }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            {formatTime(forecast.time)}
+                            <Link
+                              href={`${buildLocationUrl('details', { lat, lng, zoom: validZoom, sea: seaStr, ht: forecast.time })}#t-${forecast.time}`}
+                              title="View details for this hour"
+                              style={{
+                                display: 'inline-block',
+                                fontSize: '12px',
+                                fontWeight: 800,
+                                lineHeight: '1',
+                                padding: '2px 5px',
+                                borderRadius: '4px',
+                                color: getScoreColor(score),
+                                backgroundColor: getScoreBg(score),
+                                textDecoration: 'none',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {score}%
+                            </Link>
+                          </span>
                         </td>
                         <td className="py-2 text-center">
                           <BookingButton entry={{
@@ -226,15 +252,6 @@ export default async function ScorePage({ searchParams }: PageProps) {
                             lat,
                             lng,
                           } satisfies BookingEntry} />
-                        </td>
-                        <td className="py-2 text-center text-sm tabular-nums" style={{ color: getScoreColor(score), backgroundColor: getScoreBg(score), fontWeight: 800, ...(bestWindowIndices.has(i) ? { outline: '2px solid #2563eb', outlineOffset: '-1px', borderRadius: '4px' } : {}) }}>
-                          <a
-                            href={`${buildLocationUrl('details', { lat, lng, zoom: validZoom, sea: seaStr, ht: forecast.time })}#t-${forecast.time}`}
-                            style={{ color: 'inherit', textDecoration: 'none' }}
-                            title="View details for this hour"
-                          >
-                            {score}%
-                          </a>
                         </td>
                         <td className="py-2 text-center tabular-nums text-xs font-normal text-gray-600">
                           {safetyScore}%
