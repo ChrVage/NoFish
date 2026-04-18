@@ -433,8 +433,6 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, high
                 <td className="px-4 py-3 text-sm text-gray-700">
                   {forecast.moonPhase
                     ? <span role="img" aria-label={forecast.moonPhase.replace(/^\S+\s*/, '')}>{forecast.moonPhase}</span>
-                    :
-                    ? <span role="img" aria-label={forecast.moonPhase.replace(/^\S+\s*/, '')}>{forecast.moonPhase}</span>
                     : '—'}
                 </td>
                 <td className="px-2 py-3 text-center">
