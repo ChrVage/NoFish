@@ -102,7 +102,7 @@ function buildOutlookUrl(group: BookingEntry[]): string {
 }
 
 export default function BookingBanner() {
-  const [entries, setEntries] = useState<BookingEntry[]>([]);
+  const [entries, setEntries] = useState<BookingEntry[]>(() => getBookingEntries());
   const [expanded, setExpanded] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -111,7 +111,6 @@ export default function BookingBanner() {
   }, []);
 
   useEffect(() => {
-    sync();
     window.addEventListener('booking-updated', sync);
     return () => window.removeEventListener('booking-updated', sync);
   }, [sync]);
