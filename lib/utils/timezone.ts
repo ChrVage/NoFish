@@ -31,3 +31,17 @@ export function getTimezoneLabel(timezone: string): string {
     .find((p) => p.type === 'timeZoneName')?.value ?? timezone;
   return `${timezone} (${offset})`;
 }
+
+/**
+ * Short anchor id for a forecast hour: `t-DDHH` in the given timezone.
+ * E.g. 2026-04-18T10:00:00Z in Europe/Oslo → `t-1812` (day 18, hour 12 local).
+ */
+export function timeAnchor(isoString: string, timezone: string): string {
+  const d = new Date(isoString);
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit', hour: '2-digit', hour12: false, timeZone: timezone,
+  }).formatToParts(d);
+  const day = parts.find(p => p.type === 'day')?.value ?? '00';
+  const hour = parts.find(p => p.type === 'hour')?.value ?? '00';
+  return `t-${day}${hour}`;
+}

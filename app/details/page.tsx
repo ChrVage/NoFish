@@ -17,11 +17,11 @@ import { Footer } from '@/components/Footer';
 import FeedbackBanner from '@/components/FeedbackBanner';
 
 interface PageProps {
-  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string; ht?: string }>;
+  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string }>;
 }
 
 export default async function DetailsPage({ searchParams }: PageProps) {
-  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr, ht: htStr } = await searchParams;
+  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr } = await searchParams;
   const lat = parseFloat(latStr ?? '');
   const lng = parseFloat(lngStr ?? '');
   const validZoom = parseZoomParam(zoomStr);
@@ -166,7 +166,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton />
           </div>
-          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="details" highlightTimes={htStr} />
+          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="details" />
         </div>
       </Header>
 
@@ -259,7 +259,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
 
           {/* Forecast table */}
           <div className="mb-6">
-            <ForecastTable forecasts={forecasts} timezone={timezone} hideOceanData={isLand} highlightTimes={htStr ? htStr.split(',') : undefined} lat={lat} lng={lng} locationName={locationData?.name} scores={scores} scoreBaseUrl={scoreBaseUrl} />
+            <ForecastTable forecasts={forecasts} timezone={timezone} hideOceanData={isLand} lat={lat} lng={lng} locationName={locationData?.name} scores={scores} scoreBaseUrl={scoreBaseUrl} />
           </div>
 
           <p className="text-xs text-gray-400 mt-6">

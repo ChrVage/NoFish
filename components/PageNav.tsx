@@ -9,15 +9,13 @@ interface PageNavProps {
   current: 'score' | 'details' | 'tide';
   /** When set, only pages whose key is in this array are shown. */
   availablePages?: ('score' | 'details' | 'tide')[];
-  /** Comma-separated ISO times of best-scoring hours (forwarded between pages). */
-  highlightTimes?: string;
 }
 
 const pages = [
   {
     key: 'score',
     label: 'Score',
-    href: (lat: number, lng: number, zoom?: number, sea?: string, ht?: string) => buildLocationUrl('score', { lat, lng, zoom, sea, ht }),
+    href: (lat: number, lng: number, zoom?: number, sea?: string) => buildLocationUrl('score', { lat, lng, zoom, sea }),
     icon: (
       <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -27,7 +25,7 @@ const pages = [
   {
     key: 'details',
     label: 'Details',
-    href: (lat: number, lng: number, zoom?: number, sea?: string, ht?: string) => buildLocationUrl('details', { lat, lng, zoom, sea, ht }),
+    href: (lat: number, lng: number, zoom?: number, sea?: string) => buildLocationUrl('details', { lat, lng, zoom, sea }),
     icon: (
       <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18M3 6h18M3 18h18" />
@@ -37,7 +35,7 @@ const pages = [
   {
     key: 'tide',
     label: 'Tides',
-    href: (lat: number, lng: number, zoom?: number, sea?: string, ht?: string) => buildLocationUrl('tide', { lat, lng, zoom, sea, ht }),
+    href: (lat: number, lng: number, zoom?: number, sea?: string) => buildLocationUrl('tide', { lat, lng, zoom, sea }),
     icon: (
       <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
         <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
@@ -46,7 +44,7 @@ const pages = [
   },
 ] as const;
 
-export default function PageNav({ lat, lng, zoom, sea, current, availablePages, highlightTimes }: PageNavProps) {
+export default function PageNav({ lat, lng, zoom, sea, current, availablePages }: PageNavProps) {
   return (
     <nav aria-label="Page navigation" style={{ display: 'flex', borderRadius: '0.5rem', overflow: 'hidden' }}>
       {pages
@@ -84,7 +82,7 @@ export default function PageNav({ lat, lng, zoom, sea, current, availablePages, 
           ) : (
             <Link
               key={p.key}
-              href={p.href(lat, lng, zoom, sea, highlightTimes)}
+              href={p.href(lat, lng, zoom, sea)}
               style={linkStyle}
             >
               {p.icon}

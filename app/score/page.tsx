@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getCombinedForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
-import { getTimezone } from '@/lib/utils/timezone';
+import { getTimezone, timeAnchor } from '@/lib/utils/timezone';
 import { parseZoomParam, buildLocationUrl } from '@/lib/utils/params';
 import Header from '@/components/Header';
 import BackButton from '@/components/BackButton';
@@ -13,15 +13,22 @@ import { getTimeColumnStyle } from '@/lib/utils/sunPhaseStyle';
 import FeedbackButton from '@/components/FeedbackButton';
 import FeedbackBanner from '@/components/FeedbackBanner';
 import BookingButton, { type BookingEntry } from '@/components/BookingButton';
+
+/** True when ≥50 % of the hour is in the "day" sun phase. */
+function isDaylight(segments: { phase: string; fraction: number }[] | undefined): boolean {
+  if (!segments || segments.length === 0) { return true; }
+  const dayFrac = segments.filter(s => s.phase === 'day').reduce((sum, s) => sum + s.fraction, 0);
+  return dayFrac >= 0.5;
+}
 import BookingBanner from '@/components/BookingBanner';
 import HashScroller from '@/components/HashScroller';
 
 interface PageProps {
-  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string; ht?: string }>;
+  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string }>;
 }
 
 export default async function ScorePage({ searchParams }: PageProps) {
-  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr, ht: htStr } = await searchParams;
+  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr } = await searchParams;
   const lat = parseFloat(latStr ?? '');
   const lng = parseFloat(lngStr ?? '');
   const validZoom = parseZoomParam(zoomStr);
@@ -52,22 +59,14 @@ export default async function ScorePage({ searchParams }: PageProps) {
   // Find best fishing windows (top 2 non-overlapping, 1–3 hours)
   const bestWindows = findBestWindows(scoredForecasts);
 
-  // Set of row indices within a best-window (for highlighting)
-  const bestWindowIndices = new Set<number>();
-  bestWindows.forEach(w => { for (let j = 0; j < w.len; j++) {bestWindowIndices.add(w.start + j);} });
-
-  // Comma-separated ISO times for best-window rows (passed to details via URL)
-  const highlightTimes = Array.from(bestWindowIndices)
-    .map(i => scoredForecasts[i].forecast.time)
-    .join(',');
+  // Map each row index → window index (for data-window attribute)
+  const rowToWindow = new Map<number, number>();
+  bestWindows.forEach((w, wIdx) => { for (let j = 0; j < w.len; j++) { rowToWindow.set(w.start + j, wIdx); } });
 
   // Location name for booking entries
   const locationName = locationData?.municipality && locationData.municipality !== 'Unknown municipality' && locationData.name !== locationData.municipality
     ? `${locationData.name}, ${locationData.municipality}`
     : locationData?.name || locationData?.municipality || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-
-  // Highlight set from ht param (when jumping from details page)
-  const highlightSet = htStr ? new Set(htStr.split(',')) : null;
 
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
@@ -84,7 +83,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
     const day = parts.find(p => p.type === 'day')?.value ?? '';
     const hour = parts.find(p => p.type === 'hour')?.value ?? '00';
     const minute = parts.find(p => p.type === 'minute')?.value ?? '00';
-    return `${weekday}. ${day}. ${hour}:${minute}`;
+    return `${weekday.slice(0, 2)} ${day}. ${hour}:${minute}`;
   };
 
   return (
@@ -94,7 +93,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton />
           </div>
-          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="score" highlightTimes={highlightTimes} />
+          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="score" />
         </div>
       </Header>
 
@@ -140,7 +139,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                     return (
                       <a
                         key={idx}
-                        href={`#t-${scoredForecasts[w.start].forecast.time}`}
+                        href={`#w-${idx}`}
                         style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '2px 0', textDecoration: 'none', color: 'inherit' }}
                         title="Jump to this window in the table"
                       >
@@ -204,33 +203,40 @@ export default async function ScorePage({ searchParams }: PageProps) {
                       );
                     }
 
+                    const anchor = timeAnchor(forecast.time, timezone);
+
                     rows.push(
-                      <tr key={forecast.time} id={`t-${forecast.time}`} style={{ verticalAlign: 'top', scrollMarginTop: '4rem' }}>
-                        <td className="py-2 text-sm font-medium tabular-nums whitespace-nowrap" style={{
-                          ...getTimeColumnStyle(forecast.sunPhaseSegments),
-                          ...(highlightSet?.has(forecast.time) ? { outline: '2px solid #2563eb', outlineOffset: '-1px', borderRadius: '4px' } : {}),
-                        }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                            {formatTime(forecast.time)}
-                            <Link
-                              href={`${buildLocationUrl('details', { lat, lng, zoom: validZoom, sea: seaStr, ht: forecast.time })}#t-${forecast.time}`}
-                              title="View details for this hour"
-                              style={{
-                                display: 'inline-block',
-                                fontSize: '12px',
-                                fontWeight: 800,
-                                lineHeight: '1',
-                                padding: '2px 5px',
-                                borderRadius: '4px',
-                                color: getScoreColor(score),
-                                backgroundColor: getScoreBg(score),
-                                textDecoration: 'none',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
+                      <tr key={forecast.time} id={anchor} data-window={rowToWindow.has(i) ? rowToWindow.get(i) : undefined} style={{ verticalAlign: 'top', scrollMarginTop: '4rem' }}>
+                        <td className="py-2 text-sm font-medium tabular-nums whitespace-nowrap" style={getTimeColumnStyle(forecast.sunPhaseSegments)}>
+                          <Link
+                            href={`${buildLocationUrl('details', { lat, lng, zoom: validZoom, sea: seaStr })}#${anchor}`}
+                            title="View details for this hour"
+                            className="time-score-btn"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '3px 8px',
+                              borderRadius: '6px',
+                              textDecoration: 'none',
+                              color: 'inherit',
+                              backgroundColor: isDaylight(forecast.sunPhaseSegments) ? '#fefce8' : 'rgba(255,255,255,0.12)',
+                            }}
+                          >
+                            <span>{formatTime(forecast.time)}</span>
+                            <span style={{
+                              fontSize: '13px',
+                              fontWeight: 800,
+                              lineHeight: '1',
+                              padding: '2px 5px',
+                              borderRadius: '4px',
+                              color: getScoreColor(score),
+                              backgroundColor: getScoreBg(score),
+                              whiteSpace: 'nowrap',
+                            }}>
                               {score}%
-                            </Link>
-                          </span>
+                            </span>
+                          </Link>
                         </td>
                         <td className="py-2 text-center">
                           <BookingButton entry={{

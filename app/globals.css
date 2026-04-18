@@ -80,6 +80,13 @@
     outline: 2px solid #0ea5e9;
     outline-offset: 2px;
   }
+
+  /* Highlight the time-score button when the row is the :target of a hash link */
+  tr:target .time-score-btn,
+  tr.window-highlight .time-score-btn {
+    outline: 2px solid #2563eb;
+    outline-offset: -1px;
+  }
 }
 
 @keyframes popup-spin {

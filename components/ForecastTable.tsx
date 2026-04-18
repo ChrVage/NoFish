@@ -4,16 +4,22 @@ import React from 'react';
 import Link from 'next/link';
 import type { EnrichedForecast } from '@/lib/utils/enrichForecasts';
 import { getTimeColumnStyle } from '@/lib/utils/sunPhaseStyle';
+import { timeAnchor } from '@/lib/utils/timezone';
 import { getScoreColor, getScoreBg } from '@/lib/scoring/fishingScore';
 import FeedbackButton from '@/components/FeedbackButton';
+
+/** True when ≥50 % of the hour is in the "day" sun phase. */
+function isDaylight(segments: { phase: string; fraction: number }[] | undefined): boolean {
+  if (!segments || segments.length === 0) { return true; }
+  const dayFrac = segments.filter(s => s.phase === 'day').reduce((sum, s) => sum + s.fraction, 0);
+  return dayFrac >= 0.5;
+}
 
 interface ForecastTableProps {
   forecasts: EnrichedForecast[];
   timezone: string;
   /** Force-hide ocean columns even when wave data exists (e.g. land location). */
   hideOceanData?: boolean;
-  /** ISO time strings of best-scoring hours to highlight with a blue outline. */
-  highlightTimes?: string[];
   /** Coordinates and location name for feedback items. */
   lat?: number;
   lng?: number;
@@ -100,7 +106,7 @@ const DirectionArrow = ({
   );
 };
 
-export default function ForecastTable({ forecasts, timezone, hideOceanData, highlightTimes, lat, lng, locationName, scores, scoreBaseUrl }: ForecastTableProps) {
+export default function ForecastTable({ forecasts, timezone, hideOceanData, lat, lng, locationName, scores, scoreBaseUrl }: ForecastTableProps) {
   if (!forecasts || forecasts.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-8 text-center">
@@ -112,9 +118,6 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, high
   // If no row has wave data the point is inland — hide ocean-specific columns
   const hasOceanData = !hideOceanData && forecasts.some(f => f.waveHeight !== undefined);
   const precipLabel = (forecasts[0]?.temperature ?? 2) > 1 ? 'Rain' : 'Snow';
-
-  // Set of ISO times to highlight (best-scoring hours from the score page)
-  const highlightSet = highlightTimes ? new Set(highlightTimes) : null;
 
   // Pre-enriched by the server component — use directly
   const displayForecasts = forecasts;
@@ -136,7 +139,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, high
     const hour = parts.find(p => p.type === 'hour')?.value ?? '00';
     const minute = parts.find(p => p.type === 'minute')?.value ?? '00';
     
-    return `${weekday}. ${day}. ${hour}:${minute}`;
+    return `${weekday.slice(0, 2)} ${day}. ${hour}:${minute}`;
   };
 
   const formatValue = (value: number | undefined, decimals: number = 1, unit: string = '') => {
@@ -338,45 +341,52 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, high
                 );
               }
 
-              const isHighlighted = highlightSet?.has(forecast.time) ?? false;
+              const anchor = timeAnchor(forecast.time, timezone);
 
               rows.push(
               <tr
                 key={forecast.time}
-                id={`t-${forecast.time}`}
+                id={anchor}
                 className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
                 style={{ scrollMarginTop: '4rem', ...(isLastHourly ? { boxShadow: '0 3px 0 -1px #9ca3af, 0 6px 0 -1px #9ca3af' } : undefined) }}
               >
                 <td
                   className="pl-4 pr-1 py-3 text-sm font-medium sticky left-0 z-10 whitespace-nowrap"
-                  style={{
-                    ...getTimeColumnStyle(forecast.sunPhaseSegments),
-                    ...(isHighlighted ? { outline: '2px solid #2563eb', outlineOffset: '-1px', borderRadius: '4px' } : undefined),
-                  }}
+                  style={getTimeColumnStyle(forecast.sunPhaseSegments)}
                 >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    {formatTime(forecast.time)}
-                    {scores?.[index] !== undefined && scoreBaseUrl && (
-                      <Link
-                        href={`${scoreBaseUrl}&ht=${encodeURIComponent(forecast.time)}#t-${forecast.time}`}
-                        title="View score"
-                        style={{
-                          display: 'inline-block',
-                          fontSize: '11px',
-                          fontWeight: 800,
-                          lineHeight: '1',
-                          padding: '1px 3px',
-                          borderRadius: '3px',
-                          color: getScoreColor(scores[index]),
-                          backgroundColor: getScoreBg(scores[index]),
-                          textDecoration: 'none',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
+                  {scores?.[index] !== undefined && scoreBaseUrl ? (
+                    <Link
+                      href={`${scoreBaseUrl}#${anchor}`}
+                      title="View score"
+                      className="time-score-btn"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        padding: '3px 7px',
+                        borderRadius: '6px',
+                        textDecoration: 'none',
+                        color: 'inherit',
+                        backgroundColor: isDaylight(forecast.sunPhaseSegments) ? '#fefce8' : 'rgba(255,255,255,0.12)',
+                      }}
+                    >
+                      <span>{formatTime(forecast.time)}</span>
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: 800,
+                        lineHeight: '1',
+                        padding: '1px 3px',
+                        borderRadius: '3px',
+                        color: getScoreColor(scores[index]),
+                        backgroundColor: getScoreBg(scores[index]),
+                        whiteSpace: 'nowrap',
+                      }}>
                         {scores[index]}%
-                      </Link>
-                    )}
-                  </span>
+                      </span>
+                    </Link>
+                  ) : (
+                    <span>{formatTime(forecast.time)}</span>
+                  )}
                 </td>
 
                 {/* ── MET Norway Locationforecast cells ── */}
