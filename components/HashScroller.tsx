@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 export default function HashScroller() {
   useEffect(() => {
     const hash = window.location.hash;
-    if (!hash) return;
+    if (!hash) { return; }
     // Small delay to let the DOM settle after hydration
     const timer = setTimeout(() => {
       const el = document.getElementById(hash.slice(1));

@@ -46,7 +46,7 @@ export function clearBookingEntries() {
 
 /** Group sorted entries into contiguous slots (adjacent hours = 1 h apart) */
 export function groupEntries(entries: BookingEntry[]): BookingEntry[][] {
-  if (entries.length === 0) return [];
+  if (entries.length === 0) { return []; }
   const sorted = [...entries].sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
   const groups: BookingEntry[][] = [[sorted[0]]];
   for (let i = 1; i < sorted.length; i++) {
@@ -77,7 +77,7 @@ export default function BookingButton({ entry }: { entry: BookingEntry }) {
   // Apply highlight to parent <tr> when selected
   useEffect(() => {
     const tr = btnRef.current?.closest('tr');
-    if (!tr) return;
+    if (!tr) { return; }
     if (selected) {
       tr.style.backgroundColor = '#ecfdf5';
       tr.style.boxShadow = 'inset 0 0 0 2px #059669';
