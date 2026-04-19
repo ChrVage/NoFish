@@ -334,9 +334,10 @@ export function combineForecasts(
   lat: number,
   lng: number,
   seaCurrentEntries?: BarentswatchSeaCurrentEntry[] | null,
-  oceanForecast?: OceanForecastResponse | null
+  oceanForecast?: OceanForecastResponse | null,
+  timezone?: string
 ): HourlyForecast[] {
-  const timezone = getTimezone(lat, lng);
+  const tz = timezone ?? getTimezone(lat, lng);
   const hourlyForecasts: HourlyForecast[] = [];
 
   // Create a map of wave data by time for quick lookup
@@ -413,11 +414,11 @@ export function combineForecasts(
 
     // Add tide phase if tide data is available
     if (tideForecast && tideForecast.events.length > 0) {
-      hourlyForecast.tidePhase = calculateTidePhase(entryDate, windowEnd, tideForecast.events, timezone);
+      hourlyForecast.tidePhase = calculateTidePhase(entryDate, windowEnd, tideForecast.events, tz);
     }
 
     // Add sun data
-    const sunResult = calculateSunPhase(entryDate, windowEnd, lat, lng, timezone);
+    const sunResult = calculateSunPhase(entryDate, windowEnd, lat, lng, tz);
     hourlyForecast.sunPhase = sunResult.label;
     hourlyForecast.sunPhaseSegments = sunResult.segments;
 
@@ -881,6 +882,8 @@ export interface CombinedForecastResult {
   tideStationName?: string;
   tideStationLat?: number;
   tideStationLng?: number;
+  /** IANA timezone for the requested coordinates (e.g. "Europe/Oslo"). */
+  timezone: string;
   metadata: Record<string, never>;
 }
 
@@ -963,10 +966,12 @@ export async function getCombinedForecast(
       }
     }
 
+    const timezone = getTimezone(lat, lng);
     const result: CombinedForecastResult = {
-      forecasts: combineForecasts(locationForecast, usableWaveEntries, usableTideForecast, lat, lng, usableCurrentEntries, oceanForecast),
+      forecasts: combineForecasts(locationForecast, usableWaveEntries, usableTideForecast, lat, lng, usableCurrentEntries, oceanForecast, timezone),
       forecastLat,
       forecastLng,
+      timezone,
       oceanForecastLat: waveForecastLat,
       oceanForecastLng: waveForecastLng,
       waveForecastSource: usableWaveEntries ? 'barentswatch' : undefined,

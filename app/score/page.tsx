@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getCombinedForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
-import { getTimezone, timeAnchor } from '@/lib/utils/timezone';
+import { timeAnchor } from '@/lib/utils/timezone';
 import { parseZoomParam, buildLocationUrl } from '@/lib/utils/params';
 import Header from '@/components/Header';
 import BackButton from '@/components/BackButton';
@@ -47,8 +47,8 @@ export default async function ScorePage({ searchParams }: PageProps) {
   const { forecasts: rawForecasts, currentForecastLat, currentForecastLng: _currentForecastLng, currentForecastDistanceKm: _currentForecastDistanceKm } = weatherResult;
   const forecasts = enrichForecasts(rawForecasts);
   const hasOceanData = forecasts.some(f => f.waveHeight !== undefined);
+  const { timezone } = weatherResult;
   const hasCurrentData = currentForecastLat !== undefined;
-  const timezone = getTimezone(lat, lng);
 
   // Pre-compute scores for all forecasts (depth-adaptive)
   const depth = locationData?.isSea && locationData.elevation !== undefined

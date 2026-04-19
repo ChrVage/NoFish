@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 import { getCombinedForecast, solarPosition } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
 import { insertLookup, ensureTable } from '@/lib/db/lookups';
-import { getTimezone } from '@/lib/utils/timezone';
+
 import { haversineDistance, formatDistance } from '@/lib/utils/distance';
 import { parseZoomParam, buildLocationUrl } from '@/lib/utils/params';
 import { enrichForecasts } from '@/lib/utils/enrichForecasts';
@@ -40,11 +40,10 @@ export default async function DetailsPage({ searchParams }: PageProps) {
     getCombinedForecast(lat, lng, isSea !== undefined ? { isSea } : undefined),
   ]);
 
-  const { forecasts: rawForecasts, oceanForecastLat, oceanForecastLng, waveForecastSource, tideStationName, tideStationLat, tideStationLng } = weatherResult;
+  const { forecasts: rawForecasts, oceanForecastLat, oceanForecastLng, waveForecastSource, tideStationName, tideStationLat, tideStationLng, timezone } = weatherResult;
   const forecasts = enrichForecasts(rawForecasts);
   const isLand = locationData?.isSea === false;
   const hasOceanData = !isLand && oceanForecastLat !== undefined && oceanForecastLng !== undefined;
-  const timezone = getTimezone(lat, lng);
   const depth = locationData?.isSea && locationData.elevation !== undefined
     ? Math.abs(locationData.elevation)
     : undefined;

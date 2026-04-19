@@ -33,8 +33,6 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## To implement before release
-- Could the different timezone calculations be simplified?
-
 - Could the checks if the location is land or sea be simplified?
 - Consider using another check for is land than depth. If depth is not registered (like too far off the coast), it is considered land, even if it is clearly at sea.
 

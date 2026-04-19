@@ -22,16 +22,6 @@ export function getTimezone(lat: number, lng: number): string {
  *
  * @example getTimezoneLabel('Europe/Oslo') → 'Europe/Oslo (GMT+2)'
  */
-export function getTimezoneLabel(timezone: string): string {
-  const offset = new Intl.DateTimeFormat('en', {
-    timeZoneName: 'shortOffset',
-    timeZone: timezone,
-  })
-    .formatToParts(new Date())
-    .find((p) => p.type === 'timeZoneName')?.value ?? timezone;
-  return `${timezone} (${offset})`;
-}
-
 /**
  * Short anchor id for a forecast hour: `t-DDHH` in the given timezone.
  * E.g. 2026-04-18T10:00:00Z in Europe/Oslo → `t-1812` (day 18, hour 12 local).
