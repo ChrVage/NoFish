@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getBookingEntries, clearBookingEntries, groupEntries, type BookingEntry } from './BookingButton';
+import { getTimezone, timeAnchor } from '@/lib/utils/timezone';
 
 /** UTC Date → "20260615T100000Z" */
 function icsDate(d: Date) {
@@ -14,7 +15,9 @@ function gcalDate(d: Date) {
 function buildDetailsUrl(group: BookingEntry[]): string {
   const loc = group[0];
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://nofish.app';
-  return `${origin}/score?lat=${loc.lat.toFixed(4)}&lng=${loc.lng.toFixed(4)}&zoom=12#t-${group[0].time}`;
+  const tz = getTimezone(loc.lat, loc.lng);
+  const anchor = timeAnchor(group[0].time, tz);
+  return `${origin}/details?lat=${loc.lat.toFixed(4)}&lng=${loc.lng.toFixed(4)}&zoom=12#${anchor}`;
 }
 
 function buildDescription(group: BookingEntry[]): string {

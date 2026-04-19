@@ -37,6 +37,8 @@ Found in the [README.md](README.md) file.
 
 - When the current is not used for score calculation, it shouldn't give such a high score.
 
+- Could the different timezone calculations be simplified?
+
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
 - Link directly to **fishing rules** by species from Fiskeridirektoratet.
 
