@@ -30,40 +30,25 @@ interface ForecastTableProps {
   scoreBaseUrl?: string;
 }
 
-// Weather symbol mapping (MET Norway symbol codes)
+// Weather symbol mapping — day/night-aware to match yr.no
+// MET API symbol_code values contain _day, _night, or _polartwilight suffixes
 const getWeatherSymbol = (symbolCode: string | undefined) => {
   if (!symbolCode) {return '❓';}
-  
   const code = symbolCode.toLowerCase();
-  if (code.includes('clearsky')) {return '☀️';}
-  if (code.includes('fair')) {return '🌤️';}
-  if (code.includes('partlycloudy')) {return '⛅';}
-  if (code.includes('cloudy')) {return '☁️';}
-  if (code.includes('lightrain') || code.includes('rainshowers')) {return '🌦️';}
-  if (code.includes('rain')) {return '🌧️';}
-  if (code.includes('heavyrain')) {return '⛈️';}
-  if (code.includes('sleet')) {return '🌨️';}
-  if (code.includes('snow')) {return '❄️';}
-  if (code.includes('fog')) {return '🌫️';}
-  if (code.includes('thunder')) {return '⚡';}
-  return '🌥️';
-};
+  const isNight = code.includes('_night');
 
-const getWeatherLabel = (symbolCode: string | undefined): string => {
-  if (!symbolCode) {return 'Unknown weather';}
-  const code = symbolCode.toLowerCase();
-  if (code.includes('clearsky')) {return 'Clear sky';}
-  if (code.includes('fair')) {return 'Fair';}
-  if (code.includes('partlycloudy')) {return 'Partly cloudy';}
-  if (code.includes('cloudy')) {return 'Cloudy';}
-  if (code.includes('lightrain') || code.includes('rainshowers')) {return 'Light rain';}
-  if (code.includes('heavyrain')) {return 'Heavy rain';}
-  if (code.includes('rain')) {return 'Rain';}
-  if (code.includes('sleet')) {return 'Sleet';}
-  if (code.includes('snow')) {return 'Snow';}
-  if (code.includes('fog')) {return 'Fog';}
-  if (code.includes('thunder')) {return 'Thunder';}
-  return 'Cloudy';
+  if (code.includes('clearsky'))       {return isNight ? '🌙' : '☀️';}
+  if (code.includes('fair'))           {return isNight ? '🌙' : '🌤️';}
+  if (code.includes('partlycloudy'))   {return isNight ? '⛅' : '⛅';}
+  if (code.includes('cloudy'))         {return '☁️';}
+  if (code.includes('fog'))            {return '🌫️';}
+  if (code.includes('thunder'))        {return '⛈️';}
+  if (code.includes('sleet'))          {return '🌨️';}
+  if (code.includes('snow'))           {return '❄️';}
+  if (code.includes('heavyrain'))      {return '🌧️';}
+  if (code.includes('lightrain') || code.includes('rainshowers')) {return isNight ? '🌧️' : '🌦️';}
+  if (code.includes('rain'))           {return '🌧️';}
+  return '☁️';
 };
 
 // Arrow component for direction visualization
@@ -397,9 +382,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
                   <DirectionArrow degrees={forecast.windDirection} isFromDirection={true} className="text-amber-700" />
                 </td>
                 <td className="px-4 py-3 text-2xl text-center">
-                  <span role="img" aria-label={getWeatherLabel(forecast.symbolCode)}>
-                    {getWeatherSymbol(forecast.symbolCode)}
-                  </span>
+                  {getWeatherSymbol(forecast.symbolCode)}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700">
                   {forecast.precipitation ? formatValue(forecast.precipitation, 1, ' mm') : '—'}

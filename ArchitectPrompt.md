@@ -39,6 +39,8 @@ Found in the [README.md](README.md) file.
 
 - Could the checks if the location is land or sea be simplified?
 
+- Consider using another check for is land than dept. If dept is not registered (like too far off the coast), it is considered land, even if it is clearly at sea.
+
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
 - Link directly to **fishing rules** by species from Fiskeridirektoratet.
 
