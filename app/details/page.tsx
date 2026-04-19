@@ -260,7 +260,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
 
           {/* Forecast table */}
           <div className="mb-6">
-            <ForecastTable forecasts={forecasts} timezone={timezone} hideOceanData={isLand} lat={lat} lng={lng} locationName={locationData?.name} scores={scores} scoreBaseUrl={scoreBaseUrl} />
+            <ForecastTable forecasts={forecasts} timezone={timezone} hideOceanData={isLand} lat={lat} lng={lng} locationName={locationData?.name} scores={isLand ? undefined : scores} scoreBaseUrl={isLand ? undefined : scoreBaseUrl} />
           </div>
 
           <p className="text-xs text-gray-400 mt-6">
