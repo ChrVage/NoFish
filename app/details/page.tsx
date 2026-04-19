@@ -15,6 +15,7 @@ import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
 import { Footer } from '@/components/Footer';
 import FeedbackBanner from '@/components/FeedbackBanner';
+import HashScroller from '@/components/HashScroller';
 
 interface PageProps {
   searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string }>;
@@ -302,6 +303,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
       </main>
 
       <FeedbackBanner />
+      <HashScroller />
     </div>
   );
 }

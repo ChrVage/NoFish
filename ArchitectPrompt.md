@@ -33,8 +33,6 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## To implement before release
-- Still fix links a bit. The times should be highligthed when a link points to a specific time or times.
-
 - when my location is chosen, and it's on land. The score and tide buttons show, this is not neccessary.
 
 - When the current is not used for score calculation, it shouldn't give such a high score.
