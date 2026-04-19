@@ -107,7 +107,7 @@ export default async function TidePage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton />
           </div>
-          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="tide" />
+          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="tide" availablePages={locationData?.isSea === false ? ['details'] : undefined} />
         </div>
       </Header>
 

@@ -167,7 +167,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton />
           </div>
-          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="details" />
+          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="details" availablePages={isLand ? ['details'] : undefined} />
         </div>
       </Header>
 

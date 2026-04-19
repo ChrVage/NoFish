@@ -93,7 +93,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton />
           </div>
-          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="score" />
+          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="score" availablePages={locationData?.isSea === false ? ['details'] : undefined} />
         </div>
       </Header>
 
@@ -171,10 +171,10 @@ export default async function ScorePage({ searchParams }: PageProps) {
             <p className="text-gray-500 text-center py-8">No forecast data available.</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm" style={{ borderSpacing: '0.5rem 0', borderCollapse: 'separate' }}>
+              <table className="min-w-full text-sm">
                 <thead>
                   <tr className="text-xs text-gray-400 text-left">
-                    <th rowSpan={2} className="pb-2">Time</th>
+                    <th rowSpan={2} className="pb-2" style={{ width: '1%' }}>Time</th>
                     <th colSpan={3} className="pb-0">Score</th>
                     <th colSpan={2} className="pb-0">Why</th>
                     <th rowSpan={2} className="pb-2" aria-label="Feedback" />
@@ -207,7 +207,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
 
                     rows.push(
                       <tr key={forecast.time} id={anchor} data-window={rowToWindow.has(i) ? rowToWindow.get(i) : undefined} style={{ verticalAlign: 'top', scrollMarginTop: '4rem' }}>
-                        <td className="py-2 text-sm font-medium tabular-nums whitespace-nowrap" style={getTimeColumnStyle(forecast.sunPhaseSegments)}>
+                        <td className="pl-4 pr-1 py-3 text-sm font-medium tabular-nums whitespace-nowrap" style={getTimeColumnStyle(forecast.sunPhaseSegments)}>
                           <Link
                             href={`${buildLocationUrl('details', { lat, lng, zoom: validZoom, sea: seaStr })}#${anchor}`}
                             title="View details for this hour"
@@ -215,8 +215,8 @@ export default async function ScorePage({ searchParams }: PageProps) {
                             style={{
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: '6px',
-                              padding: '3px 8px',
+                              gap: '5px',
+                              padding: '3px 7px',
                               borderRadius: '6px',
                               textDecoration: 'none',
                               color: 'inherit',
@@ -225,11 +225,11 @@ export default async function ScorePage({ searchParams }: PageProps) {
                           >
                             <span>{formatTime(forecast.time)}</span>
                             <span style={{
-                              fontSize: '13px',
+                              fontSize: '11px',
                               fontWeight: 800,
                               lineHeight: '1',
-                              padding: '2px 5px',
-                              borderRadius: '4px',
+                              padding: '1px 3px',
+                              borderRadius: '3px',
                               color: getScoreColor(score),
                               backgroundColor: getScoreBg(score),
                               whiteSpace: 'nowrap',

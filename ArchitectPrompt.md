@@ -33,11 +33,11 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## To implement before release
-- when my location is chosen, and it's on land. The score and tide buttons show, this is not neccessary.
-
 - When the current is not used for score calculation, it shouldn't give such a high score.
 
 - Could the different timezone calculations be simplified?
+
+- Could the checks if the location is land or sea be simplified?
 
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
 - Link directly to **fishing rules** by species from Fiskeridirektoratet.
