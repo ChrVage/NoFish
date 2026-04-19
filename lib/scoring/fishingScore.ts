@@ -125,7 +125,11 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
   //   1.0     → ~0.2
   //   1.5+    → ~0.0
   //
-  let currentFactor = 1.0; // default when no current data (skip — no effect)
+  //   When no current data is available, use a cautious default (0.55)
+  //   rather than a perfect 1.0 — "no current, no fish" philosophy means
+  //   unknown current should not inflate the score.
+  //
+  let currentFactor = 0.55; // default when no current data (unknown → cautious)
   if (f.currentSpeed !== undefined) {
     const cs = f.currentSpeed;
     // Gaussian centred at depth-adjusted peak, σ from depth profile

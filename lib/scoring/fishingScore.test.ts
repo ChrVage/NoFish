@@ -77,12 +77,13 @@ describe('computeFishingScore', () => {
       expect(dangers.some(t => t.includes('unfishable'))).toBe(true);
     });
 
-    it('no current data → factor defaults to 1.0 (no penalty)', () => {
-      const _withCurrent = computeFishingScore(mkForecast({ currentSpeed: 0.40 }));
+    it('no current data → cautious default (penalised)', () => {
+      const withCurrent = computeFishingScore(mkForecast({ currentSpeed: 0.40 }));
       const withoutCurrent = computeFishingScore(mkForecast());
-      // Without current data, the current factor is neutral
-      // fishingScore should still be reasonable
-      expect(withoutCurrent.fishingScore).toBeGreaterThanOrEqual(50);
+      // Without current data, the score should be noticeably lower
+      // than with an ideal current — "no current, no fish"
+      expect(withoutCurrent.fishingScore).toBeLessThan(withCurrent.fishingScore);
+      expect(withoutCurrent.fishingScore).toBeLessThanOrEqual(55);
     });
   });
 

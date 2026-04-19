@@ -33,13 +33,10 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## To implement before release
-- When the current is not used for score calculation, it shouldn't give such a high score.
-
 - Could the different timezone calculations be simplified?
 
 - Could the checks if the location is land or sea be simplified?
-
-- Consider using another check for is land than dept. If dept is not registered (like too far off the coast), it is considered land, even if it is clearly at sea.
+- Consider using another check for is land than depth. If depth is not registered (like too far off the coast), it is considered land, even if it is clearly at sea.
 
 - Implement link to seasonal **protection zones** from Fiskeridirectoratet
 - Link directly to **fishing rules** by species from Fiskeridirektoratet.
@@ -47,6 +44,8 @@ Found in the [README.md](README.md) file.
 - Find a way to show the VHF working channel, emergency channel (16) and create hyperlink with phone number to Kystradioen (120)
 
 - Explore possibilities for changing boat size and fish species to tune for (fish species will help adapt the depth. But polloch could be large at the bottom and small higher up.) 
+
+- Are there any other functionalities that could be tested?
 
 - Also support Norwegian language.
 
