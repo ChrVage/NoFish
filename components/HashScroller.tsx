@@ -28,9 +28,12 @@ function applyHash() {
     return;
   }
 
-  // Regular element-id scroll
+  // Single time anchor – highlight and scroll
   const el = document.getElementById(hash.slice(1));
-  el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (el) {
+    el.classList.add(HIGHLIGHT_CLASS);
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 }
 
 /**
