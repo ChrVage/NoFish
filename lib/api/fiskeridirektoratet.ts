@@ -8,16 +8,16 @@ const BASE_URL =
  * spawning-area notices.
  */
 const RESTRICTION_LAYERS = [
-  { id: 78, label: 'Stengt fiskefelt (J-melding)', type: 'closure' as const },
-  { id: 75, label: 'Høstingsforskriften', type: 'regulation' as const },
-  { id: 136, label: 'Kysttorsk forbudsområde', type: 'prohibition' as const },
-  { id: 137, label: 'Stengt gytefelt (jan–apr)', type: 'seasonal' as const },
-  { id: 94, label: 'Torsk gyteområde forbud', type: 'seasonal' as const },
-  { id: 85, label: 'Torsk oppvekstområde forbud', type: 'seasonal' as const },
-  { id: 141, label: 'Nullfiskeområde', type: 'prohibition' as const },
-  { id: 28, label: 'Korallrev forbudsområde', type: 'prohibition' as const },
-  { id: 105, label: 'Gyteområde', type: 'info' as const },
-  { id: 109, label: 'Oppvekst-/beiteområde', type: 'info' as const },
+  { id: 78, label: 'Stengt fiskefelt (J-melding)', type: 'closure' as const, infoUrl: 'https://www.fiskeridir.no/fritidsfiske/generelle-reglar' },
+  { id: 75, label: 'Høstingsforskriften', type: 'regulation' as const, infoUrl: 'https://www.fiskeridir.no/fritidsfiske/generelle-reglar' },
+  { id: 136, label: 'Kysttorsk forbudsområde', type: 'prohibition' as const, infoUrl: 'https://www.fiskeridir.no/fritidsfiske/freda-og-delvis-freda-artar' },
+  { id: 137, label: 'Stengt gytefelt (jan–apr)', type: 'seasonal' as const, infoUrl: 'https://www.fiskeridir.no/fritidsfiske/freda-og-delvis-freda-artar' },
+  { id: 94, label: 'Torsk gyteområde forbud', type: 'seasonal' as const, infoUrl: 'https://www.fiskeridir.no/fritidsfiske/freda-og-delvis-freda-artar' },
+  { id: 85, label: 'Torsk oppvekstområde forbud', type: 'seasonal' as const, infoUrl: 'https://www.fiskeridir.no/fritidsfiske/freda-og-delvis-freda-artar' },
+  { id: 141, label: 'Nullfiskeområde', type: 'prohibition' as const, infoUrl: 'https://www.fiskeridir.no/fritidsfiske/generelle-reglar' },
+  { id: 28, label: 'Korallrev forbudsområde', type: 'prohibition' as const, infoUrl: 'https://www.fiskeridir.no/fritidsfiske/generelle-reglar' },
+  { id: 105, label: 'Gyteområde', type: 'info' as const, infoUrl: 'https://www.fiskeridir.no/fritidsfiske/freda-og-delvis-freda-artar' },
+  { id: 109, label: 'Oppvekst-/beiteområde', type: 'info' as const, infoUrl: 'https://www.fiskeridir.no/fritidsfiske/freda-og-delvis-freda-artar' },
 ] as const;
 
 export type ZoneType = (typeof RESTRICTION_LAYERS)[number]['type'];
@@ -28,6 +28,7 @@ export interface ProtectionZone {
   name: string;
   description?: string;
   url?: string;
+  infoUrl?: string;
   dateFrom?: string;
   dateTo?: string;
 }
@@ -95,6 +96,7 @@ function parseFeature(
     name: s('navn') ?? s('label') ?? s('omraade') ?? layer.label,
     description: s('beskrivelse') ?? s('info') ?? s('informasjon') ?? undefined,
     url: s('url') ?? s('lovdata') ?? undefined,
+    infoUrl: layer.infoUrl,
     dateFrom: formatEsriDate(attrs.dato_fra ?? attrs.jmelding_fra_dato ?? attrs.stengt_dato),
     dateTo: formatEsriDate(attrs.dato_til ?? attrs.jmelding_til_dato ?? attrs.aapnet_dato),
   };

@@ -145,6 +145,14 @@ export default async function ScorePage({ searchParams }: PageProps) {
                           </a>
                         </>
                       )}
+                      {z.infoUrl && (
+                        <>
+                          {' '}
+                          <a href={z.infoUrl} target="_blank" rel="noopener noreferrer" className="underline text-red-600 hover:text-red-800">
+                            Fiskeridir ↗
+                          </a>
+                        </>
+                      )}
                     </li>
                   ))}
                 </ul>
