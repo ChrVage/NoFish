@@ -62,7 +62,7 @@ export async function queryProtectionZones(
           signal: controller.signal,
           next: { revalidate: 3600 },
         });
-        if (!res.ok) return [];
+        if (!res.ok) { return []; }
         const data = await res.json();
         return (data.features ?? []).map((f: { attributes: Record<string, unknown> }) =>
           parseFeature(f.attributes, layer),
@@ -101,6 +101,6 @@ function parseFeature(
 }
 
 function formatEsriDate(value: unknown): string | undefined {
-  if (typeof value !== 'number' || !value) return undefined;
+  if (typeof value !== 'number' || !value) { return undefined; }
   return new Date(value).toISOString().slice(0, 10);
 }

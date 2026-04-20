@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getCombinedForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
-import { queryProtectionZones, type ProtectionZone } from '@/lib/api/fiskeridirektoratet';
+import { queryProtectionZones } from '@/lib/api/fiskeridirektoratet';
 import { timeAnchor } from '@/lib/utils/timezone';
 import { parseZoomParam, buildLocationUrl } from '@/lib/utils/params';
 import Header from '@/components/Header';
@@ -396,8 +396,8 @@ export default async function ScorePage({ searchParams }: PageProps) {
       <FeedbackBanner />
       <BookingBanner restrictions={protectionZones.map(z => {
         let text = z.name;
-        if (z.description) text += ` — ${z.description}`;
-        if (z.dateFrom && z.dateTo) text += ` (${z.dateFrom} → ${z.dateTo})`;
+        if (z.description) { text += ` — ${z.description}`; }
+        if (z.dateFrom && z.dateTo) { text += ` (${z.dateFrom} → ${z.dateTo})`; }
         return text;
       })} />
       <HashScroller />
