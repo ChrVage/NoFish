@@ -49,7 +49,6 @@ export default async function ScorePage({ searchParams }: PageProps) {
 
   const { forecasts: rawForecasts, currentForecastLat, currentForecastLng: _currentForecastLng, currentForecastDistanceKm: _currentForecastDistanceKm } = weatherResult;
   const forecasts = enrichForecasts(rawForecasts);
-  const hasOceanData = forecasts.some(f => f.waveHeight !== undefined);
   const { timezone } = weatherResult;
   const hasCurrentData = currentForecastLat !== undefined;
 
