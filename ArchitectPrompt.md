@@ -33,8 +33,6 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## To implement before release
-- Link directly to **fishing rules** by species from Fiskeridirektoratet in the end of the score page, as a button.
-
 - Find a way to show the VHF working channel, emergency channel (16) and create hyperlink with phone number to Kystradioen (120)
 
 - Explore possibilities for changing boat size and fish species to tune for (fish species will help adapt the depth. But polloch could be large at the bottom and small higher up.) 
