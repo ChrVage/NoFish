@@ -186,7 +186,7 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
 
         if (angleDiff > 120) {
           // Wind opposing current
-          const cs = f.currentSpeed!;
+          const cs = f.currentSpeed ?? 0;
           if (ws > 8 && cs > 0.5) {
             // Strong wind against strong current — dangerous steep breaking waves
             const severity = lerp01(ws, 8, 14) * lerp01(cs, 0.5, 1.0);

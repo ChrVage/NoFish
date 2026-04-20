@@ -16,6 +16,7 @@ import PageNav from '@/components/PageNav';
 import { Footer } from '@/components/Footer';
 import FeedbackBanner from '@/components/FeedbackBanner';
 import HashScroller from '@/components/HashScroller';
+import SafetyContacts from '@/components/SafetyContacts';
 
 interface PageProps {
   searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string }>;
@@ -297,6 +298,8 @@ export default async function DetailsPage({ searchParams }: PageProps) {
           </p>
 
           <Footer showColumnRef />
+
+          {!isLand && <SafetyContacts />}
 
         </div>
       </main>

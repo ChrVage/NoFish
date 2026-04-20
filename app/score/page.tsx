@@ -23,6 +23,7 @@ function isDaylight(segments: { phase: string; fraction: number }[] | undefined)
 }
 import BookingBanner from '@/components/BookingBanner';
 import HashScroller from '@/components/HashScroller';
+import SafetyContacts from '@/components/SafetyContacts';
 
 interface PageProps {
   searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string }>;
@@ -68,7 +69,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
   // Location name for booking entries
   const locationName = locationData?.municipality && locationData.municipality !== 'Unknown municipality' && locationData.name !== locationData.municipality
     ? `${locationData.name}, ${locationData.municipality}`
-    : locationData?.name || locationData?.municipality || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    : locationData?.name ?? locationData?.municipality ?? `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
@@ -397,6 +398,8 @@ export default async function ScorePage({ searchParams }: PageProps) {
               <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Fishing Rules by Species ↗</span>
             </a>
           </div>
+
+          {locationData?.isSea !== false && <SafetyContacts />}
 
         </div>
       </main>

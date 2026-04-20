@@ -135,7 +135,7 @@ export default async function TidePage({ searchParams }: PageProps) {
                 <p className="text-xs text-gray-400 mt-1">
                   Station: {tidePageData.stationName}
                   {hasCoords && (
-                    <> · {formatDistance(haversineDistance(lat, lng, tidePageData.stationLat!, tidePageData.stationLng!))} from selected location</>
+                    <> · {formatDistance(haversineDistance(lat, lng, tidePageData.stationLat ?? 0, tidePageData.stationLng ?? 0))} from selected location</>
                   )}
                   {' '}· Levels relative to chart datum (CD)
                 </p>

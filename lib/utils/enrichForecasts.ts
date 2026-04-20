@@ -62,8 +62,8 @@ export function enrichForecasts(forecasts: HourlyForecast[]): EnrichedForecast[]
 
     const tA = new Date(result[a].time).getTime();
     const tB = new Date(result[b].time).getTime();
-    const hA = result[a].waveHeight!;
-    const hB = result[b].waveHeight!;
+    const hA = result[a].waveHeight ?? 0;
+    const hB = result[b].waveHeight ?? 0;
     const dA = result[a].waveDirection;
     const dB = result[b].waveDirection;
 
