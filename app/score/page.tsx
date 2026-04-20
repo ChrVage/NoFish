@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getCombinedForecast } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
+import { queryProtectionZones, type ProtectionZone } from '@/lib/api/fiskeridirektoratet';
 import { timeAnchor } from '@/lib/utils/timezone';
 import { parseZoomParam, buildLocationUrl } from '@/lib/utils/params';
 import Header from '@/components/Header';
@@ -39,9 +40,10 @@ export default async function ScorePage({ searchParams }: PageProps) {
 
   const isSea = seaStr === '0' ? false : seaStr === '1' ? true : undefined;
 
-  const [locationData, weatherResult] = await Promise.all([
+  const [locationData, weatherResult, protectionZones] = await Promise.all([
     reverseGeocode(lat, lng),
     getCombinedForecast(lat, lng, isSea !== undefined ? { isSea } : undefined),
+    queryProtectionZones(lat, lng),
   ]);
 
   const { forecasts: rawForecasts, currentForecastLat, currentForecastLng: _currentForecastLng, currentForecastDistanceKm: _currentForecastDistanceKm } = weatherResult;
@@ -123,6 +125,30 @@ export default async function ScorePage({ searchParams }: PageProps) {
               <p className="text-xs text-amber-600 mt-1">
                 ⚠ No reliable current forecast — current speed not included in score
               </p>
+            )}
+            {protectionZones.length > 0 && (
+              <div className="mt-2 rounded-md border border-red-200 bg-red-50 p-3">
+                <p className="text-xs font-bold text-red-800 mb-1">⚠ Fishing restrictions at this location:</p>
+                <ul className="text-xs text-red-700 space-y-0.5 list-disc pl-4">
+                  {protectionZones.map((z, i) => (
+                    <li key={i}>
+                      <span className="font-semibold">{z.name}</span>
+                      {z.description && <span> — {z.description}</span>}
+                      {z.dateFrom && z.dateTo && (
+                        <span className="text-red-500"> ({z.dateFrom} → {z.dateTo})</span>
+                      )}
+                      {z.url && (
+                        <>
+                          {' '}
+                          <a href={z.url} target="_blank" rel="noopener noreferrer" className="underline text-red-600 hover:text-red-800">
+                            Lovdata ↗
+                          </a>
+                        </>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
             <h3 className="text-sm font-bold text-ocean-900 mt-2" style={{ marginBottom: '2px' }}>Best fishing windows:</h3>
             {bestWindows.length > 0 ? (() => {
@@ -354,7 +380,12 @@ export default async function ScorePage({ searchParams }: PageProps) {
       </main>
 
       <FeedbackBanner />
-      <BookingBanner />
+      <BookingBanner restrictions={protectionZones.map(z => {
+        let text = z.name;
+        if (z.description) text += ` — ${z.description}`;
+        if (z.dateFrom && z.dateTo) text += ` (${z.dateFrom} → ${z.dateTo})`;
+        return text;
+      })} />
       <HashScroller />
     </div>
   );

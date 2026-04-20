@@ -20,7 +20,7 @@ function buildDetailsUrl(group: BookingEntry[]): string {
   return `${origin}/details?lat=${loc.lat.toFixed(4)}&lng=${loc.lng.toFixed(4)}&zoom=12#${anchor}`;
 }
 
-function buildDescription(group: BookingEntry[]): string {
+function buildDescription(group: BookingEntry[], restrictions?: string[]): string {
   const avgScore = Math.round(group.reduce((s, e) => s + e.score, 0) / group.length);
   const safetyAvg = Math.round(group.reduce((s, e) => s + e.safetyScore, 0) / group.length);
   const fishingAvg = Math.round(group.reduce((s, e) => s + e.fishingScore, 0) / group.length);
@@ -34,6 +34,9 @@ function buildDescription(group: BookingEntry[]): string {
     '',
     `Map: https://www.google.com/maps?q=${loc.lat},${loc.lng}`,
   ];
+  if (restrictions && restrictions.length > 0) {
+    lines.push('', '⚠ Fishing restrictions:', ...restrictions.map(r => `• ${r}`));
+  }
   return lines.join('\n');
 }
 
@@ -43,12 +46,12 @@ function slotTimes(group: BookingEntry[]): { start: Date; end: Date } {
   return { start, end };
 }
 
-function buildIcsForGroups(groups: BookingEntry[][]): string {
+function buildIcsForGroups(groups: BookingEntry[][], restrictions?: string[]): string {
   const events = groups.map(group => {
     const { start, end } = slotTimes(group);
     const avg = Math.round(group.reduce((s, e) => s + e.score, 0) / group.length);
     const loc = group[0];
-    const desc = buildDescription(group).replace(/\n/g, '\\n');
+    const desc = buildDescription(group, restrictions).replace(/\n/g, '\\n');
     const detailsUrl = buildDetailsUrl(group);
     return [
       'BEGIN:VEVENT',
@@ -72,11 +75,11 @@ function buildIcsForGroups(groups: BookingEntry[][]): string {
   ].join('\r\n');
 }
 
-function buildGoogleUrl(group: BookingEntry[]): string {
+function buildGoogleUrl(group: BookingEntry[], restrictions?: string[]): string {
   const { start, end } = slotTimes(group);
   const avg = Math.round(group.reduce((s, e) => s + e.score, 0) / group.length);
   const loc = group[0];
-  const desc = buildDescription(group);
+  const desc = buildDescription(group, restrictions);
   const params = new URLSearchParams({
     action: 'TEMPLATE',
     text: `🎣 Fishing ${avg}% – ${loc.locationName}`,
@@ -87,11 +90,11 @@ function buildGoogleUrl(group: BookingEntry[]): string {
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
-function buildOutlookUrl(group: BookingEntry[]): string {
+function buildOutlookUrl(group: BookingEntry[], restrictions?: string[]): string {
   const { start, end } = slotTimes(group);
   const avg = Math.round(group.reduce((s, e) => s + e.score, 0) / group.length);
   const loc = group[0];
-  const desc = buildDescription(group);
+  const desc = buildDescription(group, restrictions);
   const params = new URLSearchParams({
     path: '/calendar/action/compose',
     rru: 'addevent',
@@ -104,7 +107,7 @@ function buildOutlookUrl(group: BookingEntry[]): string {
   return `https://outlook.live.com/calendar/0/action/compose?${params.toString()}`;
 }
 
-export default function BookingBanner() {
+export default function BookingBanner({ restrictions }: { restrictions?: string[] }) {
   const [entries, setEntries] = useState<BookingEntry[]>(() => getBookingEntries());
   const [expanded, setExpanded] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -133,7 +136,7 @@ export default function BookingBanner() {
   if (entries.length === 0) {return null;}
 
   const groups = groupEntries(entries);
-  const icsHref = `data:text/calendar;charset=utf-8,${encodeURIComponent(buildIcsForGroups(groups))}`;
+  const icsHref = `data:text/calendar;charset=utf-8,${encodeURIComponent(buildIcsForGroups(groups, restrictions))}`;
   const timeFmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
 
   return (
@@ -170,7 +173,7 @@ export default function BookingBanner() {
                 </div>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   <a
-                    href={buildGoogleUrl(group)}
+                    href={buildGoogleUrl(group, restrictions)}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '6px', backgroundColor: '#065f46', color: '#d1fae5', textDecoration: 'none', fontSize: '12px', border: '1px solid #047857' }}
@@ -178,7 +181,7 @@ export default function BookingBanner() {
                     Google
                   </a>
                   <a
-                    href={buildOutlookUrl(group)}
+                    href={buildOutlookUrl(group, restrictions)}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '6px', backgroundColor: '#065f46', color: '#d1fae5', textDecoration: 'none', fontSize: '12px', border: '1px solid #047857' }}

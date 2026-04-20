@@ -33,8 +33,6 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## To implement before release
-- Query the Fiskeridirektoratet ArcGIS REST API (FiskeridirWFS_fiskeri/MapServer) to check for intersecting seasonal protection zones. Please implement a spatial intersection query using the API's geometry parameter to find overlapping polygons. Extract any active fishing restrictions or seasonal rules from the JSON response and display them in the header of the "Score" page. Also include any restrictions in the end of the calendar appointment.
-
 - Link directly to **fishing rules** by species from Fiskeridirektoratet in the end of the score page, as a button.
 
 - Find a way to show the VHF working channel, emergency channel (16) and create hyperlink with phone number to Kystradioen (120)

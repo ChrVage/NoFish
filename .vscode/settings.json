@@ -1,6 +1,11 @@
 {
     "chat.tools.terminal.autoApprove": {
         "npx next": true,
-        "npx eslint": true
+        "npx eslint": true,
+        "npx tsc": true,
+        "/^node -e \"fetch\\('https://gis\\.fiskeridir\\.no/server/rest/services/FiskeridirWFS_fiskeri/MapServer/136/query\\?geometry=10\\.5579%2C59\\.8089&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=\\*&returnGeometry=false&f=json'\\)\\.then\\(r=>r\\.json\\(\\)\\)\\.then\\(d=>console\\.log\\(JSON\\.stringify\\(d,null,2\\)\\)\\)\\.catch\\(e=>console\\.error\\(e\\)\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }
