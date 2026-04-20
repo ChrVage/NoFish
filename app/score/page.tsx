@@ -122,7 +122,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                 </span>
               )}
             </p>
-            {!hasCurrentData && hasOceanData && (
+            {!hasCurrentData && locationData?.isSea !== false && (
               <p className="text-xs text-amber-600 mt-1">
                 ⚠ No reliable current forecast — current speed not included in score
               </p>
