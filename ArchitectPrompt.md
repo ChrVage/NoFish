@@ -33,11 +33,9 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## To implement before release
-- Could the checks if the location is land or sea be simplified?
-- Consider using another check for is land than depth. If depth is not registered (like too far off the coast), it is considered land, even if it is clearly at sea.
+- Query the Fiskeridirektoratet ArcGIS REST API (FiskeridirWFS_fiskeri/MapServer) to check for intersecting seasonal protection zones. Please implement a spatial intersection query using the API's geometry parameter to find overlapping polygons. Extract any active fishing restrictions or seasonal rules from the JSON response and display them in the header of the "Score" page. Also include any restrictions in the end of the calendar appointment.
 
-- Implement link to seasonal **protection zones** from Fiskeridirectoratet
-- Link directly to **fishing rules** by species from Fiskeridirektoratet.
+- Link directly to **fishing rules** by species from Fiskeridirektoratet in the end of the score page, as a button.
 
 - Find a way to show the VHF working channel, emergency channel (16) and create hyperlink with phone number to Kystradioen (120)
 

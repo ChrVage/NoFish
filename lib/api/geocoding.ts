@@ -24,7 +24,7 @@ export interface GeocodingResult {
   elevation?: number;
   /** Terrain type returned by Kartverket (e.g. "Hav", "Skog", "Innsjø"). */
   terrain?: string;
-  /** true when the point is over sea (terrain === "Hav" or elevation < 0 with no land terrain). */
+  /** true when the point is classified as sea (based on terrain, elevation, and nearby features). */
   isSea?: boolean;
   /** Distance in metres from the clicked point to the named place. */
   placeDistanceM?: number;
@@ -236,7 +236,7 @@ async function fetchElevation(lat: number, lng: number): Promise<{ elevation: nu
     if (!res.ok) {return null;}
     const data: GeonorgeElevationResponse = await res.json();
     const pt = data.punkter?.[0];
-    if (pt?.z === undefined) {return null;}
+    if (pt?.z == null) {return null;}
     return { elevation: pt.z, terrain: pt.terreng ?? '' };
   } catch {
     return null;
@@ -379,19 +379,21 @@ function classifySeaLand(
   elev: { elevation: number; terrain: string } | null,
   nearbyEntries: KartverketPunktEntry[],
 ): boolean {
+  // 1. Elevation API returned data — trust terrain type first, then elevation
   if (elev) {
     if (elev.terrain === 'Hav') {return true;}
-    if (elev.elevation < 0 && !LAND_TERRAIN_TYPES.includes(elev.terrain)) {return true;}
     if (LAND_TERRAIN_TYPES.includes(elev.terrain)) {return false;}
+    return elev.elevation < 0;
   }
 
-  // Elevation unavailable or ambiguous — check nearby features as a signal
-  const nearMaritime = nearbyEntries.some(
-    e => e.meterFraPunkt <= 100 && isMaritimeType(e.navneobjekttype),
-  );
-  if (nearMaritime) {return true;}
+  // 2. No elevation data — Kartverket Høydedata covers all Norwegian land,
+  //    so a null response means the point is outside coverage (open sea or
+  //    foreign territory). Default to sea unless nearby features say otherwise.
+  if (nearbyEntries.some(e => isMaritimeType(e.navneobjekttype))) {return true;}
+  if (nearbyEntries.length === 0) {return true;}
 
-  return false; // default to land
+  // Non-maritime nearby features exist → likely land (e.g. foreign coast)
+  return false;
 }
 
 // ── Main function ─────────────────────────────────────────────────────────
