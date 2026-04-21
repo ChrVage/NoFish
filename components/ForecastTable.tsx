@@ -102,7 +102,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
 
   // If no row has wave data the point is inland — hide ocean-specific columns
   const hasOceanData = !hideOceanData && forecasts.some(f => f.waveHeight !== undefined);
-  const precipLabel = (forecasts[0]?.temperature ?? 2) > 1 ? 'Rain' : 'Snow';
+  const precipLabel = 'Precip.';
 
   // Pre-enriched by the server component — use directly
   const displayForecasts = forecasts;
