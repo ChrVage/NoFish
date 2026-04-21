@@ -932,7 +932,14 @@ export async function getCombinedForecast(
         ? haversineDistance(lat, lng, waveForecastLat, waveForecastLng)
         : null;
 
-      if (waveDistance === null || waveDistance <= MAX_OCEAN_FORECAST_DISTANCE_KM) {
+      // Also reject land-masked cells: the Barentswatch model sets all wave heights to
+      // exactly 0.0 for land grid points. Any real sea point will have at least one
+      // non-zero totalSignificantWaveHeight across the forecast.
+      const hasRealWaveData = waveForecast.some(
+        e => e.totalSignificantWaveHeight != null && e.totalSignificantWaveHeight > 0
+      );
+
+      if ((waveDistance === null || waveDistance <= MAX_OCEAN_FORECAST_DISTANCE_KM) && hasRealWaveData) {
         usableWaveEntries = waveForecast;
       } else {
         waveForecastLat = undefined;

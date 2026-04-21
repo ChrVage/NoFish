@@ -202,6 +202,16 @@ export async function getWaveGridPoint(
       return null;
     }
 
+    // Reject land-masked cells: Barentswatch sets all wave heights to 0.0 for land grid points.
+    // Any real sea point will have at least one non-zero wave height in the forecast.
+    const hasRealWaveData = waveForecast.some(
+      e => e.totalSignificantWaveHeight != null && e.totalSignificantWaveHeight > 0
+    );
+    if (!hasRealWaveData) {
+      await setCached(cacheKey, { point: null } satisfies WaveGridPointCache, 1);
+      return null;
+    }
+
     const result: WaveGridPoint = { lat: gridLat, lng: gridLng };
     await setCached(cacheKey, { point: result } satisfies WaveGridPointCache, 1);
     return result;
