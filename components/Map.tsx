@@ -151,7 +151,11 @@ export default function Map() {
     const z = parseInt(searchParams.get('zoom') ?? '', 10);
     return !isNaN(z) && z >= 13;
   });
+  const [centerIsLand, setCenterIsLand] = useState<boolean | null>(null);
   const seaChartManualRef = useRef(false);
+  const centerIsLandRef = useRef<boolean | null>(null);
+  const landCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const landCheckAbortRef = useRef<AbortController | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -215,6 +219,30 @@ export default function Map() {
     let activeFetchController: AbortController | null = null;
     let activePopupRoot: Root | null = null;
     let navigating = false;
+
+    const setLandState = (isLand: boolean | null) => {
+      centerIsLandRef.current = isLand;
+      setCenterIsLand(isLand);
+      if (isLand === true) {
+        seaChartManualRef.current = false;
+        setShowSeaChart(false);
+      }
+    };
+
+    const checkLandAt = async (lat: number, lng: number) => {
+      if (landCheckAbortRef.current) {landCheckAbortRef.current.abort();}
+      const controller = new AbortController();
+      landCheckAbortRef.current = controller;
+      try {
+        const res = await fetch(`/api/geocoding?lat=${lat}&lon=${lng}`, { signal: controller.signal });
+        if (!res.ok) {return;}
+        const result = await res.json();
+        const isLand = result.isSea === false;
+        setLandState(isLand);
+      } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') {return;}
+      }
+    };
 
     const clearOceanLayers = () => {
       if (activeOceanLine) { map.removeLayer(activeOceanLine); activeOceanLine = null; }
@@ -295,6 +323,7 @@ export default function Map() {
               isLand = true;
               hasOcean = false;
             }
+            setLandState(isSea === false);
           }
 
           if (!isLand && oceanResponse.ok) {
@@ -404,11 +433,21 @@ export default function Map() {
         seaChartManualRef.current = false;
       }
       if (!seaChartManualRef.current) {
-        setShowSeaChart(zoom >= SEA_CHART_AUTO_ZOOM);
+        setShowSeaChart(centerIsLandRef.current === true ? false : zoom >= SEA_CHART_AUTO_ZOOM);
       }
       prevZoom = zoom;
     };
     map.on('zoomend', updateSeaChartForZoom);
+
+    const scheduleCenterLandCheck = () => {
+      if (landCheckTimerRef.current !== null) {clearTimeout(landCheckTimerRef.current);}
+      landCheckTimerRef.current = setTimeout(() => {
+        const c = map.getCenter();
+        void checkLandAt(c.lat, c.lng);
+      }, 250);
+    };
+    map.on('moveend', scheduleCenterLandCheck);
+    scheduleCenterLandCheck();
 
     mapRef.current = map;
 
@@ -421,6 +460,8 @@ export default function Map() {
       if (restoreTimer !== null) {clearTimeout(restoreTimer);}
       if (singleClickTimer !== null) {clearTimeout(singleClickTimer);}
       if (activeFetchController) {activeFetchController.abort();}
+      if (landCheckTimerRef.current !== null) {clearTimeout(landCheckTimerRef.current);}
+      if (landCheckAbortRef.current) {landCheckAbortRef.current.abort();}
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -656,9 +697,14 @@ export default function Map() {
         {/* Sea chart toggle */}
         <button
           type="button"
-          onClick={() => { seaChartManualRef.current = true; setShowSeaChart(v => !v); }}
+          onClick={() => {
+            if (centerIsLand === true) {return;}
+            seaChartManualRef.current = true;
+            setShowSeaChart(v => !v);
+          }}
+          disabled={centerIsLand === true}
           aria-label={showSeaChart ? 'Hide sea chart' : 'Show sea chart (Kartverket)'}
-          title={showSeaChart ? 'Hide sea chart' : 'Sea chart – depth & bottom topography (Kartverket)'}
+          title={centerIsLand === true ? 'Sea chart unavailable on land' : (showSeaChart ? 'Hide sea chart' : 'Sea chart – depth & bottom topography (Kartverket)')}
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
             background: showSeaChart ? '#0284c7' : '#fff',
@@ -668,7 +714,8 @@ export default function Map() {
             padding: '6px 12px',
             fontSize: '13px',
             fontWeight: 500,
-            cursor: 'pointer',
+            cursor: centerIsLand === true ? 'not-allowed' : 'pointer',
+            opacity: centerIsLand === true ? 0.55 : 1,
             boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
             flexShrink: 0,
           }}
