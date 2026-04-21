@@ -2,6 +2,8 @@
 
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import Header from '@/components/Header';
 import HeaderMenu from '@/components/Footer';
 
@@ -19,13 +21,29 @@ const Map = dynamic(() => import('@/components/Map'), {
 });
 
 export default function Home() {
+  const router = useRouter();
+  const [mapInstanceKey, setMapInstanceKey] = useState(0);
+
+  const handleLogoReset = () => {
+    router.replace('/');
+    setMapInstanceKey(k => k + 1);
+  };
+
   return (
     <div className="flex flex-col h-dvh overflow-hidden bg-ocean-50">
       {/* Header */}
       <Header className="relative z-[1100] shrink-0 overflow-visible">
         <div className="flex items-center max-w-7xl mx-auto">
-          <Image src="/NoFish.png" alt="NoFish" width={32} height={32} className="rounded-full shrink-0" />
-          <span className="text-base whitespace-nowrap shrink-0 ml-2">NoFish</span>
+          <button
+            type="button"
+            onClick={handleLogoReset}
+            className="flex items-center shrink-0 bg-transparent border-0 p-0 m-0 appearance-none cursor-pointer"
+            aria-label="Reset map and clear selected location"
+            title="Reset map"
+          >
+            <Image src="/NoFish.png" alt="NoFish" width={32} height={32} className="rounded-full shrink-0" />
+            <span className="text-base whitespace-nowrap shrink-0 ml-2">NoFish</span>
+          </button>
           <span className="text-[10px] italic font-light opacity-60 text-center flex-1 px-3">... because fishing in bad weather is worse than no fishing at all</span>
           <div className="shrink-0">
             <HeaderMenu />
@@ -35,7 +53,7 @@ export default function Home() {
 
       {/* Main content — z-0 creates a stacking context so map overlays stay below the header menu */}
       <div className="flex-1 min-h-0 relative overflow-hidden z-0">
-        <Map />
+        <Map key={mapInstanceKey} />
       </div>
     </div>
   );
