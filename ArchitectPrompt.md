@@ -34,28 +34,28 @@ Make sure all functionality is updated in the documentation. Also read all docum
 Found in the [README.md](README.md) file.
 
 ## To implement before release
-- Explore possibilities for changing boat size and fish species to tune for (fish species will help adapt the depth. But polloch could be large at the bottom and small higher up.) 
+- Explore possibilities for changing boat size and fish species to tune for (fish species will help adapt the depth. But for instance polloch could be large at the bottom and small higher up.) 
 
 - Are there any other functionalities in this app that could be tested, like the score is tested?
 
 - Also support Norwegian language.
 
-- Create a colour palette, then a better icon and logo https://realfavicongenerator.net/
+- Create a colour palette, then a better icon and logo, maybe with https://realfavicongenerator.net/
 
 - Create possibility to choose email for those without GitHub account. The email link could use a link with specified subject and body. It should be sent to feedback@nofish.no.
 
 - Explore which license is right for this project.
 
-- SEO to make sure people find the site when I am happy with it.
+- SEO to make sure people find the site.
 
 ### To implement later (in case number of users increase)
 - Implement function for optional payment
 
-- Implment an **API** so others can collect next best fishing times based on coordinates.
+- Implment an **API** so others can collect next best fishing times based on coordinates. One for score and detail and one for tide. Make sure I can contact the caller, so I don't need authentication on this solution. Also implement limiting so that I will not take down my data sources.
 
 - Functionality for subscribing to calendar appointments with good fishing times.
 
-- Add possibility for fish logging, and add weather to the log,so that you can know in which conditions you fish the fish. Send mail after fishing appointment.
+- Add possibility for fish logging, and add weather to the logged fish, so that you can know in which conditions you fish the fish. Send mail after fishing appointment to collect the data via link.
 
 ## Instructions for response
 
