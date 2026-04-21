@@ -14,6 +14,7 @@ Please review the code based on the following prioritized criteria:
 3. API efficiency & Data handling: Efficient fetching and aggregation of multiple external APIs server-side, robust error handling, and clean execution of data interpolation (e.g., transforming 3-hour wave data into 1-hour intervals).
 4. Security: Verification that API calls and keys remain strictly server-side, safe handling of client inputs (coordinates), and adherence to the strict security headers (CSP, HSTS, no-sniff) defined in the project.
 5. User experience & Responsiveness: Mobile-first considerations, especially ensuring that the large forecast tables and map popups are highly readable and responsive on small screens. Make sure UX is intuitive enough so that users don't need any instructions. Adapt and shorten all instructions available on nofish.no to accomodate users with special interest to details. No cookies if it can be avoided.
+Make sure all functionality is updated in the documentation. Also read all documentation and modify what is not synchronized with the code.
 6. WCAG (Accessibility): Proper semantic HTML, correct ARIA roles (crucial for the map and data tables), and full keyboard navigability. 
 7. Review readme files on github to make sure they are up to date.
     README.md - contains information on why the project exists, what the solution does and how to use it.
@@ -33,11 +34,9 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## To implement before release
-- Is it a problem with >1 meter waves if the period is long? Could the score calculation be modified so that just a bit too high waves with long period is great safety?
-
 - Explore possibilities for changing boat size and fish species to tune for (fish species will help adapt the depth. But polloch could be large at the bottom and small higher up.) 
 
-- Are there any other functionalities that could be tested?
+- Are there any other functionalities in this app that could be tested, like the score is tested?
 
 - Also support Norwegian language.
 

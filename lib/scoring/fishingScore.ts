@@ -319,9 +319,14 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
         // Bright midday with clear sky → slight fishing penalty, scaled by depth
         if (f.cloudCover !== undefined && f.cloudCover < 20) {
           lightFactor = 0.70;
-          lightFishingFactor = 1.0 - 0.10 * dp.dawnDuskBonus; // down to 0.90 at shallow (fish go deep)
+          const brightSunPenalty = 0.10 * dp.dawnDuskBonus; // penalty fades with depth
+          lightFishingFactor = 1.0 - brightSunPenalty;
           good('Clear sky', 'safety');
-          bad('Bright sun — fish deep', 'fishing');
+          if (brightSunPenalty >= 0.05) {
+            bad('Bright sun — fish deep', 'fishing');
+          } else {
+            good('Bright sun less relevant at depth', 'fishing');
+          }
         } else if (f.cloudCover !== undefined && f.cloudCover >= 50) {
           lightFactor = 0.85;
           lightFishingFactor = 1.0 + 0.05 * dp.dawnDuskBonus; // slight bonus
@@ -439,8 +444,9 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
   let wavePeriodFactor = 1.0; // default when no data or calm seas
   if (f.wavePeriod !== undefined && f.waveHeight !== undefined && f.waveHeight > 1.0) {
     const wp = f.wavePeriod;
+    const wh = f.waveHeight;
     // Scale penalty by wave height: 0 at 1.0 m, full at 1.5 m+
-    const heightScale = Math.min(1, (f.waveHeight - 1.0) / 0.5);
+    const heightScale = Math.min(1, (wh - 1.0) / 0.5);
     let rawPeriodFactor = 1.0;
     let reason: { text: string; tone: 'good' | 'bad' | 'danger' } | null = null;
 
@@ -459,6 +465,27 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
 
     // Blend toward 1.0 for smaller waves
     wavePeriodFactor = 1.0 - heightScale * (1.0 - rawPeriodFactor);
+
+    // Long, soft swell can make slightly-too-high waves manageable when wind is low.
+    // This only applies in the marginal range (1.0–1.4 m) and never to big seas.
+    if (wp >= 10 && wh <= 1.4) {
+      const ws = f.windSpeed ?? 0;
+      const gs = f.windGust ?? ws;
+      const windStress = Math.max(ws, gs * 0.7);
+      const swellStrength = lerp01(wp, 10, 14);
+      const marginalWaves = 1.0 - lerp01(wh, 1.0, 1.4);
+      const lowWind = 1.0 - lerp01(windStress, 5, 8);
+      const relief = swellStrength * marginalWaves * lowWind;
+
+      if (relief > 0) {
+        const relaxedTarget = 0.88;
+        waveFactor += (relaxedTarget - waveFactor) * relief;
+        if (relief >= 0.25) {
+          good('Long-period swell softens wave risk', 'safety');
+        }
+      }
+    }
+
     if (reason && heightScale >= 0.5) {
       reasons.push({ ...reason, category: 'safety' as const });
     }

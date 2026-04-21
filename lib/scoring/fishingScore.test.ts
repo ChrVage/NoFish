@@ -195,6 +195,15 @@ describe('computeFishingScore', () => {
       expect(reasons.some(r => r.text.includes('fish deep') && r.tone === 'bad')).toBe(true);
     });
 
+    it('bright midday at very deep spots is not treated as negative', () => {
+      const { reasons } = computeFishingScore(mkForecast({
+        sunPhaseSegments: [{ phase: 'day', fraction: 1.0 }],
+        cloudCover: 10,
+      }), 500);
+      expect(reasons.some(r => r.text.includes('Bright sun less relevant at depth') && r.tone === 'good')).toBe(true);
+      expect(reasons.some(r => r.text.includes('fish deep') && r.tone === 'bad')).toBe(false);
+    });
+
     it('overcast day boosts fishing', () => {
       const { reasons } = computeFishingScore(mkForecast({
         sunPhaseSegments: [{ phase: 'day', fraction: 1.0 }],
@@ -279,6 +288,13 @@ describe('computeFishingScore', () => {
     it('long swell with moderate waves is comfortable', () => {
       const { reasons } = computeFishingScore(mkForecast({ waveHeight: 1.5, wavePeriod: 12 }));
       expect(reasons.some(r => r.text.includes('Long swell'))).toBe(true);
+    });
+
+    it('long-period swell improves safety for marginally high waves', () => {
+      const shortPeriod = computeFishingScore(mkForecast({ waveHeight: 1.2, wavePeriod: 5, windSpeed: 3 }));
+      const longPeriod = computeFishingScore(mkForecast({ waveHeight: 1.2, wavePeriod: 12, windSpeed: 3 }));
+      expect(longPeriod.safetyScore).toBeGreaterThan(shortPeriod.safetyScore);
+      expect(longPeriod.reasons.some(r => r.text.includes('softens wave risk') && r.tone === 'good')).toBe(true);
     });
 
     it('wave period ignored when seas calm (<1m)', () => {
