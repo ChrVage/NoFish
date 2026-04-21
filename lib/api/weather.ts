@@ -64,8 +64,8 @@ export async function getLocationForecast(
 }
 
 /**
- * Fetch Oceanforecast data from MET.no (kept for potential future use).
- * Currently unused — wave data now comes from Barentswatch.
+ * Fetch Oceanforecast data from MET.no.
+ * Used for sea surface temperature in the combined hourly forecast.
  */
 export async function getOceanForecast(
   lat: number,

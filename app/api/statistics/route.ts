@@ -1,10 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSql } from '@/lib/db/index';
 import { ensureTable } from '@/lib/db/lookups';
+import { checkRateLimit } from '@/lib/utils/rateLimit';
 
 export const revalidate = 300; // ISR: regenerate at most every 5 minutes
 
-export async function GET() {
+const RATE_LIMIT = { name: 'statistics', limit: 10, windowSeconds: 60 };
+
+export async function GET(request: NextRequest) {
+  const limited = checkRateLimit(request, RATE_LIMIT);
+  if (limited) {return limited;}
+
   try {
     const sql = getSql();
     await ensureTable();

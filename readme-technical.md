@@ -1,4 +1,4 @@
-# NoFish — Technical Documentation
+﻿# NoFish — Technical Documentation
 
 ---
 
@@ -37,11 +37,12 @@ All external calls are made **server-side** to avoid CORS issues and comply with
 
 | Route | Purpose |
 |---|---|
-| `GET /api/geocoding?lat=&lon=` | Reverse geocodes coordinates using "Maritime First" strategy (v9): parallel elevation + Kartverket SSR nearby-places fetch, maritime features prioritised for coastal locations, municipality from Kartverket `/sted` endpoint. Nominatim used only as fallback for non-Norwegian locations. Returns place name, elevation, terrain type, sea/land classification, and kommune number. 30-day cacheKartverket SSR nearby-places fetch, maritime features prioritised for coastal locations, municipality from Kartverket `/sted` endpoint. Nominatim used only as fallback for non-Norwegian locations. Returns place name, elevation, terrain type, sea/land classification, and kommune number. 30-day cache. |
+| `GET /api/geocoding?lat=&lon=` | Reverse geocodes coordinates using "Maritime First" strategy (v9): parallel elevation + Kartverket SSR nearby-places fetch, maritime features prioritised for coastal locations, municipality from Kartverket `/sted` endpoint. Nominatim used only as fallback for non-Norwegian locations. Returns place name, elevation, terrain type, sea/land classification, and kommune number. 30-day cache. |
 | `GET /api/weather?lat=&lon=` | Returns the full 10-day merged `HourlyForecast[]` array plus ocean grid coordinates. Used by the Details, Score, and Tide pages via server-side direct lib calls; this route is exposed for external consumers. |
 | `GET /api/ocean-point?lat=&lon=` | Returns only `{ oceanForecastLat, oceanForecastLng }`. Used by the map to place the blue dot and determine whether Score/Tide buttons should be shown. Returns `undefined` coordinates when the grid point is more than 1 km away. Cache-backed \u2014 usually a hit when the Details page has already been visited. |
+| `GET /api/search?q=` | Place name search via Kartverket Stedsnavn API. Returns up to 6 results with name, type, municipality, and coordinates. Fuzzy wildcard matching. Rate-limited (30 req/min/IP); cached 24 h. |
+| `GET /api/statistics` | Aggregate usage counts from the `lookups` table — total lookups, weekly series, today/7-day KPIs, top cities. Powers `/statistics` page. Rate-limited (10 req/min/IP); 5-minute ISR cache. |
 
-All three routes validate coordinate bounds (`lat` ∈ [−90, 90], `lon` ∈ [−180, 180]) and return `400` for out-of-range or non-numeric inputs.
 
 ---
 
@@ -213,6 +214,14 @@ app/
       route.ts          # GET /api/weather?lat=&lon= — returns full HourlyForecast[] + ocean grid coordinates
     ocean-point/
       route.ts          # GET /api/ocean-point?lat=&lon= — returns only oceanForecastLat/Lng (used by map)
+    search/
+      route.ts          # GET /api/search?q= — place name search via Kartverket Stedsnavn
+    statistics/
+      route.ts          # GET /api/statistics — aggregate usage stats (rate-limited)
+  feedback/
+    page.tsx            # Client component — collect flagged data points and open GitHub issue
+  statistics/
+    page.tsx            # Server component — aggregate usage charts (ISR, 5-minute revalidation)
 
 components/
   BackButton.tsx        # Client component — reads lat/lng/zoom from search params, navigates back to /?lat=&lng=&zoom=
@@ -225,7 +234,8 @@ lib/
   api/
     barentswatch.ts     # OAuth2 token management + getWaveForecast() + getSeaCurrentForecast()
     weather.ts          # getCombinedForecast() — fetches and merges all API sources
-    geocoding.ts        # reverseGeocode() — "Maritime First" v9: Kartverket SSR + elevation, maritime features prioritised, Nominatim fallbacklevation, maritime features prioritised, Nominatim fallback
+    geocoding.ts        # reverseGeocode() — "Maritime First" v9: Kartverket SSR + elevation, maritime features prioritised, Nominatim fallback
+    fiskeridirektoratet.ts # queryProtectionZones() — fishing protection zones from Fiskeridirektoratet
   db/
     index.ts            # Neon SQL client (reads DATABASE_URL)
     lookups.ts          # insertLookup() + ensureTable()

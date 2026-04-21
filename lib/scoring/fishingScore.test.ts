@@ -23,12 +23,6 @@ function mkForecast(overrides: Partial<HourlyForecast> = {}): HourlyForecast {
 function dangerTexts(reasons: { text: string; tone: string }[]): string[] {
   return reasons.filter(r => r.tone === 'danger').map(r => r.text);
 }
-function _safetyReasons(reasons: { text: string; tone: string; category: string }[]) {
-  return reasons.filter(r => r.category === 'safety');
-}
-function _fishingReasons(reasons: { text: string; tone: string; category: string }[]) {
-  return reasons.filter(r => r.category === 'fishing');
-}
 
 // ═════════════════════════════════════════════════════════════════════════════
 // computeFishingScore
