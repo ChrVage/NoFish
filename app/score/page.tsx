@@ -208,7 +208,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="text-xs text-gray-400 text-left">
-                    <th rowSpan={2} className="pb-2" style={{ width: '1%' }}>Time</th>
+                    <th rowSpan={2} className="pb-2" style={{ width: '1%' }}>Time and Score</th>
                     <th colSpan={3} className="pb-0">Score</th>
                     <th colSpan={2} className="pb-0">Why</th>
                     <th rowSpan={2} className="pb-2" aria-label="Feedback" />
@@ -262,10 +262,9 @@ export default async function ScorePage({ searchParams }: PageProps) {
                           >
                             <span>{formatTime(forecast.time)}</span>
                             <span style={{
-                              fontSize: '11px',
                               fontWeight: 800,
                               lineHeight: '1',
-                              padding: '1px 3px',
+                              padding: '2px 5px',
                               borderRadius: '3px',
                               color: getScoreColor(score),
                               backgroundColor: getScoreBg(score),

@@ -224,7 +224,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
             {/* Column header row */}
             <tr>
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider sticky left-0 bg-ocean-700 z-10 whitespace-nowrap" style={{ width: '1%' }}>
-                Time
+                {scores ? 'Time and Score' : 'Time'}
               </th>
 
               {/* ── MET Norway Locationforecast columns ── */}

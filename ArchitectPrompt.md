@@ -33,6 +33,15 @@ Please review the code based on the following prioritized criteria:
 Found in the [README.md](README.md) file.
 
 ## To implement before release
+- Is it a problem with >1 meter waves if the period is long? Could the score calculation be modified so that just a bit too high waves with long period is great safety?
+
+- Coloured background is not neccessary on fishing score, only bold and green text.
+- Right align the score% in the time field both in details and in score.
+- No need to have bold Score% in the details screen. In the Score screen, only good or bad scores should be bold.
+- Change name on Snow/Rain in details page to Precipitation
+- Is it possible to detect if the map is only on land, and avoid the activation of the seachart?
+- If a clicked point is on land - then seachart should not be activated.
+- Clicking the logo in the maps page should reset all links and reset the map view.
 - Explore possibilities for changing boat size and fish species to tune for (fish species will help adapt the depth. But polloch could be large at the bottom and small higher up.) 
 
 - Are there any other functionalities that could be tested?
