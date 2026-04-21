@@ -358,7 +358,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
                       <span>{formatTime(forecast.time)}</span>
                       <span style={{
                         fontSize: '11px',
-                        fontWeight: 800,
+                        fontWeight: 500,
                         lineHeight: '1',
                         padding: '1px 3px',
                         borderRadius: '3px',

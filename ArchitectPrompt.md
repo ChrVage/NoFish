@@ -35,8 +35,7 @@ Found in the [README.md](README.md) file.
 ## To implement before release
 - Is it a problem with >1 meter waves if the period is long? Could the score calculation be modified so that just a bit too high waves with long period is great safety?
 
-- Right align the score% in the time field both in details and in score.
-- No need to have bold Score% in the details screen. In the Score screen, only good or bad scores should be bold.
+
 - Change name on Snow/Rain in details page to Precipitation
 - Is it possible to detect if the map is only on land, and avoid the activation of the seachart?
 - If a clicked point is on land - then seachart should not be activated.

@@ -223,7 +223,6 @@ export default async function ScorePage({ searchParams }: PageProps) {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {(() => {
-                    const maxFishingScore = Math.max(...scoredForecasts.map(sf => sf.fishingScore));
                     return scoredForecasts.map(({ forecast, score, safetyScore, fishingScore, reasons }, i) => {
                     const isMidnight = i > 0 && (() => {
                       const dateFmt = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -240,7 +239,6 @@ export default async function ScorePage({ searchParams }: PageProps) {
                     }
 
                     const anchor = timeAnchor(forecast.time, timezone);
-                    const isTopFishing = maxFishingScore >= 50 && fishingScore >= 50 && fishingScore >= maxFishingScore - 15;
 
                     rows.push(
                       <tr key={forecast.time} id={anchor} data-window={rowToWindow.has(i) ? rowToWindow.get(i) : undefined} style={{ verticalAlign: 'top', scrollMarginTop: '4rem' }}>
@@ -262,7 +260,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                           >
                             <span>{formatTime(forecast.time)}</span>
                             <span style={{
-                              fontWeight: 800,
+                              fontWeight: (score >= 50 || score < 35) ? 800 : 500,
                               lineHeight: '1',
                               padding: '2px 5px',
                               borderRadius: '3px',
@@ -299,10 +297,10 @@ export default async function ScorePage({ searchParams }: PageProps) {
                           {safetyScore}%
                         </td>
                         <td className="py-2 text-center tabular-nums text-xs" style={
-                          isTopFishing
+                          fishingScore >= 50
                             ? { color: '#15803d', fontWeight: 700 }
-                            : reasons.filter(r => r.category === 'fishing').every(r => r.tone === 'good')
-                              ? { color: '#15803d', fontWeight: 600 }
+                            : fishingScore < 35
+                              ? { color: '#c2410c', fontWeight: 700 }
                               : { color: '#4b5563' }
                         }>
                           {fishingScore}%
