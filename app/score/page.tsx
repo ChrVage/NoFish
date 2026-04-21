@@ -300,7 +300,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                         </td>
                         <td className="py-2 text-center tabular-nums text-xs" style={
                           isTopFishing
-                            ? { color: '#14532d', fontWeight: 700, backgroundColor: '#dcfce7', borderRadius: '6px' }
+                            ? { color: '#15803d', fontWeight: 700 }
                             : reasons.filter(r => r.category === 'fishing').every(r => r.tone === 'good')
                               ? { color: '#15803d', fontWeight: 600 }
                               : { color: '#4b5563' }
