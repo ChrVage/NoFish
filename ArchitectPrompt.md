@@ -34,7 +34,7 @@ Make sure all functionality is updated in the documentation. Also read all docum
 Found in the [README.md](README.md) file.
 
 ## To implement before release
-- Explore possibilities for changing boat size and fish species to tune for (fish species will help adapt the depth. But for instance polloch could be large at the bottom and small higher up.) 
+- Explore possibilities for changing boat size and fish species to tune for (fish species will help adapt the depth. But for instance polloch could be large at the bottom and small higher up.) There should be a way to remember the choices until the next use of the webpage, without logging in. Don't do changes, just explain options.
 
 - Are there any other functionalities in this app that could be tested, like the score is tested?
 
