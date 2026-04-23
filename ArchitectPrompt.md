@@ -34,7 +34,14 @@ Make sure all functionality is updated in the documentation. Also read all docum
 Found in the [README.md](README.md) file.
 
 ## To implement before release
+
+- Is this true: "No current, no fish"? Some places the current is never stronger than 0,15 m/s. Are those places permanently bad? 
+- In documentation it says 1 is used when there is no current. Is this true, or should the documentation be fixed?
+- It should be possble to zoom in on documentation pages on NoFish, and the text should adapt, instead of flowing over the edge.
+
 - Add new tuning functionality to NoFish with no login and no cookies by using URL parameters as the primary source of truth and localStorage as fallback so user choices persist until next visit and links remain shareable. Add tuning for boat size and fish target while keeping the architecture simple, URL-driven, mobile-friendly, and backward compatible when parameters are missing. Boat size presets must be in feet ranges and include 20 feet, using 15-19 ft, 20-24 ft, 25-30 ft, and 31-40 ft with 20-24 ft as default. Fish targets must be common food fish on the Norwegian coast and include Cod (Torsk), Saithe/Coalfish (Sei), Haddock (Hyse), Mackerel (Makrell), Pollock (Lyr), Halibut (Kveite), Ling (Lange), Tusk (Brosme), Monkfish (Breiflabb), Wolffish (Steinbit), Redfish (Uer), Plaice (Rødspette), Hake (Lysing), plus General recommendation as default. Species tuning must adapt effective depth preference and support Pollock as multi-depth behavior where smaller fish are higher in the water column and larger fish are deeper. Boat size must affect only safety thresholds such as wind limits, wave-height penalties, and short-period wave sensitivity, while species must affect fishing-depth preference and not core safety logic. Ensure URL-first precedence, localStorage fallback, and URL updates when selections change, and include unit tests for profile mapping, parameter precedence, defaults, and compatibility when no tuning parameters are present.
+- implement functionality for scoring for different fishing methods; Trolling, Fishing on the same spot, fishing with net (high scone only when also the morning after is calm), fish pot- on the bottom (then current should be ok during the night and next few days)
+- Recommended methods when species is selected.
 
 - Are there any other functionalities in this app that could be tested, like the score is tested?
 
@@ -51,7 +58,7 @@ Found in the [README.md](README.md) file.
 ### To implement later (in case number of users increase)
 - Implement function for optional payment
 
-- Implment an **API** so others can collect next best fishing times based on coordinates. One for score and detail and one for tide. Make sure I can contact the caller, so I don't need authentication on this solution. Also implement limiting so that I will not take down my data sources.
+- Implment an **API** so others can collect next best fishing times based on coordinates. One for score and detail and one for tide. Make sure I can contact the caller, so I don't need authentication on this solution. Also implement limiting so that I will not take down my data sources. API optionally can include boat size, species and method. Use default if not provided.
 
 - Functionality for subscribing to calendar appointments with good fishing times.
 

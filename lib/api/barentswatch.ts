@@ -184,7 +184,6 @@ export async function getWaveGridPoint(
     const waveForecast = await getWaveForecast(lat, lng);
 
     if (!waveForecast || waveForecast.length === 0) {
-      await setCached(cacheKey, { point: null } satisfies WaveGridPointCache, 1);
       return null;
     }
 
@@ -192,13 +191,11 @@ export async function getWaveGridPoint(
     const gridLng = waveForecast[0].longitude;
 
     if (gridLat == null || gridLng == null) {
-      await setCached(cacheKey, { point: null } satisfies WaveGridPointCache, 1);
       return null;
     }
 
     const distance = haversineDistance(lat, lng, gridLat, gridLng);
     if (distance > MAX_WAVE_GRID_DISTANCE_KM) {
-      await setCached(cacheKey, { point: null } satisfies WaveGridPointCache, 1);
       return null;
     }
 
@@ -208,7 +205,6 @@ export async function getWaveGridPoint(
       e => e.totalSignificantWaveHeight != null && e.totalSignificantWaveHeight > 0
     );
     if (!hasRealWaveData) {
-      await setCached(cacheKey, { point: null } satisfies WaveGridPointCache, 1);
       return null;
     }
 
