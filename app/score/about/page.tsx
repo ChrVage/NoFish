@@ -129,7 +129,7 @@ totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-gray-400 mt-1">When no current data is available, a neutral factor of 1.0 is used.</p>
+              <p className="text-xs text-gray-400 mt-1">When no current data is available, a cautious factor of 0.55 is used — unknown current should not inflate the score.</p>
 
               <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">6. Tidal Phase</h3>
               <p className="text-sm">Tidal phases dictate biological rhythms at depth and nutrient exchange.</p>
