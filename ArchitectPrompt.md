@@ -38,8 +38,6 @@ Found in the [README.md](README.md) file.
 - implement functionality for scoring for different fishing methods; Trolling, Fishing on the same spot, fishing with net (high scone only when also the morning after is calm), fish pot- on the bottom (then current should be ok during the night and next few days)
 - Recommended methods when species is selected.
 
-- Are there any other functionalities in this app that could be tested, like the score is tested?
-
 - Also support Norwegian language.
 
 - Create a colour palette, then a better icon and logo, maybe with https://realfavicongenerator.net/
