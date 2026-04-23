@@ -19,15 +19,15 @@ export default function AboutPage() {
         </div>
       </Header>
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-lg" style={{ padding: '2rem 1.5rem' }}>
+      <main className="max-w-3xl mx-auto w-full min-w-0 px-4 py-8">
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ padding: '2rem 1.5rem' }}>
 
           <h1 className="text-2xl font-bold text-ocean-900 mb-2">About NoFish</h1>
           <p className="text-sm text-gray-500 mb-6 italic">
             ... because fishing in bad weather is worse than no fishing at all.
           </p>
 
-          <div className="prose prose-sm max-w-none text-gray-700 space-y-6">
+          <div className="prose prose-sm max-w-none text-gray-700 space-y-6 break-words [overflow-wrap:anywhere] [&_table]:w-full [&_th]:whitespace-normal [&_td]:whitespace-normal [&_th]:align-top [&_td]:align-top">
 
             <section>
               <h2 className="text-lg font-bold text-ocean-900 mt-6 mb-2">What it does</h2>
@@ -74,23 +74,25 @@ export default function AboutPage() {
                 The Details page shows an hourly forecast table with columns grouped by API source. See the{' '}
                 <Link href="/data" className="text-ocean-600 underline">Data Column Reference</Link> for a full description of every column.
               </p>
-              <table className="text-xs mt-2 w-full">
-                <thead>
-                  <tr className="text-left border-b border-gray-200">
-                    <th className="pb-1 pr-4">Group</th>
-                    <th className="pb-1 pr-4">Columns</th>
-                    <th className="pb-1">Notes</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  <tr><td className="py-1 pr-4">MET Norway</td><td className="py-1 pr-4">Wind, Wind dir, Weather, Rain/Snow, Temp</td><td className="py-1">Always shown</td></tr>
-                  <tr><td className="py-1 pr-4">Barentswatch Waves</td><td className="py-1 pr-4">Wave height, Wave dir</td><td className="py-1">Coastal only; interpolated hourly</td></tr>
-                  <tr><td className="py-1 pr-4">Barentswatch Current</td><td className="py-1 pr-4">Current speed, Current dir</td><td className="py-1">Coastal only</td></tr>
-                  <tr><td className="py-1 pr-4">MET Sea Temp</td><td className="py-1 pr-4">Sea temp</td><td className="py-1">From MET Oceanforecast</td></tr>
-                  <tr><td className="py-1 pr-4">Kartverket</td><td className="py-1 pr-4">Tide</td><td className="py-1">High/low phase label</td></tr>
-                  <tr><td className="py-1 pr-4">Calculated</td><td className="py-1 pr-4">Sun</td><td className="py-1">Sunrise/sunset/twilight</td></tr>
-                </tbody>
-              </table>
+              <div className="overflow-x-auto">
+                <table className="text-xs mt-2 w-full table-auto">
+                  <thead>
+                    <tr className="text-left border-b border-gray-200">
+                      <th className="pb-1 pr-4">Group</th>
+                      <th className="pb-1 pr-4">Columns</th>
+                      <th className="pb-1">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    <tr><td className="py-1 pr-4">MET Norway</td><td className="py-1 pr-4">Wind, Wind dir, Weather, Rain/Snow, Temp</td><td className="py-1">Always shown</td></tr>
+                    <tr><td className="py-1 pr-4">Barentswatch Waves</td><td className="py-1 pr-4">Wave height, Wave dir</td><td className="py-1">Coastal only; interpolated hourly</td></tr>
+                    <tr><td className="py-1 pr-4">Barentswatch Current</td><td className="py-1 pr-4">Current speed, Current dir</td><td className="py-1">Coastal only</td></tr>
+                    <tr><td className="py-1 pr-4">MET Sea Temp</td><td className="py-1 pr-4">Sea temp</td><td className="py-1">From MET Oceanforecast</td></tr>
+                    <tr><td className="py-1 pr-4">Kartverket</td><td className="py-1 pr-4">Tide</td><td className="py-1">High/low phase label</td></tr>
+                    <tr><td className="py-1 pr-4">Calculated</td><td className="py-1 pr-4">Sun</td><td className="py-1">Sunrise/sunset/twilight</td></tr>
+                  </tbody>
+                </table>
+              </div>
             </section>
 
             <section>

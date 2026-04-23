@@ -19,15 +19,15 @@ export default function ScoreAboutPage() {
         </div>
       </Header>
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-lg" style={{ padding: '2rem 1.5rem' }}>
+      <main className="max-w-3xl mx-auto w-full min-w-0 px-4 py-8">
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ padding: '2rem 1.5rem' }}>
 
           <h1 className="text-2xl font-bold text-ocean-900 mb-2">Fishing Score Algorithm</h1>
           <p className="text-sm text-gray-500 mb-6">
             The Score page shows a per-hour fishing suitability rating from <strong>0 %</strong> (most dangerous / unfishable) to <strong>100 %</strong> (perfect conditions). Each row includes the time, three scores (Total, Safety, Fishing), and brief explanations by category.
           </p>
 
-          <div className="prose prose-sm max-w-none text-gray-700 space-y-6">
+          <div className="prose prose-sm max-w-none text-gray-700 space-y-6 break-words [overflow-wrap:anywhere] [&_table]:w-full [&_th]:whitespace-normal [&_td]:whitespace-normal [&_th]:align-top [&_td]:align-top">
 
             <p>
               The algorithm is designed for <strong>deep-water fishing (50–200 m)</strong> on the exposed Norwegian coast, where the continuous Norwegian Coastal Current (NCC) often intersects with and overpowers standard tidal movements. The core philosophy is <strong>&quot;No current, no fish&quot;</strong> — water movement is the primary driver for feeding behaviour in deep-water predators such as Ling, Tusk, Cod, and Saithe.
