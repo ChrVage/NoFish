@@ -159,7 +159,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
               <th className="sticky left-0 bg-maritime-teal-800 z-10" aria-hidden="true" />
               {/* MET Norway Locationforecast — always present */}
               <th
-                colSpan={6}
+                colSpan={7}
                 scope="colgroup"
                 className="px-4 py-1 text-center font-semibold border-l-2 border-amber-400/50 border-r border-amber-400/20"
               >
@@ -244,6 +244,9 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider bg-amber-900/20 border-r-2 border-amber-400/30">
                 Pressure
               </th>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-amber-900/20 border-r-2 border-amber-400/30">
+                UV
+              </th>
 
               {/* ── Barentswatch Waveforecast columns ── */}
               {hasOceanData && (
@@ -313,7 +316,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
               })();
 
               // Count total columns for separator rows
-              const totalCols = 8 + (hasOceanData ? 7 : 0) + 1 + 1;
+              const totalCols = 9 + (hasOceanData ? 7 : 0) + 1 + 1;
 
               const rows: React.ReactNode[] = [];
 
@@ -390,8 +393,23 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
                 <td className="px-4 py-3 text-sm text-gray-700 border-r-2 border-amber-200">
                   {formatValue(forecast.temperature, 1, '°C')}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700 border-r-2 border-amber-200">
+                <td className="px-4 py-3 text-sm text-gray-700">
                   {forecast.pressure !== undefined ? `${forecast.pressure.toFixed(0)} hPa` : '—'}
+                </td>
+                <td className="px-4 py-3 text-sm text-center text-gray-700 border-r-2 border-amber-200">
+                  {forecast.uvIndex !== undefined ? (
+                    <span className={
+                      forecast.uvIndex >= 8
+                        ? 'text-red-700 font-semibold'
+                        : forecast.uvIndex >= 6
+                          ? 'text-orange-700 font-semibold'
+                          : forecast.uvIndex >= 3
+                            ? 'text-amber-700 font-medium'
+                            : 'text-gray-600'
+                    }>
+                      {Math.round(forecast.uvIndex)}
+                    </span>
+                  ) : '—'}
                 </td>
 
                 {/* ── Barentswatch Waveforecast cells ── */}

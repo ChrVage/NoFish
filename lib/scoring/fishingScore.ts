@@ -651,6 +651,30 @@ export function computeFishingScore(f: HourlyForecast, depthOrOptions?: number |
     }
   }
 
+  // ═══ 12. DRIFT ICE — safety warning (no score effect) ═════════════════
+  //
+  //   Very cold sea can produce drifting slush/ice, especially when
+  //   wind/current can transport it into routes and nearshore areas.
+  //   This is a safety warning only and does not alter score factors.
+  //
+  if (f.seaTemperature !== undefined) {
+    const st = f.seaTemperature;
+    const ws = f.windSpeed ?? 0;
+    const gs = f.windGust ?? ws;
+    const windStress = Math.max(ws, gs * 0.7);
+    const driftStress = Math.max(windStress / 10, f.currentSpeed ?? 0);
+
+    if (st <= 0) {
+      if (driftStress >= 0.7) {
+        reasons.push({ text: `🧊 Sea ${st.toFixed(1)}°C — drift ice likely`, tone: 'danger', category: 'safety' });
+      } else {
+        reasons.push({ text: `🧊 Sea ${st.toFixed(1)}°C — drift ice possible`, tone: 'danger', category: 'safety' });
+      }
+    } else if (st <= 1 && driftStress >= 0.7) {
+      reasons.push({ text: `🧊 Near-freezing sea ${st.toFixed(1)}°C — watch for drift ice`, tone: 'bad', category: 'safety' });
+    }
+  }
+
   // ═══ COMBINE — multiply factors, scale to 0–100 ══════════════════════
   const safetyRaw = windFactor * waveFactor * lightFactor * wavePeriodFactor;
   const fishingRaw = currentFactor * tideFactor * moonFactor * precipFactor * tempFactor * pressureFactor * lightFishingFactor;
