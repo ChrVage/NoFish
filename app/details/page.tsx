@@ -9,6 +9,7 @@ import { haversineDistance, formatDistance } from '@/lib/utils/distance';
 import { parseZoomParam, buildLocationUrl } from '@/lib/utils/params';
 import { enrichForecasts } from '@/lib/utils/enrichForecasts';
 import { computeFishingScore } from '@/lib/scoring/fishingScore';
+import { parseTuningFromSearchParams, resolveTuningSelection } from '@/lib/utils/tuning';
 import ForecastTable from '@/components/ForecastTable';
 import Header from '@/components/Header';
 import BackButton from '@/components/BackButton';
@@ -19,11 +20,11 @@ import HashScroller from '@/components/HashScroller';
 import SafetyContacts from '@/components/SafetyContacts';
 
 interface PageProps {
-  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string }>;
+  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string; boat?: string; fish?: string; method?: string }>;
 }
 
 export default async function DetailsPage({ searchParams }: PageProps) {
-  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr } = await searchParams;
+  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr, boat: boatStr, fish: fishStr, method: methodStr } = await searchParams;
   const lat = parseFloat(latStr ?? '');
   const lng = parseFloat(lngStr ?? '');
   const validZoom = parseZoomParam(zoomStr);
@@ -34,6 +35,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
 
   // Pass isSea hint when known — skips 4 ocean API calls for inland points
   const isSea = seaStr === '0' ? false : seaStr === '1' ? true : undefined;
+  const tuning = resolveTuningSelection(parseTuningFromSearchParams({ boat: boatStr, fish: fishStr, method: methodStr }));
 
   // Fetch data in parallel directly from lib — no internal HTTP round-trips
   const [locationData, weatherResult] = await Promise.all([
@@ -48,8 +50,16 @@ export default async function DetailsPage({ searchParams }: PageProps) {
   const depth = locationData?.isSea && locationData.elevation !== undefined
     ? Math.abs(locationData.elevation)
     : undefined;
-  const scores = forecasts.map(f => computeFishingScore(f, depth).score);
-  const scoreBaseUrl = buildLocationUrl('score', { lat, lng, zoom: validZoom, sea: seaStr });
+  const scores = forecasts.map((f) => computeFishingScore(f, { depth, boat: tuning.boat, fish: tuning.fish }).score);
+  const scoreBaseUrl = buildLocationUrl('score', {
+    lat,
+    lng,
+    zoom: validZoom,
+    sea: seaStr,
+    boat: tuning.boat,
+    fish: tuning.fish,
+    method: tuning.method,
+  });
   const oceanForecastDistance = oceanForecastLat !== undefined && oceanForecastLng !== undefined
     ? haversineDistance(lat, lng, oceanForecastLat, oceanForecastLng)
     : null;
@@ -101,7 +111,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
       for (const f of forecasts) {
         const fMs = new Date(f.time).getTime();
         if (fMs >= cutoffMs) {break;}
-        const { reasons } = computeFishingScore(f, depth);
+        const { reasons } = computeFishingScore(f, { depth, boat: tuning.boat, fish: tuning.fish });
         const dangerReasons = reasons.filter(r => r.tone === 'danger').map(r => r.text);
         if (dangerReasons.length > 0) {
           allDangers.push({ time: f.time, reasons: dangerReasons, count: dangerReasons.length });
@@ -167,7 +177,17 @@ export default async function DetailsPage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton />
           </div>
-          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="details" availablePages={isLand ? ['details'] : undefined} />
+          <PageNav
+            lat={lat}
+            lng={lng}
+            zoom={validZoom}
+            sea={seaStr}
+            boat={tuning.boat}
+            fish={tuning.fish}
+            method={tuning.method}
+            current="details"
+            availablePages={isLand ? ['details'] : undefined}
+          />
         </div>
       </Header>
 

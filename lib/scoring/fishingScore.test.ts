@@ -5,6 +5,7 @@ import {
   getScoreColor,
   getScoreBg,
   getDepthProfile,
+  recommendFishingMethods,
   type ScoredForecast,
 } from './fishingScore';
 import type { HourlyForecast } from '@/types/weather';
@@ -544,5 +545,75 @@ describe('depth-adaptive scoring', () => {
     const { score } = computeFishingScore(mkForecast({ currentSpeed: 0.40 }));
     expect(score).toBeGreaterThanOrEqual(0);
     expect(score).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('tuning compatibility', () => {
+  it('boat size changes safety, not fishing logic', () => {
+    const f = mkForecast({ windSpeed: 12.5, windGust: 18, waveHeight: 1.4, currentSpeed: 0.35 });
+    const smallBoat = computeFishingScore(f, { boat: '15-19', fish: 'general' });
+    const defaultBoat = computeFishingScore(f, { boat: '20-24', fish: 'general' });
+
+    expect(smallBoat.safetyScore).toBeLessThan(defaultBoat.safetyScore);
+    expect(smallBoat.fishingScore).toBe(defaultBoat.fishingScore);
+  });
+
+  it('species tuning changes fishing preference, not safety', () => {
+    const f = mkForecast({ currentSpeed: 0.24, windSpeed: 5, waveHeight: 0.8 });
+    const general = computeFishingScore(f, { fish: 'general', boat: '20-24' });
+    const mackerel = computeFishingScore(f, { fish: 'mackerel', boat: '20-24' });
+
+    expect(mackerel.fishingScore).toBeGreaterThan(general.fishingScore);
+    expect(mackerel.safetyScore).toBe(general.safetyScore);
+  });
+
+  it('pollock supports multi-depth behavior', () => {
+    const shallowCurrent = computeFishingScore(mkForecast({ currentSpeed: 0.25 }), { fish: 'pollock', boat: '20-24' });
+    const deeperCurrent = computeFishingScore(mkForecast({ currentSpeed: 0.45 }), { fish: 'pollock', boat: '20-24' });
+
+    expect(shallowCurrent.fishingScore).toBeGreaterThanOrEqual(45);
+    expect(deeperCurrent.fishingScore).toBeGreaterThanOrEqual(45);
+  });
+});
+
+describe('recommendFishingMethods', () => {
+  it('returns ranked method scores with two recommendations', () => {
+    const scored: ScoredForecast[] = Array.from({ length: 24 }).map((_, i) => ({
+      forecast: mkForecast({
+        time: `2026-01-01T${String(i).padStart(2, '0')}:00:00Z`,
+        currentSpeed: 0.35,
+        windSpeed: 5,
+        waveHeight: 0.8,
+      }),
+      score: 65,
+      safetyScore: 70,
+      fishingScore: 75,
+      reasons: [],
+    }));
+
+    const methods = recommendFishingMethods(scored, 'Europe/Oslo', 'cod');
+    expect(methods).toHaveLength(4);
+    expect(methods.filter((m) => m.recommended)).toHaveLength(2);
+    expect(methods[0].score).toBeGreaterThanOrEqual(methods[1].score);
+  });
+
+  it('penalizes net score when morning after is not calm', () => {
+    const scored: ScoredForecast[] = Array.from({ length: 36 }).map((_, i) => ({
+      forecast: mkForecast({
+        time: `2026-01-${i < 24 ? '01' : '02'}T${String(i % 24).padStart(2, '0')}:00:00Z`,
+        currentSpeed: 0.3,
+        windSpeed: i >= 29 && i <= 34 ? 12 : 5,
+        waveHeight: i >= 29 && i <= 34 ? 1.8 : 0.8,
+      }),
+      score: 58,
+      safetyScore: i >= 29 && i <= 34 ? 45 : 70,
+      fishingScore: 72,
+      reasons: [],
+    }));
+
+    const methods = recommendFishingMethods(scored, 'Europe/Oslo', 'general');
+    const net = methods.find((m) => m.method === 'net');
+    expect(net).toBeDefined();
+    expect(net?.score).toBeLessThan(60);
   });
 });

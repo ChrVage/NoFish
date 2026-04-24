@@ -1,12 +1,30 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createRoot, type Root } from 'react-dom/client';
 import { flushSync } from 'react-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { buildLocationUrl } from '@/lib/utils/params';
+import {
+  parseTuningFromSearchParams,
+  resolveTuningSelection,
+  sanitizeTuningSelection,
+} from '@/lib/utils/tuning';
+
+const TUNING_STORAGE_KEY = 'nofish-tuning-v1';
+
+function getStoredTuning() {
+  if (typeof window === 'undefined') {return {};}
+  try {
+    const raw = localStorage.getItem(TUNING_STORAGE_KEY);
+    if (!raw) {return {};}
+    return sanitizeTuningSelection(JSON.parse(raw));
+  } catch {
+    return {};
+  }
+}
 
 // ── Popup content (rendered via createRoot into a Leaflet popup) ────────────
 
@@ -168,6 +186,11 @@ export default function Map() {
   const restoreLat = parseFloat(searchParams.get('lat') ?? '');
   const restoreLng = parseFloat(searchParams.get('lng') ?? '');
   const restoreZoom = parseInt(searchParams.get('zoom') ?? '', 10);
+  const tuningFromUrl = useMemo(() => parseTuningFromSearchParams({
+    boat: searchParams.get('boat') ?? undefined,
+    fish: searchParams.get('fish') ?? undefined,
+    method: searchParams.get('method') ?? undefined,
+  }), [searchParams]);
   const hasRestore = !isNaN(restoreLat) && !isNaN(restoreLng);
 
   useEffect(() => {
@@ -280,9 +303,18 @@ export default function Map() {
         navigating = true;
         const zoom = map.getZoom();
         const sea = isLand ? '0' : '1';
+        const tuning = resolveTuningSelection(tuningFromUrl, getStoredTuning());
         // Update current history entry so browser-back restores map position
-        window.history.replaceState(window.history.state, '', buildLocationUrl('', { lat, lng, zoom }));
-        router.push(buildLocationUrl(page as 'score' | 'details' | 'tide', { lat, lng, zoom, sea }));
+        window.history.replaceState(window.history.state, '', buildLocationUrl('', { lat, lng, zoom, boat: tuning.boat, fish: tuning.fish, method: tuning.method }));
+        router.push(buildLocationUrl(page as 'score' | 'details' | 'tide', {
+          lat,
+          lng,
+          zoom,
+          sea,
+          boat: tuning.boat,
+          fish: tuning.fish,
+          method: tuning.method,
+        }));
       };
 
       // Initial render — show loading state with all buttons visible
@@ -467,7 +499,7 @@ export default function Map() {
         mapRef.current = null;
       }
     };
-  }, [router, restoreLat, restoreLng, restoreZoom, hasRestore]);
+  }, [router, restoreLat, restoreLng, restoreZoom, hasRestore, tuningFromUrl]);
 
   // Toggle Kartverket sea chart overlay
   useEffect(() => {
@@ -584,6 +616,7 @@ export default function Map() {
         const lat4 = latitude.toFixed(4);
         const lng4 = longitude.toFixed(4);
         const zoom = Math.max(mapRef.current?.getZoom() ?? MIN_LOCATION_ZOOM, MIN_LOCATION_ZOOM);
+        const tuning = resolveTuningSelection(tuningFromUrl, getStoredTuning());
         let sea: string | undefined;
         try {
           const res = await fetch(`/api/geocoding?lat=${lat4}&lon=${lng4}`);
@@ -594,8 +627,23 @@ export default function Map() {
         } catch { /* navigate without sea hint */ }
         setLocating(false);
         // Update current history entry so browser-back restores map position
-        window.history.replaceState(window.history.state, '', buildLocationUrl('', { lat: lat4, lng: lng4, zoom }));
-        router.push(buildLocationUrl('details', { lat: lat4, lng: lng4, zoom, sea }));
+        window.history.replaceState(window.history.state, '', buildLocationUrl('', {
+          lat: lat4,
+          lng: lng4,
+          zoom,
+          boat: tuning.boat,
+          fish: tuning.fish,
+          method: tuning.method,
+        }));
+        router.push(buildLocationUrl('details', {
+          lat: lat4,
+          lng: lng4,
+          zoom,
+          sea,
+          boat: tuning.boat,
+          fish: tuning.fish,
+          method: tuning.method,
+        }));
       },
       (err) => {
         setLocating(false);

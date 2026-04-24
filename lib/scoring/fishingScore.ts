@@ -30,6 +30,7 @@
  */
 
 import type { HourlyForecast } from '@/types/weather';
+import type { BoatSizePreset, FishTarget, FishingMethod } from '@/lib/utils/tuning';
 
 // ── Public types ────────────────────────────────────────────────────────────
 
@@ -47,6 +48,19 @@ export interface BestWindow {
   start: number;
   len: number;
   avg: number;
+}
+
+export interface MethodRecommendation {
+  method: FishingMethod;
+  score: number;
+  reason: string;
+  recommended: boolean;
+}
+
+export interface ComputeScoreOptions {
+  depth?: number;
+  boat?: BoatSizePreset;
+  fish?: FishTarget;
 }
 
 // ── Continuous helper functions ──────────────────────────────────────────────
@@ -84,6 +98,125 @@ export interface DepthProfile {
   dawnDuskBonus: number;
 }
 
+interface BoatSafetyProfile {
+  stormWind: number;
+  stormGust: number;
+  strongWindStart: number;
+  strongWindEnd: number;
+  strongGustStart: number;
+  waveCalm: number;
+  waveModerate: number;
+  waveDanger: number;
+  shortWavePeriodStart: number;
+}
+
+function getBoatSafetyProfile(boat: BoatSizePreset | undefined): BoatSafetyProfile {
+  switch (boat) {
+  case '15-19':
+    return {
+      stormWind: 13.5,
+      stormGust: 20,
+      strongWindStart: 10,
+      strongWindEnd: 13.5,
+      strongGustStart: 16,
+      waveCalm: 0.4,
+      waveModerate: 0.8,
+      waveDanger: 1.6,
+      shortWavePeriodStart: 5.5,
+    };
+  case '25-30':
+    return {
+      stormWind: 16.5,
+      stormGust: 24,
+      strongWindStart: 13,
+      strongWindEnd: 16.5,
+      strongGustStart: 19,
+      waveCalm: 0.55,
+      waveModerate: 1.1,
+      waveDanger: 2.2,
+      shortWavePeriodStart: 4.8,
+    };
+  case '31-40':
+    return {
+      stormWind: 18,
+      stormGust: 26,
+      strongWindStart: 14,
+      strongWindEnd: 18,
+      strongGustStart: 21,
+      waveCalm: 0.6,
+      waveModerate: 1.25,
+      waveDanger: 2.5,
+      shortWavePeriodStart: 4.5,
+    };
+  case '20-24':
+  default:
+    return {
+      stormWind: 15,
+      stormGust: 22,
+      strongWindStart: 12,
+      strongWindEnd: 15,
+      strongGustStart: 18,
+      waveCalm: 0.5,
+      waveModerate: 1.0,
+      waveDanger: 2.0,
+      shortWavePeriodStart: 5.0,
+    };
+  }
+}
+
+function speciesDepths(fish: FishTarget | undefined): number[] {
+  switch (fish) {
+  case 'cod': return [90];
+  case 'saithe': return [60];
+  case 'haddock': return [120];
+  case 'mackerel': return [25];
+  case 'pollock': return [30, 130];
+  case 'halibut': return [150];
+  case 'ling': return [220];
+  case 'tusk': return [260];
+  case 'monkfish': return [130];
+  case 'wolffish': return [100];
+  case 'redfish': return [300];
+  case 'plaice': return [70];
+  case 'hake': return [180];
+  case 'general':
+  default:
+    return [];
+  }
+}
+
+function blendedDepth(baseDepth: number | undefined, preferredDepth: number): number {
+  if (baseDepth === undefined) {return preferredDepth;}
+  return baseDepth * 0.6 + preferredDepth * 0.4;
+}
+
+function getSpeciesProfiles(depth: number | undefined, fish: FishTarget | undefined): DepthProfile[] {
+  const preferred = speciesDepths(fish);
+  if (preferred.length === 0) {
+    return [getDepthProfile(depth)];
+  }
+  return preferred.map((d) => getDepthProfile(blendedDepth(depth, d)));
+}
+
+function combineDepthProfiles(profiles: DepthProfile[]): DepthProfile {
+  if (profiles.length === 1) {return profiles[0];}
+  const sum = profiles.reduce((acc, p) => ({
+    currentMu: acc.currentMu + p.currentMu,
+    currentSigma: acc.currentSigma + p.currentSigma,
+    tideSpread: acc.tideSpread + p.tideSpread,
+    moonSpread: acc.moonSpread + p.moonSpread,
+    dawnDuskBonus: acc.dawnDuskBonus + p.dawnDuskBonus,
+  }), { currentMu: 0, currentSigma: 0, tideSpread: 0, moonSpread: 0, dawnDuskBonus: 0 });
+  const n = profiles.length;
+  return {
+    currentMu: sum.currentMu / n,
+    currentSigma: sum.currentSigma / n,
+    tideSpread: sum.tideSpread / n,
+    moonSpread: sum.moonSpread / n,
+    dawnDuskBonus: sum.dawnDuskBonus / n,
+  };
+}
+
 /** Return a depth profile that shifts scoring knobs based on seabed depth. */
 export function getDepthProfile(depth: number | undefined): DepthProfile {
   if (depth === undefined) {
@@ -109,8 +242,13 @@ function moonAge(date: Date): number {
 
 // ── The scoring function ────────────────────────────────────────────────────
 
-export function computeFishingScore(f: HourlyForecast, depth?: number): { score: number; safetyScore: number; fishingScore: number; reasons: Reason[] } {
-  const dp = getDepthProfile(depth);
+export function computeFishingScore(f: HourlyForecast, depthOrOptions?: number | ComputeScoreOptions): { score: number; safetyScore: number; fishingScore: number; reasons: Reason[] } {
+  const options: ComputeScoreOptions = typeof depthOrOptions === 'number'
+    ? { depth: depthOrOptions }
+    : (depthOrOptions ?? {});
+  const profiles = getSpeciesProfiles(options.depth, options.fish);
+  const dp = combineDepthProfiles(profiles);
+  const boatSafety = getBoatSafetyProfile(options.boat);
   const reasons: Reason[] = [];
   const good   = (text: string, category: 'safety' | 'fishing') => reasons.push({ text, tone: 'good', category });
   const bad    = (text: string, category: 'safety' | 'fishing') => reasons.push({ text, tone: 'bad', category });
@@ -132,8 +270,8 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
   let currentFactor = 0.55; // default when no current data (unknown → cautious)
   if (f.currentSpeed !== undefined) {
     const cs = f.currentSpeed;
-    // Gaussian centred at depth-adjusted peak, σ from depth profile
-    currentFactor = gaussian(cs, dp.currentMu, dp.currentSigma);
+    // For multi-depth species (for example pollock), allow either depth band to score well.
+    currentFactor = profiles.reduce((best, p) => Math.max(best, gaussian(cs, p.currentMu, p.currentSigma)), 0);
     // Floor for dead water (< 0.1 m/s → max 0.15)
     if (cs < 0.1) {currentFactor = Math.min(currentFactor, 0.15);}
     // Rapid drop above 1.0 m/s
@@ -162,12 +300,11 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
     const gs = f.windGust ?? ws;
 
     // Gale / storm override
-    if (ws > 15 || gs > 22) {
+    if (ws > boatSafety.stormWind || gs > boatSafety.stormGust) {
       windFactor = 0;
       danger(`⚠️ Storm — ${ws.toFixed(1)} m/s (gusts ${gs.toFixed(1)})`, 'safety');
-    } else if (ws > 12 || gs > 18) {
-      // 12 m/s → 0.20, 13.5 m/s → 0.10, 15 m/s → 0.05
-      windFactor = (1 - lerp01(Math.max(ws, gs * 0.7), 12, 15)) * 0.20;
+    } else if (ws > boatSafety.strongWindStart || gs > boatSafety.strongGustStart) {
+      windFactor = (1 - lerp01(Math.max(ws, gs * 0.7), boatSafety.strongWindStart, boatSafety.strongWindEnd)) * 0.20;
       windFactor = Math.max(windFactor, 0.05);
       danger(`⚠️ Strong wind ${ws.toFixed(1)} m/s`, 'safety');
     } else {
@@ -348,14 +485,14 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
   let waveFactor = 0.90; // default when no wave data
   if (f.waveHeight !== undefined) {
     const wh = f.waveHeight;
-    if (wh <= 0.5) {
+    if (wh <= boatSafety.waveCalm) {
       waveFactor = 1.0;
       good(`Calm seas ${wh.toFixed(1)}m`, 'safety');
-    } else if (wh <= 1.0) {
-      waveFactor = 1.0 - 0.4 * sigmoid01(wh, 0.5, 1.0);
+    } else if (wh <= boatSafety.waveModerate) {
+      waveFactor = 1.0 - 0.4 * sigmoid01(wh, boatSafety.waveCalm, boatSafety.waveModerate);
       if (wh <= 0.7) {good(`Low waves ${wh.toFixed(1)}m`, 'safety');}
-    } else if (wh <= 2.0) {
-      waveFactor = 0.6 - 0.5 * sigmoid01(wh, 1.0, 2.0);
+    } else if (wh <= boatSafety.waveDanger) {
+      waveFactor = 0.6 - 0.5 * sigmoid01(wh, boatSafety.waveModerate, boatSafety.waveDanger);
       if (wh > 1.5) {
         const gustVal = f.windGust ?? f.windSpeed ?? 0;
         if (gustVal > 5) {
@@ -368,7 +505,7 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
         bad(`Waves ${wh.toFixed(1)}m`, 'safety');
       }
     } else {
-      waveFactor = Math.max(0, 0.1 - 0.1 * sigmoid01(wh, 2.0, 3.0));
+      waveFactor = Math.max(0, 0.1 - 0.1 * sigmoid01(wh, boatSafety.waveDanger, boatSafety.waveDanger + 1.0));
       danger(`⚠️ Dangerous seas ${wh.toFixed(1)}m`, 'safety');
     }
   }
@@ -455,11 +592,11 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
       reason = { text: 'Long swell — comfortable', tone: 'good' };
     } else if (wp >= 7) {
       rawPeriodFactor = 0.85 + 0.15 * lerp01(wp, 7, 10);
-    } else if (wp >= 5) {
-      rawPeriodFactor = 0.60 + 0.25 * lerp01(wp, 5, 7);
+    } else if (wp >= boatSafety.shortWavePeriodStart) {
+      rawPeriodFactor = 0.60 + 0.25 * lerp01(wp, boatSafety.shortWavePeriodStart, 7);
       reason = { text: `Short waves ${wp.toFixed(1)}s`, tone: 'bad' };
     } else {
-      rawPeriodFactor = 0.30 + 0.30 * lerp01(wp, 3, 5);
+      rawPeriodFactor = 0.30 + 0.30 * lerp01(wp, 3, boatSafety.shortWavePeriodStart);
       reason = { text: `⚠️ Steep chop ${wp.toFixed(1)}s`, tone: 'danger' };
     }
 
@@ -523,6 +660,149 @@ export function computeFishingScore(f: HourlyForecast, depth?: number): { score:
   const fishingScore = Math.round(Math.max(0, Math.min(100, fishingRaw * 100)));
 
   return { score, safetyScore, fishingScore, reasons };
+}
+
+function clampScore(v: number): number {
+  return Math.round(Math.max(0, Math.min(100, v)));
+}
+
+function localHour(iso: string, timezone: string): number {
+  const parts = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hour12: false, timeZone: timezone }).formatToParts(new Date(iso));
+  return parseInt(parts.find((p) => p.type === 'hour')?.value ?? '0', 10);
+}
+
+function localDateKey(iso: string, timezone: string): string {
+  const parts = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: timezone }).formatToParts(new Date(iso));
+  const y = parts.find((p) => p.type === 'year')?.value ?? '0000';
+  const m = parts.find((p) => p.type === 'month')?.value ?? '00';
+  const d = parts.find((p) => p.type === 'day')?.value ?? '00';
+  return `${y}-${m}-${d}`;
+}
+
+const SPECIES_METHOD_PREFS: Record<FishTarget, FishingMethod[]> = {
+  general: ['same-spot', 'trolling', 'pot', 'net'],
+  cod: ['same-spot', 'pot', 'net', 'trolling'],
+  saithe: ['trolling', 'same-spot', 'net', 'pot'],
+  haddock: ['same-spot', 'net', 'pot', 'trolling'],
+  mackerel: ['trolling', 'same-spot', 'net', 'pot'],
+  pollock: ['trolling', 'same-spot', 'pot', 'net'],
+  halibut: ['same-spot', 'trolling', 'pot', 'net'],
+  ling: ['same-spot', 'pot', 'net', 'trolling'],
+  tusk: ['same-spot', 'pot', 'net', 'trolling'],
+  monkfish: ['same-spot', 'net', 'pot', 'trolling'],
+  wolffish: ['same-spot', 'pot', 'net', 'trolling'],
+  redfish: ['same-spot', 'pot', 'net', 'trolling'],
+  plaice: ['same-spot', 'net', 'pot', 'trolling'],
+  hake: ['same-spot', 'trolling', 'pot', 'net'],
+};
+
+export function recommendFishingMethods(
+  scoredForecasts: ScoredForecast[],
+  timezone: string,
+  fish: FishTarget,
+): MethodRecommendation[] {
+  if (scoredForecasts.length === 0) {return [];}
+
+  const next48h = scoredForecasts.slice(0, 48);
+  const avgScore = next48h.reduce((s, x) => s + x.score, 0) / next48h.length;
+
+  const tomorrowKey = (() => {
+    const first = scoredForecasts[0]?.forecast.time;
+    if (!first) {return null;}
+    const d = new Date(first);
+    d.setUTCDate(d.getUTCDate() + 1);
+    return localDateKey(d.toISOString(), timezone);
+  })();
+
+  const morningAfter = tomorrowKey
+    ? scoredForecasts.filter((x) => {
+      const sameDay = localDateKey(x.forecast.time, timezone) === tomorrowKey;
+      const h = localHour(x.forecast.time, timezone);
+      return sameDay && h >= 5 && h <= 10;
+    })
+    : [];
+  const morningAfterCalm = morningAfter.length > 0
+    && morningAfter.every((x) => (x.forecast.windSpeed ?? 0) <= 8 && (x.forecast.waveHeight ?? 0) <= 1.1 && x.safetyScore >= 60);
+
+  const nights = scoredForecasts.filter((x) => {
+    const h = localHour(x.forecast.time, timezone);
+    return h >= 22 || h <= 5;
+  });
+  const potCurrentOk = nights.length > 0 && nights.every((x) => {
+    const cs = x.forecast.currentSpeed;
+    if (cs === undefined) {return true;}
+    return cs >= 0.12 && cs <= 0.75;
+  });
+
+  const allMethods: MethodRecommendation[] = [
+    {
+      method: 'trolling',
+      score: clampScore(avgScore + next48h.reduce((sum, x) => {
+        const cs = x.forecast.currentSpeed ?? 0.35;
+        const ws = x.forecast.windSpeed ?? 5;
+        const wh = x.forecast.waveHeight ?? 0.8;
+        const fit = (cs >= 0.15 && cs <= 0.9 ? 8 : -8) + (ws <= 10 ? 6 : -10) + (wh <= 1.5 ? 6 : -12);
+        return sum + fit;
+      }, 0) / next48h.length),
+      reason: 'Best when drift is manageable and fish are moving in mid-water.',
+      recommended: false,
+    },
+    {
+      method: 'same-spot',
+      score: clampScore(avgScore + next48h.reduce((sum, x) => {
+        const cs = x.forecast.currentSpeed ?? 0.35;
+        const ws = x.forecast.windSpeed ?? 5;
+        const fit = (cs >= 0.2 && cs <= 0.7 ? 10 : -8) + (ws <= 9 ? 6 : -10);
+        return sum + fit;
+      }, 0) / next48h.length),
+      reason: 'Strong for controlled bottom contact when current is steady.',
+      recommended: false,
+    },
+    {
+      method: 'net',
+      score: clampScore((morningAfterCalm ? 1.0 : 0.55) * (avgScore + next48h.reduce((sum, x) => {
+        const ws = x.forecast.windSpeed ?? 5;
+        const wh = x.forecast.waveHeight ?? 0.8;
+        const calmFit = (ws <= 8 ? 8 : -12) + (wh <= 1.2 ? 8 : -14);
+        return sum + calmFit;
+      }, 0) / next48h.length)),
+      reason: morningAfterCalm
+        ? 'Good only because both deployment window and morning-after retrieval look calm.'
+        : 'Penalized because morning-after calm conditions are not stable enough.',
+      recommended: false,
+    },
+    {
+      method: 'pot',
+      score: clampScore((potCurrentOk ? 1.0 : 0.7) * (avgScore + next48h.reduce((sum, x) => {
+        const cs = x.forecast.currentSpeed;
+        const okCurrent = cs === undefined || (cs >= 0.12 && cs <= 0.75);
+        const ws = x.forecast.windSpeed ?? 5;
+        const fit = (okCurrent ? 8 : -14) + (ws <= 11 ? 4 : -8);
+        return sum + fit;
+      }, 0) / next48h.length)),
+      reason: potCurrentOk
+        ? 'Night current and coming days support stable bottom pots.'
+        : 'Reduced because night current is too weak/strong for bottom pots.',
+      recommended: false,
+    },
+  ];
+
+  const rankedBySpecies = SPECIES_METHOD_PREFS[fish];
+  const boosted = allMethods.map((m) => {
+    const rank = rankedBySpecies.indexOf(m.method);
+    const speciesBonus = rank >= 0 ? Math.max(0, 12 - rank * 4) : 0;
+    return { ...m, score: clampScore(m.score + speciesBonus) };
+  });
+
+  const topMethods = boosted
+    .slice()
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 2)
+    .map((m) => m.method);
+
+  return boosted
+    .map((m) => ({ ...m, recommended: topMethods.includes(m.method) }))
+    .sort((a, b) => b.score - a.score);
 }
 
 // ── Score display helpers ───────────────────────────────────────────────────

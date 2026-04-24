@@ -9,11 +9,13 @@ import Header from '@/components/Header';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
 import { enrichForecasts } from '@/lib/utils/enrichForecasts';
-import { computeFishingScore, findBestWindows, getScoreColor, getScoreBg } from '@/lib/scoring/fishingScore';
+import { computeFishingScore, findBestWindows, getScoreColor, getScoreBg, recommendFishingMethods } from '@/lib/scoring/fishingScore';
 import { getTimeColumnStyle } from '@/lib/utils/sunPhaseStyle';
 import FeedbackButton from '@/components/FeedbackButton';
 import FeedbackBanner from '@/components/FeedbackBanner';
 import BookingButton, { type BookingEntry } from '@/components/BookingButton';
+import TuningControls from '@/components/TuningControls';
+import { FISHING_METHOD_OPTIONS, parseTuningFromSearchParams, resolveTuningSelection } from '@/lib/utils/tuning';
 
 /** True when ≥50 % of the hour is in the "day" sun phase. */
 function isDaylight(segments: { phase: string; fraction: number }[] | undefined): boolean {
@@ -26,11 +28,11 @@ import HashScroller from '@/components/HashScroller';
 import SafetyContacts from '@/components/SafetyContacts';
 
 interface PageProps {
-  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string }>;
+  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string; boat?: string; fish?: string; method?: string }>;
 }
 
 export default async function ScorePage({ searchParams }: PageProps) {
-  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr } = await searchParams;
+  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr, boat: boatStr, fish: fishStr, method: methodStr } = await searchParams;
   const lat = parseFloat(latStr ?? '');
   const lng = parseFloat(lngStr ?? '');
   const validZoom = parseZoomParam(zoomStr);
@@ -40,6 +42,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
   }
 
   const isSea = seaStr === '0' ? false : seaStr === '1' ? true : undefined;
+  const tuning = resolveTuningSelection(parseTuningFromSearchParams({ boat: boatStr, fish: fishStr, method: methodStr }));
 
   const [locationData, weatherResult, protectionZones] = await Promise.all([
     reverseGeocode(lat, lng),
@@ -56,7 +59,11 @@ export default async function ScorePage({ searchParams }: PageProps) {
   const depth = locationData?.isSea && locationData.elevation !== undefined
     ? Math.abs(locationData.elevation)
     : undefined;
-  const scoredForecasts = forecasts.map(f => ({ forecast: f, ...computeFishingScore(f, depth) }));
+  const scoredForecasts = forecasts.map((f) => ({
+    forecast: f,
+    ...computeFishingScore(f, { depth, boat: tuning.boat, fish: tuning.fish }),
+  }));
+  const methodRecommendations = recommendFishingMethods(scoredForecasts, timezone, tuning.fish);
 
   // Find best fishing windows (top 2 non-overlapping, 1–3 hours)
   const bestWindows = findBestWindows(scoredForecasts);
@@ -95,7 +102,17 @@ export default async function ScorePage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton />
           </div>
-          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="score" availablePages={locationData?.isSea === false ? ['details'] : undefined} />
+          <PageNav
+            lat={lat}
+            lng={lng}
+            zoom={validZoom}
+            sea={seaStr}
+            boat={tuning.boat}
+            fish={tuning.fish}
+            method={tuning.method}
+            current="score"
+            availablePages={locationData?.isSea === false ? ['details'] : undefined}
+          />
         </div>
       </Header>
 
@@ -199,6 +216,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
             })() : (
               <p className="mt-1 text-sm text-gray-500 italic">No safe fishing periods at this location in the forecast period.</p>
             )}
+
           </div>
 
           {forecasts.length === 0 ? (
@@ -244,7 +262,15 @@ export default async function ScorePage({ searchParams }: PageProps) {
                       <tr key={forecast.time} id={anchor} data-window={rowToWindow.has(i) ? rowToWindow.get(i) : undefined} style={{ verticalAlign: 'top', scrollMarginTop: '4rem' }}>
                         <td className="pl-4 pr-1 py-3 text-sm font-medium tabular-nums whitespace-nowrap" style={getTimeColumnStyle(forecast.sunPhaseSegments)}>
                           <Link
-                            href={`${buildLocationUrl('details', { lat, lng, zoom: validZoom, sea: seaStr })}#${anchor}`}
+                            href={`${buildLocationUrl('details', {
+                              lat,
+                              lng,
+                              zoom: validZoom,
+                              sea: seaStr,
+                              boat: tuning.boat,
+                              fish: tuning.fish,
+                              method: tuning.method,
+                            })}#${anchor}`}
                             title="View details for this hour"
                             className="time-score-btn"
                             style={{
@@ -353,41 +379,106 @@ export default async function ScorePage({ searchParams }: PageProps) {
             </div>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'center' }} className="mt-6">
-            <div style={{ display: 'flex', borderRadius: '0.5rem', overflow: 'hidden' }}>
-              <a
-                href="/score/about"
-                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.75rem', textDecoration: 'none', backgroundColor: '#f3f4f6', color: '#1f2937', borderRight: '2px solid white' }}
-              >
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>About Fishing Score</span>
-              </a>
-              <a
-                href="/about"
-                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.75rem', textDecoration: 'none', backgroundColor: '#f3f4f6', color: '#1f2937', borderRight: '2px solid white' }}
-              >
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>About NoFish</span>
-              </a>
-              <a
-                href="https://github.com/ChrVage/NoFish/issues/new/choose"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.75rem', textDecoration: 'none', backgroundColor: '#f3f4f6', color: '#1f2937' }}
-              >
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Feedback</span>
-              </a>
-            </div>
-          </div>
+          {methodRecommendations.length > 0 && (
+            <section
+              aria-label="Method scores"
+              style={{ marginTop: '1.5rem', borderRadius: '14px', backgroundColor: '#f3f4f6', padding: '0.875rem' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>
+                  Method scores
+                </h3>
+                <div style={{ flexShrink: 0, minWidth: '160px', maxWidth: '260px', flex: '0 1 220px' }}>
+                  <TuningControls currentPage="score" lat={lat} lng={lng} zoom={validZoom} sea={seaStr} fields={['fish']} />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.5rem' }}>
+                {methodRecommendations.map((m) => {
+                  const label = FISHING_METHOD_OPTIONS.find((o) => o.value === m.method)?.label ?? m.method;
+                  return (
+                    <div
+                      key={m.method}
+                      style={{
+                        borderRadius: '10px',
+                        backgroundColor: '#ffffff',
+                        padding: '0.625rem 0.75rem',
+                        boxShadow: '0 0 0 1px #e5e7eb',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.25rem', marginBottom: '0.375rem' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#374151', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {label}
+                        </span>
+                        {m.recommended && (
+                          <span style={{ flexShrink: 0, borderRadius: '9999px', backgroundColor: '#1f2937', color: '#ffffff', padding: '2px 7px', fontSize: '9px', fontWeight: 600, lineHeight: 1, letterSpacing: '0.02em' }}>
+                            BEST
+                          </span>
+                        )}
+                      </div>
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          fontSize: '15px',
+                          fontWeight: 700,
+                          fontVariantNumeric: 'tabular-nums',
+                          borderRadius: '6px',
+                          color: getScoreColor(m.score),
+                          backgroundColor: getScoreBg(m.score),
+                          padding: '1px 7px',
+                        }}
+                      >
+                        {m.score}%
+                      </span>
+                      <p style={{ marginTop: '0.375rem', marginBottom: 0, fontSize: '11px', color: '#6b7280', lineHeight: 1.35 }}>
+                        {m.reason}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
-          <div style={{ display: 'flex', justifyContent: 'center' }} className="mt-4">
+          <section
+            aria-label="Settings"
+            style={{ marginTop: '1rem', borderRadius: '14px', backgroundColor: '#f3f4f6', padding: '0.875rem' }}
+          >
+            <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 0.625rem 0' }}>
+              Settings
+            </h3>
+            <TuningControls currentPage="score" lat={lat} lng={lng} zoom={validZoom} sea={seaStr} fields={['boat', 'method']} />
+          </section>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.75rem', marginTop: '1rem' }}>
+            <a
+              href="/score/about"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', textDecoration: 'none', backgroundColor: '#f3f4f6', color: '#1f2937' }}
+            >
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>About Fishing Score</span>
+            </a>
+            <a
+              href="/about"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', textDecoration: 'none', backgroundColor: '#f3f4f6', color: '#1f2937' }}
+            >
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>About NoFish</span>
+            </a>
+            <a
+              href="https://github.com/ChrVage/NoFish/issues/new/choose"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', textDecoration: 'none', backgroundColor: '#f3f4f6', color: '#1f2937' }}
+            >
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Feedback</span>
+            </a>
             <a
               href="https://www.fiskeridir.no/fritidsfiske"
               target="_blank"

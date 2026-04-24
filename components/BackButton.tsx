@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { buildLocationUrl } from '@/lib/utils/params';
+import { parseBoatSize, parseFishTarget, parseFishingMethod } from '@/lib/utils/tuning';
 
 const buttonStyle: React.CSSProperties = {
   display: 'flex',
@@ -27,8 +28,11 @@ export default function BackButton() {
     const lat = searchParams.get('lat');
     const lng = searchParams.get('lng');
     const zoom = searchParams.get('zoom');
+    const boat = parseBoatSize(searchParams.get('boat') ?? undefined);
+    const fish = parseFishTarget(searchParams.get('fish') ?? undefined);
+    const method = parseFishingMethod(searchParams.get('method') ?? undefined);
     if (lat && lng) {
-      router.push(buildLocationUrl('', { lat, lng, zoom: zoom ?? undefined }));
+      router.push(buildLocationUrl('', { lat, lng, zoom: zoom ?? undefined, boat, fish, method }));
     } else {
       router.push('/');
     }

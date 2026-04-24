@@ -4,6 +4,7 @@ import { reverseGeocode } from '@/lib/api/geocoding';
 import { getTimezone } from '@/lib/utils/timezone';
 import { haversineDistance, formatDistance } from '@/lib/utils/distance';
 import { parseZoomParam } from '@/lib/utils/params';
+import { parseTuningFromSearchParams, resolveTuningSelection } from '@/lib/utils/tuning';
 import Header from '@/components/Header';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
@@ -13,14 +14,15 @@ import FeedbackBanner from '@/components/FeedbackBanner';
 import type { TidePrediction } from '@/types/weather';
 
 interface PageProps {
-  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string }>;
+  searchParams: Promise<{ lat?: string; lng?: string; zoom?: string; sea?: string; boat?: string; fish?: string; method?: string }>;
 }
 
 export default async function TidePage({ searchParams }: PageProps) {
-  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr } = await searchParams;
+  const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr, boat: boatStr, fish: fishStr, method: methodStr } = await searchParams;
   const lat = parseFloat(latStr ?? '');
   const lng = parseFloat(lngStr ?? '');
   const validZoom = parseZoomParam(zoomStr);
+  const tuning = resolveTuningSelection(parseTuningFromSearchParams({ boat: boatStr, fish: fishStr, method: methodStr }));
 
   if (!latStr || !lngStr || isNaN(lat) || isNaN(lng)) {
     notFound();
@@ -107,7 +109,17 @@ export default async function TidePage({ searchParams }: PageProps) {
           <div className="flex items-center gap-3">
             <BackButton />
           </div>
-          <PageNav lat={lat} lng={lng} zoom={validZoom} sea={seaStr} current="tide" availablePages={locationData?.isSea === false ? ['details'] : undefined} />
+          <PageNav
+            lat={lat}
+            lng={lng}
+            zoom={validZoom}
+            sea={seaStr}
+            boat={tuning.boat}
+            fish={tuning.fish}
+            method={tuning.method}
+            current="tide"
+            availablePages={locationData?.isSea === false ? ['details'] : undefined}
+          />
         </div>
       </Header>
 

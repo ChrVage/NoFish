@@ -32,6 +32,18 @@ describe('buildLocationUrl', () => {
     expect(url).toBe('/score?lat=63.4000&lng=10.4000&zoom=9&sea=true');
   });
 
+  it('includes tuning parameters when provided', () => {
+    const url = buildLocationUrl('score', {
+      lat: 63.4,
+      lng: 10.4,
+      boat: '20-24',
+      fish: 'cod',
+      method: 'trolling',
+    });
+
+    expect(url).toBe('/score?lat=63.4000&lng=10.4000&boat=20-24&fish=cod&method=trolling');
+  });
+
   it('accepts preformatted string coordinates without reformatting', () => {
     const url = buildLocationUrl('details', {
       lat: '63.430512',
