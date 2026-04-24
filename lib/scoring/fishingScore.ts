@@ -110,6 +110,24 @@ interface BoatSafetyProfile {
   shortWavePeriodStart: number;
 }
 
+interface SpeciesSeasonProfile {
+  prime: number[];
+  shoulder?: number[];
+}
+
+interface SpeciesWaterColumnProfile {
+  habitatMinDepth: number;
+  habitatMaxDepth: number;
+  targetZoneLabel: string;
+}
+
+interface SpeciesBehaviorProfile {
+  displayName: string;
+  preferredDepths: number[];
+  season: SpeciesSeasonProfile;
+  column: SpeciesWaterColumnProfile;
+}
+
 function getBoatSafetyProfile(boat: BoatSizePreset | undefined): BoatSafetyProfile {
   switch (boat) {
   case '15-19':
@@ -164,25 +182,113 @@ function getBoatSafetyProfile(boat: BoatSizePreset | undefined): BoatSafetyProfi
   }
 }
 
+const SPECIES_BEHAVIOR: Partial<Record<FishTarget, SpeciesBehaviorProfile>> = {
+  cod: {
+    displayName: 'Cod',
+    preferredDepths: [90],
+    season: { prime: [1, 2, 3, 4, 10, 11, 12], shoulder: [5, 9] },
+    column: { habitatMinDepth: 20, habitatMaxDepth: 220, targetZoneLabel: 'near bottom (5-20 m above seabed)' },
+  },
+  saithe: {
+    displayName: 'Saithe',
+    preferredDepths: [60],
+    season: { prime: [5, 6, 7, 8, 9], shoulder: [4, 10] },
+    column: { habitatMinDepth: 20, habitatMaxDepth: 180, targetZoneLabel: 'mid-water schools (20-90 m)' },
+  },
+  haddock: {
+    displayName: 'Haddock',
+    preferredDepths: [120],
+    season: { prime: [2, 3, 4, 5, 9, 10, 11], shoulder: [1, 6, 8, 12] },
+    column: { habitatMinDepth: 40, habitatMaxDepth: 260, targetZoneLabel: 'close to bottom (0-15 m above seabed)' },
+  },
+  mackerel: {
+    displayName: 'Mackerel',
+    preferredDepths: [25],
+    season: { prime: [6, 7, 8, 9], shoulder: [5, 10] },
+    column: { habitatMinDepth: 10, habitatMaxDepth: 120, targetZoneLabel: 'upper water column (surface-40 m)' },
+  },
+  pollock: {
+    displayName: 'Pollock',
+    preferredDepths: [30, 130],
+    season: { prime: [4, 5, 6, 7, 8, 9, 10], shoulder: [3, 11] },
+    column: { habitatMinDepth: 20, habitatMaxDepth: 220, targetZoneLabel: 'mid-water near structure (10-80 m above bottom)' },
+  },
+  halibut: {
+    displayName: 'Halibut',
+    preferredDepths: [150],
+    season: { prime: [5, 6, 7, 8, 9, 10], shoulder: [4, 11] },
+    column: { habitatMinDepth: 50, habitatMaxDepth: 350, targetZoneLabel: 'bottom zone on banks and edges' },
+  },
+  ling: {
+    displayName: 'Ling',
+    preferredDepths: [220],
+    season: { prime: [3, 4, 5, 6, 7, 8, 9, 10, 11], shoulder: [2, 12] },
+    column: { habitatMinDepth: 120, habitatMaxDepth: 450, targetZoneLabel: 'deep bottom (0-10 m above seabed)' },
+  },
+  tusk: {
+    displayName: 'Tusk',
+    preferredDepths: [260],
+    season: { prime: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+    column: { habitatMinDepth: 150, habitatMaxDepth: 500, targetZoneLabel: 'deep bottom and rough ground' },
+  },
+  monkfish: {
+    displayName: 'Monkfish',
+    preferredDepths: [130],
+    season: { prime: [5, 6, 7, 8, 9, 10, 11], shoulder: [4, 12] },
+    column: { habitatMinDepth: 60, habitatMaxDepth: 260, targetZoneLabel: 'bottom ambush zone' },
+  },
+  wolffish: {
+    displayName: 'Wolffish',
+    preferredDepths: [100],
+    season: { prime: [1, 2, 3, 4, 10, 11, 12], shoulder: [5, 9] },
+    column: { habitatMinDepth: 40, habitatMaxDepth: 220, targetZoneLabel: 'close to rocky bottom' },
+  },
+  redfish: {
+    displayName: 'Redfish',
+    preferredDepths: [300],
+    season: { prime: [6, 7, 8, 9, 10, 11], shoulder: [5, 12] },
+    column: { habitatMinDepth: 180, habitatMaxDepth: 600, targetZoneLabel: 'deep mid-water over deep bottom' },
+  },
+  plaice: {
+    displayName: 'Plaice',
+    preferredDepths: [70],
+    season: { prime: [4, 5, 6, 7, 8, 9, 10], shoulder: [3, 11] },
+    column: { habitatMinDepth: 15, habitatMaxDepth: 160, targetZoneLabel: 'on sandy bottom' },
+  },
+  hake: {
+    displayName: 'Hake',
+    preferredDepths: [180],
+    season: { prime: [7, 8, 9, 10, 11], shoulder: [6, 12] },
+    column: { habitatMinDepth: 100, habitatMaxDepth: 380, targetZoneLabel: 'mid to deep water above bottom' },
+  },
+};
+
+function getSpeciesBehavior(fish: FishTarget | undefined): SpeciesBehaviorProfile | undefined {
+  if (!fish || fish === 'general') {return undefined;}
+  return SPECIES_BEHAVIOR[fish];
+}
+
 function speciesDepths(fish: FishTarget | undefined): number[] {
-  switch (fish) {
-  case 'cod': return [90];
-  case 'saithe': return [60];
-  case 'haddock': return [120];
-  case 'mackerel': return [25];
-  case 'pollock': return [30, 130];
-  case 'halibut': return [150];
-  case 'ling': return [220];
-  case 'tusk': return [260];
-  case 'monkfish': return [130];
-  case 'wolffish': return [100];
-  case 'redfish': return [300];
-  case 'plaice': return [70];
-  case 'hake': return [180];
-  case 'general':
-  default:
-    return [];
-  }
+  return getSpeciesBehavior(fish)?.preferredDepths ?? [];
+}
+
+function seasonFactorForMonth(season: SpeciesSeasonProfile, month: number): number {
+  if (season.prime.includes(month)) {return 1.0;}
+  if ((season.shoulder ?? []).includes(month)) {return 0.9;}
+  return 0.78;
+}
+
+function waterColumnFactor(profile: SpeciesWaterColumnProfile, depth: number | undefined): number {
+  if (depth === undefined) {return 1.0;}
+  const d = Math.abs(depth);
+  if (d >= profile.habitatMinDepth && d <= profile.habitatMaxDepth) {return 1.0;}
+
+  const belowMin = d < profile.habitatMinDepth;
+  const edge = belowMin ? profile.habitatMinDepth : profile.habitatMaxDepth;
+  const dist = Math.abs(d - edge);
+  const scale = Math.max(40, edge * 0.6);
+  const penalty = Math.min(0.35, dist / scale * 0.35);
+  return Math.max(0.65, 1 - penalty);
 }
 
 function blendedDepth(baseDepth: number | undefined, preferredDepth: number): number {
@@ -247,6 +353,7 @@ export function computeFishingScore(f: HourlyForecast, depthOrOptions?: number |
     ? { depth: depthOrOptions }
     : (depthOrOptions ?? {});
   const profiles = getSpeciesProfiles(options.depth, options.fish);
+  const speciesBehavior = getSpeciesBehavior(options.fish);
   const dp = combineDepthProfiles(profiles);
   const boatSafety = getBoatSafetyProfile(options.boat);
   const reasons: Reason[] = [];
@@ -533,6 +640,48 @@ export function computeFishingScore(f: HourlyForecast, depthOrOptions?: number |
     // No per-hour trend data available, so we only flag extremes
   }
 
+  // ═══ 8b. SPECIES WATER COLUMN / HABITAT DEPTH ═════════════════════════
+  //
+  //   Penalise when selected species is unlikely at the seabed depth of the
+  //   chosen location. This approximates where in the water column each
+  //   species is typically targeted.
+  //
+  let speciesColumnFactor = 1.0;
+  if (speciesBehavior) {
+    speciesColumnFactor = waterColumnFactor(speciesBehavior.column, options.depth);
+
+    if (options.depth !== undefined) {
+      const d = Math.round(Math.abs(options.depth));
+      if (speciesColumnFactor >= 0.98) {
+        good(`${speciesBehavior.displayName}: ${speciesBehavior.column.targetZoneLabel}`, 'fishing');
+      } else if (speciesColumnFactor <= 0.75) {
+        bad(`${speciesBehavior.displayName}: depth ${d} m is outside typical habitat`, 'fishing');
+      } else {
+        bad(`${speciesBehavior.displayName}: depth ${d} m is suboptimal`, 'fishing');
+      }
+    }
+  }
+
+  // ═══ 8c. SPECIES SEASONALITY ═══════════════════════════════════════════
+  //
+  //   Species activity differs by season. Prime months are neutral (1.0),
+  //   shoulder months get a small reduction, off-season gets stronger
+  //   reduction.
+  //
+  let speciesSeasonFactor = 1.0;
+  if (speciesBehavior) {
+    const month = entryDate.getUTCMonth() + 1;
+    speciesSeasonFactor = seasonFactorForMonth(speciesBehavior.season, month);
+
+    if (speciesSeasonFactor >= 0.99) {
+      good(`${speciesBehavior.displayName}: in-season`, 'fishing');
+    } else if (speciesSeasonFactor >= 0.89) {
+      bad(`${speciesBehavior.displayName}: shoulder season`, 'fishing');
+    } else {
+      bad(`${speciesBehavior.displayName}: off-season`, 'fishing');
+    }
+  }
+
   // ═══ 9. BAROMETRIC PRESSURE — fish activity modifier (fishing) ════════
   //
   //   Stable / slowly falling pressure is best for fishing.
@@ -677,7 +826,7 @@ export function computeFishingScore(f: HourlyForecast, depthOrOptions?: number |
 
   // ═══ COMBINE — multiply factors, scale to 0–100 ══════════════════════
   const safetyRaw = windFactor * waveFactor * lightFactor * wavePeriodFactor;
-  const fishingRaw = currentFactor * tideFactor * moonFactor * precipFactor * tempFactor * pressureFactor * lightFishingFactor;
+  const fishingRaw = currentFactor * tideFactor * moonFactor * precipFactor * tempFactor * speciesColumnFactor * speciesSeasonFactor * pressureFactor * lightFishingFactor;
   const raw = safetyRaw * fishingRaw;
   const score = Math.round(Math.max(0, Math.min(100, raw * 100)));
   const safetyScore = Math.round(Math.max(0, Math.min(100, safetyRaw * 100)));

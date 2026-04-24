@@ -34,10 +34,10 @@ export default function ScoreAboutPage() {
             <section>
               <h2 className="text-lg font-bold text-maritime-teal-800 mt-6 mb-2">Algorithm design</h2>
               <p>
-                Instead of hard if/else brackets, the algorithm uses <strong>continuous mathematical functions</strong> — Gaussian curves, sigmoids, and smooth interpolation — to produce a fine-grained, linear 0–100 % scale. Ten independent variables are each evaluated as a <strong>0.0–1.0 factor</strong>. The factors are split into two groups — <strong>safety</strong> and <strong>fishing</strong> — then multiplied within each group and combined:
+                Instead of hard if/else brackets, the algorithm uses <strong>continuous mathematical functions</strong> — Gaussian curves, sigmoids, and smooth interpolation — to produce a fine-grained, linear 0–100 % scale. Twelve independent variables are each evaluated as a <strong>0.0–1.0 factor</strong>. The factors are split into two groups — <strong>safety</strong> and <strong>fishing</strong> — then multiplied within each group and combined:
               </p>
               <pre className="bg-gray-50 rounded p-3 text-xs overflow-x-auto"><code>{`safetyScore  = round( windF × waveF × lightF × wavePeriodF × 100 )
-fishingScore = round( currentF × tideF × moonF × precipF × tempF × pressureF × 100 )
+fishingScore = round( currentF × tideF × moonF × precipF × tempF × speciesDepthF × speciesSeasonF × pressureF × lightFishingF × 100 )
 totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
               <p>
                 This multiplicative structure means a single dangerous condition (factor → 0) drives the entire score toward 0 %, while excellent conditions require <em>all</em> factors to be high. The split lets users see whether a low score is due to unsafe weather or poor fishing conditions.
@@ -106,6 +106,15 @@ totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
                   </tbody>
                 </table>
               </div>
+
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">5. UV &amp; Drift Ice Warnings (Informational)</h3>
+              <p className="text-sm">UV and drift ice are shown as safety warnings in the reason list. They do <strong>not</strong> directly change Safety score, but they flag important exposure risks for small-boat trips.</p>
+              <ul className="list-disc pl-5 text-sm space-y-0.5 mt-1">
+                <li>UV ≥ 3: sunscreen reminder</li>
+                <li>UV ≥ 6: high UV warning</li>
+                <li>UV ≥ 8: very high UV warning</li>
+                <li>Sea temperature near/freezing with wind or current drift: drift-ice warning</li>
+              </ul>
             </section>
 
             {/* Fishing Factors */}
@@ -184,6 +193,26 @@ totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
                   </tbody>
                 </table>
               </div>
+
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">11. Species Habitat Depth &amp; Water Column</h3>
+              <p className="text-sm">
+                When a species is selected, NoFish applies a habitat-depth factor based on where that species is typically targeted in the water column (for example upper water, mid-water, or close to bottom over deep ground).
+              </p>
+              <ul className="list-disc pl-5 text-sm space-y-0.5 mt-1">
+                <li>If local seabed depth is within the species&apos; typical habitat range → no penalty (factor 1.00)</li>
+                <li>If depth is outside the range → gradual penalty (down to ~0.65)</li>
+                <li>Reason text explains whether depth is optimal, suboptimal, or outside typical habitat</li>
+              </ul>
+
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">12. Species Seasonality</h3>
+              <p className="text-sm">
+                Species are scored with month-based season windows (prime, shoulder, off-season). This affects the fishing score even when weather is identical.
+              </p>
+              <ul className="list-disc pl-5 text-sm space-y-0.5 mt-1">
+                <li>Prime season → factor 1.00</li>
+                <li>Shoulder season → factor 0.90</li>
+                <li>Off-season → factor 0.78</li>
+              </ul>
             </section>
 
             {/* Best Fishing Windows */}

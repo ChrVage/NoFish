@@ -34,7 +34,7 @@ Make sure all functionality is updated in the documentation. Also read all docum
 Found in the [README.md](README.md) file.
 
 ## To implement before release
-
+- Full Architect Propmpt.
 
 - Also support Norwegian language.
 

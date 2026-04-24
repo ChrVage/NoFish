@@ -253,6 +253,49 @@ describe('computeFishingScore', () => {
     });
   });
 
+  // ── Species water-column and seasonality ─────────────────────────────
+
+  describe('species behavior (water column + season)', () => {
+    it('mackerel prefers shallower habitat than deep offshore points', () => {
+      const shallow = computeFishingScore(
+        mkForecast({ time: '2025-08-15T12:00:00Z', currentSpeed: 0.35 }),
+        { fish: 'mackerel', depth: 40 },
+      );
+      const deep = computeFishingScore(
+        mkForecast({ time: '2025-08-15T12:00:00Z', currentSpeed: 0.35 }),
+        { fish: 'mackerel', depth: 350 },
+      );
+
+      expect(shallow.fishingScore).toBeGreaterThan(deep.fishingScore);
+    });
+
+    it('mackerel scores higher in summer than winter', () => {
+      const summer = computeFishingScore(
+        mkForecast({ time: '2025-08-15T12:00:00Z', currentSpeed: 0.35 }),
+        { fish: 'mackerel', depth: 40 },
+      );
+      const winter = computeFishingScore(
+        mkForecast({ time: '2025-01-15T12:00:00Z', currentSpeed: 0.35 }),
+        { fish: 'mackerel', depth: 40 },
+      );
+
+      expect(summer.fishingScore).toBeGreaterThan(winter.fishingScore);
+    });
+
+    it('cod scores higher in winter shoulder/prime than midsummer', () => {
+      const winter = computeFishingScore(
+        mkForecast({ time: '2025-02-15T12:00:00Z', currentSpeed: 0.35 }),
+        { fish: 'cod', depth: 100 },
+      );
+      const summer = computeFishingScore(
+        mkForecast({ time: '2025-07-15T12:00:00Z', currentSpeed: 0.35 }),
+        { fish: 'cod', depth: 100 },
+      );
+
+      expect(winter.fishingScore).toBeGreaterThan(summer.fishingScore);
+    });
+  });
+
   // ── 9. Barometric pressure ────────────────────────────────────────────
 
   describe('pressure', () => {
