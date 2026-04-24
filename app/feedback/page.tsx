@@ -22,7 +22,7 @@ function FeedbackContent() {
     setFeedbackItems(updated);
   };
 
-  const handleSubmit = () => {
+  const buildFeedbackPayload = () => {
     const locationInfo = items.length > 0
       ? (items[0].locationName ?? `${items[0].lat.toFixed(4)}, ${items[0].lng.toFixed(4)}`)
       : 'Unknown';
@@ -31,26 +31,48 @@ function FeedbackContent() {
       ? `Feedback: ${locationInfo} (${items.length} data point${items.length !== 1 ? 's' : ''})`
       : 'Feedback';
 
-    const bodyParts: string[] = [];
+    const markdownBodyParts: string[] = [];
+    const plainBodyParts: string[] = [];
 
     if (comment.trim()) {
-      bodyParts.push(`## Description\n\n${comment.trim()}\n`);
+      markdownBodyParts.push(`## Description\n\n${comment.trim()}\n`);
+      plainBodyParts.push(`Description:\n${comment.trim()}\n`);
     }
 
     if (items.length > 0) {
       const coords = `${items[0].lat.toFixed(4)}, ${items[0].lng.toFixed(4)}`;
-      bodyParts.push(`## Selected Data Points\n`);
-      bodyParts.push(`**Location:** ${locationInfo} (${coords})\n`);
+      markdownBodyParts.push(`## Selected Data Points\n`);
+      markdownBodyParts.push(`**Location:** ${locationInfo} (${coords})\n`);
+      plainBodyParts.push('Selected Data Points:\n');
+      plainBodyParts.push(`Location: ${locationInfo} (${coords})\n`);
       for (const item of items) {
-        bodyParts.push(`- **[${item.page}]** ${item.time} — ${item.summary}`);
+        markdownBodyParts.push(`- **[${item.page}]** ${item.time} — ${item.summary}`);
+        plainBodyParts.push(`- [${item.page}] ${item.time} - ${item.summary}`);
       }
     }
 
-    const body = bodyParts.join('\n');
-    const params = new URLSearchParams({ title, body, labels: 'feedback' });
+    return {
+      title,
+      markdownBody: markdownBodyParts.join('\n'),
+      plainBody: plainBodyParts.join('\n'),
+    };
+  };
+
+  const handleSubmitGitHub = () => {
+    const { title, markdownBody } = buildFeedbackPayload();
+    const params = new URLSearchParams({ title, body: markdownBody, labels: 'feedback' });
     const url = `https://github.com/ChrVage/NoFish/issues/new?${params.toString()}`;
 
     window.open(url, '_blank');
+  };
+
+  const handleSubmitEmail = () => {
+    const { title, plainBody } = buildFeedbackPayload();
+    const params = new URLSearchParams({
+      subject: title,
+      body: plainBody,
+    });
+    window.location.href = `mailto:feedback@nofish.no?${params.toString()}`;
   };
 
   const handleClear = () => {
@@ -72,7 +94,7 @@ function FeedbackContent() {
         <div className="bg-white rounded-lg shadow-lg" style={{ padding: '2rem 1.5rem' }}>
           <h2 className="text-2xl font-bold text-maritime-teal-700 mb-1">Submit Feedback</h2>
           <p className="text-sm text-gray-500 mb-6">
-            Report inaccurate data or suggest improvements. Your feedback will be submitted as a GitHub issue.
+            Report inaccurate data or suggest improvements. You can submit via GitHub or email.
           </p>
 
           {items.length > 0 ? (
@@ -135,7 +157,7 @@ function FeedbackContent() {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={handleSubmit}
+              onClick={handleSubmitGitHub}
               disabled={!comment.trim()}
               style={{
                 padding: '10px 24px',
@@ -149,6 +171,23 @@ function FeedbackContent() {
               }}
             >
               Submit on GitHub →
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmitEmail}
+              disabled={!comment.trim()}
+              style={{
+                padding: '10px 16px',
+                borderRadius: '8px',
+                border: '1px solid #d1d5db',
+                backgroundColor: comment.trim() ? '#fff' : '#f3f4f6',
+                color: comment.trim() ? '#374151' : '#9ca3af',
+                fontWeight: 700,
+                fontSize: '14px',
+                cursor: comment.trim() ? 'pointer' : 'not-allowed',
+              }}
+            >
+              Submit by email
             </button>
             {items.length > 0 && (
               <button
@@ -170,7 +209,7 @@ function FeedbackContent() {
           </div>
 
           <p className="text-xs text-gray-400 mt-4">
-            This will open GitHub in a new tab with a pre-filled issue. You&apos;ll need a GitHub account to submit.
+            GitHub opens a pre-filled issue. Email opens your mail app with pre-filled subject and details to feedback@nofish.no.
           </p>
         </div>
       </main>

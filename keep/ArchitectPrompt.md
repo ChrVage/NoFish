@@ -28,11 +28,7 @@ Make sure all functionality is updated in the documentation. Also read all docum
 Found in the [README.md](README.md) file.
 
 ## To implement before release
-- Full Architect Propmpt.
-
 - Also support Norwegian language.
-
-- Create possibility to choose email for those without GitHub account. The email link could use a link with specified subject and body. It should be sent to feedback@nofish.no.
 
 - Explore which license is right for this project.
 
