@@ -61,7 +61,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
     : undefined;
   const scoredForecasts = forecasts.map((f) => ({
     forecast: f,
-    ...computeFishingScore(f, { depth, boat: tuning.boat, fish: tuning.fish }),
+    ...computeFishingScore(f, { depth, boat: tuning.boat, fish: tuning.fish, timezone }),
   }));
   const methodRecommendations = recommendFishingMethods(scoredForecasts, timezone, tuning.fish);
 

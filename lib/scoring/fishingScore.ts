@@ -61,6 +61,7 @@ export interface ComputeScoreOptions {
   depth?: number;
   boat?: BoatSizePreset;
   fish?: FishTarget;
+  timezone?: string;
 }
 
 // ── Continuous helper functions ──────────────────────────────────────────────
@@ -276,6 +277,16 @@ function seasonFactorForMonth(season: SpeciesSeasonProfile, month: number): numb
   if (season.prime.includes(month)) {return 1.0;}
   if ((season.shoulder ?? []).includes(month)) {return 0.9;}
   return 0.78;
+}
+
+function monthInTimezone(date: Date, timezone: string | undefined): number {
+  if (!timezone) {return date.getUTCMonth() + 1;}
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    month: '2-digit',
+    timeZone: timezone,
+  }).formatToParts(date);
+  const month = parseInt(parts.find((p) => p.type === 'month')?.value ?? '1', 10);
+  return Number.isFinite(month) && month >= 1 && month <= 12 ? month : (date.getUTCMonth() + 1);
 }
 
 function waterColumnFactor(profile: SpeciesWaterColumnProfile, depth: number | undefined): number {
@@ -670,7 +681,7 @@ export function computeFishingScore(f: HourlyForecast, depthOrOptions?: number |
   //
   let speciesSeasonFactor = 1.0;
   if (speciesBehavior) {
-    const month = entryDate.getUTCMonth() + 1;
+    const month = monthInTimezone(entryDate, options.timezone);
     speciesSeasonFactor = seasonFactorForMonth(speciesBehavior.season, month);
 
     if (speciesSeasonFactor >= 0.99) {

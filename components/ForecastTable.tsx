@@ -141,14 +141,6 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
     return <><strong>{speed.toFixed(1)}</strong>{gustPart}{' m/s'}</>;
   };
 
-  const _getDirectionLabel = (degrees: number | undefined, isToDirection: boolean = false) => {
-    if (degrees === undefined) {return '—';}
-    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-    const index = Math.round(degrees / 45) % 8;
-    const direction = directions[index];
-    return isToDirection ? `to ${direction}` : direction;
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
       <div className="overflow-x-auto">

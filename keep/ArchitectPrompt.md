@@ -21,13 +21,7 @@ Make sure all functionality is updated in the documentation. Also read all docum
     readme-technical.md should contain more detailed information on the platform, components used and how it all connects.
 8. Design
     Everything should look beautiful and consistent.
-    Buttons and icons
-        Background light grey / gray-100 / #f3f4f6
-        Foreground dark gray / gray-800 /  #1f2937
-    Selected/pressed button
-        Background grey / gray-400 / #9ca3af
-        Foreground white / #ffffff
-    Text and borders: dark gray / gray-800 /  #1f2937
+    
 
 
 ## Reason for existing

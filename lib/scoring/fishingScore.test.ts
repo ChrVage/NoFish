@@ -294,6 +294,23 @@ describe('computeFishingScore', () => {
 
       expect(winter.fishingScore).toBeGreaterThan(summer.fishingScore);
     });
+
+    it('season month follows local timezone near UTC month boundary', () => {
+      const boundaryTime = '2025-04-30T23:30:00Z';
+
+      const utc = computeFishingScore(
+        mkForecast({ time: boundaryTime, currentSpeed: 0.35 }),
+        { fish: 'cod', depth: 100, timezone: 'UTC' },
+      );
+      const oslo = computeFishingScore(
+        mkForecast({ time: boundaryTime, currentSpeed: 0.35 }),
+        { fish: 'cod', depth: 100, timezone: 'Europe/Oslo' },
+      );
+
+      // UTC is still April (prime for cod), while Oslo is May (shoulder for cod).
+      expect(utc.reasons.some((r) => r.text.includes('Cod: in-season'))).toBe(true);
+      expect(oslo.reasons.some((r) => r.text.includes('Cod: shoulder season'))).toBe(true);
+    });
   });
 
   // ── 9. Barometric pressure ────────────────────────────────────────────
