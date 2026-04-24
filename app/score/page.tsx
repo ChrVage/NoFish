@@ -96,7 +96,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-ocean-50">
+    <div className="min-h-screen bg-gray-50">
       <Header>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -120,7 +120,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
         <div className="bg-white rounded-lg shadow-lg" style={{ padding: '2rem 1.5rem' }}>
           <div className="mb-6 border-b border-gray-200 pb-4">
             {locationData && (
-              <h2 className="text-2xl font-bold text-ocean-900 mb-1">
+              <h2 className="text-2xl font-bold text-maritime-teal-800 mb-1">
                 {locationData.name}
                 {locationData.municipality && locationData.municipality !== 'Unknown municipality' && locationData.municipality !== locationData.name && (
                   <span className="text-lg font-normal text-gray-500">, {locationData.municipality}</span>
@@ -175,7 +175,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                 </ul>
               </div>
             )}
-            <h3 className="text-sm font-bold text-ocean-900 mt-2" style={{ marginBottom: '2px' }}>Best fishing windows:</h3>
+            <h3 className="text-sm font-bold text-maritime-teal-800 mt-2" style={{ marginBottom: '2px' }}>Best fishing windows:</h3>
             {bestWindows.length > 0 ? (() => {
               const dateFmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short', timeZone: timezone });
               const timeFmt = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone });

@@ -153,10 +153,10 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200" aria-label="Hourly weather forecast">
-          <thead className="bg-ocean-700 text-white">
+          <thead className="bg-maritime-teal-700 text-white">
             {/* API source group header row */}
-            <tr className="bg-ocean-800 text-ocean-200 text-[10px] tracking-widest">
-              <th className="sticky left-0 bg-ocean-800 z-10" aria-hidden="true" />
+            <tr className="bg-maritime-teal-800 text-slate-100 text-[10px] tracking-widest">
+              <th className="sticky left-0 bg-maritime-teal-800 z-10" aria-hidden="true" />
               {/* MET Norway Locationforecast — always present */}
               <th
                 colSpan={6}
@@ -170,7 +170,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
                 <th
                   colSpan={3}
                   scope="colgroup"
-                  className="px-4 py-1 text-center font-semibold border-l border-ocean-400/20 border-r border-ocean-400/20"
+                  className="px-4 py-1 text-center font-semibold border-l border-slate-400/20 border-r border-slate-400/20"
                 >
                   Barentswatch Waveforecast
                 </th>
@@ -223,7 +223,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
 
             {/* Column header row */}
             <tr>
-              <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider sticky left-0 bg-ocean-700 z-10 whitespace-nowrap" style={{ width: '1%' }}>
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium tracking-wider sticky left-0 bg-maritime-teal-700 z-10 whitespace-nowrap" style={{ width: '1%' }}>
                 {scores ? 'Time and Score' : 'Time'}
               </th>
 
@@ -247,17 +247,17 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
 
               {/* ── Barentswatch Waveforecast columns ── */}
               {hasOceanData && (
-                <th scope="col" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30 border-l-2 border-ocean-400/50">
+                <th scope="col" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-slate-800/30 border-l-2 border-slate-400/50">
                   Height
                 </th>
               )}
               {hasOceanData && (
-                <th scope="col" aria-label="Wave direction" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30">
+                <th scope="col" aria-label="Wave direction" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-slate-800/30">
                   Dir
                 </th>
               )}
               {hasOceanData && (
-                <th scope="col" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-ocean-800/30 border-r-2 border-ocean-400/30">
+                <th scope="col" className="px-4 py-3 text-center text-xs font-medium tracking-wider bg-slate-800/30 border-r-2 border-slate-400/30">
                   Period
                 </th>
               )}
@@ -396,7 +396,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
 
                 {/* ── Barentswatch Waveforecast cells ── */}
                 {hasOceanData && (
-                  <td className="px-4 py-3 text-sm text-gray-700 text-center border-l-2 border-ocean-300/50">
+                  <td className="px-4 py-3 text-sm text-gray-700 text-center border-l-2 border-slate-300/50">
                     {forecast.waveHeight !== undefined
                       ? forecast.isInterpolatedWave
                         ? <span className="text-gray-400 italic">{forecast.waveHeight.toFixed(1)} m</span>
@@ -407,11 +407,11 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
                 {hasOceanData && (
                   <td className="px-4 py-3 text-sm text-gray-700 text-center">
                     {/* Wave direction: do NOT add 180° (show as-is) */}
-                    <DirectionArrow degrees={forecast.waveDirection} isFromDirection={false} className={forecast.isInterpolatedWave ? 'text-gray-400' : 'text-ocean-600'} />
+                    <DirectionArrow degrees={forecast.waveDirection} isFromDirection={false} className={forecast.isInterpolatedWave ? 'text-gray-400' : 'text-maritime-teal-600'} />
                   </td>
                 )}
                 {hasOceanData && (
-                  <td className="px-4 py-3 text-sm text-gray-700 text-center border-r-2 border-ocean-200">
+                  <td className="px-4 py-3 text-sm text-gray-700 text-center border-r-2 border-slate-200">
                     {forecast.wavePeriod !== undefined
                       ? forecast.isInterpolatedWave
                         ? <span className="text-gray-400 italic">{forecast.wavePeriod.toFixed(1)} s</span>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Header from '@/components/Header';
+import Logo from '@/components/Logo';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -9,20 +10,17 @@ export const metadata: Metadata = {
 
 export default function ScoreAboutPage() {
   return (
-    <div className="min-h-screen bg-ocean-50">
+    <div className="min-h-screen bg-gray-50">
       <Header>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-ocean-800 hover:text-ocean-600 no-underline">
-            <span className="text-lg">🎣</span>
-            <span className="font-bold">NoFish</span>
-          </Link>
+          <Logo href="/" showText={true} />
         </div>
       </Header>
 
       <main className="max-w-3xl mx-auto w-full min-w-0 px-4 py-8">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ padding: '2rem 1.5rem' }}>
 
-          <h1 className="text-2xl font-bold text-ocean-900 mb-2">Fishing Score Algorithm</h1>
+          <h1 className="text-2xl font-bold text-maritime-teal-800 mb-2">Fishing Score Algorithm</h1>
           <p className="text-sm text-gray-500 mb-6">
             The Score page shows a per-hour fishing suitability rating from <strong>0 %</strong> (most dangerous / unfishable) to <strong>100 %</strong> (perfect conditions). Each row includes the time, three scores (Total, Safety, Fishing), and brief explanations by category.
           </p>
@@ -34,7 +32,7 @@ export default function ScoreAboutPage() {
             </p>
 
             <section>
-              <h2 className="text-lg font-bold text-ocean-900 mt-6 mb-2">Algorithm design</h2>
+              <h2 className="text-lg font-bold text-maritime-teal-800 mt-6 mb-2">Algorithm design</h2>
               <p>
                 Instead of hard if/else brackets, the algorithm uses <strong>continuous mathematical functions</strong> — Gaussian curves, sigmoids, and smooth interpolation — to produce a fine-grained, linear 0–100 % scale. Ten independent variables are each evaluated as a <strong>0.0–1.0 factor</strong>. The factors are split into two groups — <strong>safety</strong> and <strong>fishing</strong> — then multiplied within each group and combined:
               </p>
@@ -48,9 +46,9 @@ totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
 
             {/* Safety Factors */}
             <section>
-              <h2 className="text-lg font-bold text-ocean-900 mt-8 mb-3">Safety factors</h2>
+              <h2 className="text-lg font-bold text-maritime-teal-800 mt-8 mb-3">Safety factors</h2>
 
-              <h3 className="text-base font-bold text-ocean-800 mt-4 mb-2">1. Wind Speed &amp; Current Interaction</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-4 mb-2">1. Wind Speed &amp; Current Interaction</h3>
               <p className="text-sm">Wind affects surface drift, which determines whether deep-water gear can maintain bottom contact.</p>
               <p className="text-sm font-bold mt-2">Safety overrides:</p>
               <ul className="list-disc pl-5 text-sm space-y-0.5">
@@ -64,7 +62,7 @@ totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
               </ul>
               <p className="text-sm mt-1">Below safety threshold, factor decreases smoothly from 1.0 (calm) toward 0.25 (12 m/s). Gusts above 10–12 m/s apply an additional multiplier (0.85–0.92).</p>
 
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">2. Wave Height</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">2. Wave Height</h3>
               <p className="text-sm">Affects gear handling efficiency and vessel safety.</p>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full mt-1">
@@ -79,7 +77,7 @@ totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
                 </table>
               </div>
 
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">3. Light &amp; Time of Day</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">3. Light &amp; Time of Day</h3>
               <p className="text-sm">Deep-water fish feed more aggressively in low light. Factor peaks at dawn and dusk.</p>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full mt-1">
@@ -95,7 +93,7 @@ totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
                 </table>
               </div>
 
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">4. Wave Period</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">4. Wave Period</h3>
               <p className="text-sm">Short steep waves are dangerous for small boats. Penalty scales with wave height — below 1.0 m wave height, period has no effect.</p>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full mt-1">
@@ -112,9 +110,9 @@ totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
 
             {/* Fishing Factors */}
             <section>
-              <h2 className="text-lg font-bold text-ocean-900 mt-8 mb-3">Fishing factors</h2>
+              <h2 className="text-lg font-bold text-maritime-teal-800 mt-8 mb-3">Fishing factors</h2>
 
-              <h3 className="text-base font-bold text-ocean-800 mt-4 mb-2">5. Ocean Current Speed (Base Score)</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-4 mb-2">5. Ocean Current Speed (Base Score)</h3>
               <p className="text-sm">The primary fishing driver. A Gaussian curve centred at <strong>0.4 m/s</strong> (σ = 0.22).</p>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full mt-1">
@@ -131,7 +129,7 @@ totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
               </div>
               <p className="text-xs text-gray-400 mt-1">When no current data is available, a cautious factor of 0.55 is used — unknown current should not inflate the score.</p>
 
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">6. Tidal Phase</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">6. Tidal Phase</h3>
               <p className="text-sm">Tidal phases dictate biological rhythms at depth and nutrient exchange.</p>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full mt-1">
@@ -147,7 +145,7 @@ totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
               </div>
               <p className="text-xs text-gray-400 mt-1">When no tide data is available, a neutral 0.75 default is used.</p>
 
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">7. Moon Phase</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">7. Moon Phase</h3>
               <p className="text-sm">Controls the strength of tidal pull — spring tides reach deeper into the water column.</p>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full mt-1">
@@ -160,20 +158,20 @@ totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
                 </table>
               </div>
 
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">8. Precipitation</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">8. Precipitation</h3>
               <ul className="list-disc pl-5 text-sm space-y-0.5">
                 <li>Dry or light (≤ 0.5 mm/h) → 1.00</li>
                 <li>Moderate (0.5–2 mm/h) → 0.93</li>
                 <li>Heavy (&gt; 2 mm/h) → 0.85</li>
               </ul>
 
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">9. Sea Temperature</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">9. Sea Temperature</h3>
               <ul className="list-disc pl-5 text-sm space-y-0.5">
                 <li>≥ 3°C → 1.00</li>
                 <li>&lt; 3°C → 0.92 (reduced fish activity)</li>
               </ul>
 
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">10. Barometric Pressure</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">10. Barometric Pressure</h3>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full mt-1">
                   <thead><tr className="text-left border-b"><th className="pb-1 pr-3">Pressure</th><th className="pb-1 pr-3">Factor</th><th className="pb-1">Meaning</th></tr></thead>
@@ -190,7 +188,7 @@ totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
 
             {/* Best Fishing Windows */}
             <section>
-              <h2 className="text-lg font-bold text-ocean-900 mt-8 mb-2">Best fishing windows</h2>
+              <h2 className="text-lg font-bold text-maritime-teal-800 mt-8 mb-2">Best fishing windows</h2>
               <p className="text-sm">
                 The Score page highlights up to 2 non-overlapping 1–3 hour stretches with the highest average score. Each window is shown as a card with the average score, date/time range, and links to add the event to Google Calendar, Outlook.com, or download an .ics file.
               </p>
@@ -207,7 +205,7 @@ totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
 
             {/* Score Colour Coding */}
             <section>
-              <h2 className="text-lg font-bold text-ocean-900 mt-8 mb-2">Score colour coding</h2>
+              <h2 className="text-lg font-bold text-maritime-teal-800 mt-8 mb-2">Score colour coding</h2>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full mt-1">
                   <thead><tr className="text-left border-b"><th className="pb-1 pr-3">Score</th><th className="pb-1 pr-3">Colour</th><th className="pb-1">Meaning</th></tr></thead>
@@ -224,7 +222,7 @@ totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
 
             <section className="mt-6">
               <p className="text-sm text-gray-500">
-                See <Link href="/data" className="text-ocean-600 underline">Data Column Reference</Link> for source ratings and column descriptions.
+                See <Link href="/data" className="text-maritime-teal-600 underline">Data Column Reference</Link> for source ratings and column descriptions.
               </p>
             </section>
           </div>

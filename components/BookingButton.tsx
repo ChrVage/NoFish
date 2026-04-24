@@ -79,8 +79,8 @@ export default function BookingButton({ entry }: { entry: BookingEntry }) {
     const tr = btnRef.current?.closest('tr');
     if (!tr) { return; }
     if (selected) {
-      tr.style.backgroundColor = '#ecfdf5';
-      tr.style.boxShadow = 'inset 0 0 0 2px #059669';
+      tr.style.backgroundColor = '#e0f2f1';
+      tr.style.boxShadow = 'inset 0 0 0 2px #00796b';
     } else {
       tr.style.backgroundColor = '';
       tr.style.boxShadow = '';
@@ -107,7 +107,7 @@ export default function BookingButton({ entry }: { entry: BookingEntry }) {
         height: '22px',
         borderRadius: '4px',
         border: 'none',
-        backgroundColor: selected ? '#059669' : 'transparent',
+        backgroundColor: selected ? '#00796b' : 'transparent',
         color: selected ? '#fff' : '#9ca3af',
         cursor: 'pointer',
         padding: 0,

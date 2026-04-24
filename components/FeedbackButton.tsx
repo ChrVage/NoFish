@@ -66,7 +66,7 @@ export default function FeedbackButton({ item }: { item: FeedbackItem }) {
         height: '22px',
         borderRadius: '4px',
         border: 'none',
-        backgroundColor: selected ? '#2563eb' : 'transparent',
+        backgroundColor: selected ? '#d32f2f' : 'transparent',
         color: selected ? '#fff' : '#9ca3af',
         cursor: 'pointer',
         padding: 0,

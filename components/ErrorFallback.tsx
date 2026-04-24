@@ -13,10 +13,10 @@ export default function ErrorFallback({ error, reset, pageName }: ErrorFallbackP
   const label = pageName ?? 'page';
 
   return (
-    <div className="min-h-screen bg-ocean-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
         <div className="text-4xl mb-4" aria-hidden="true">⚠️</div>
-        <h2 className="text-xl font-bold text-ocean-900 mb-2">
+        <h2 className="text-xl font-bold text-coastal-red-700 mb-2">
           Failed to load {label}
         </h2>
         <p className="text-sm text-gray-600 mb-6">
@@ -30,13 +30,13 @@ export default function ErrorFallback({ error, reset, pageName }: ErrorFallbackP
         <div className="flex flex-col gap-3 items-center">
           <button
             onClick={reset}
-            className="px-6 py-2.5 bg-ocean-600 text-white rounded-lg font-semibold hover:bg-ocean-700 transition-colors"
+            className="px-6 py-2.5 bg-maritime-teal-600 text-white rounded-lg font-semibold hover:bg-maritime-teal-700 transition-colors"
           >
             Try again
           </button>
           <Link
             href="/"
-            className="text-sm text-ocean-600 hover:text-ocean-800 underline"
+            className="text-sm text-maritime-teal-600 hover:text-maritime-teal-700 underline"
           >
             Back to map
           </Link>

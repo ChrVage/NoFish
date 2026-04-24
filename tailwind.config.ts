@@ -9,15 +9,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ocean: {
-          50: '#f0f9ff',
-          500: '#0ea5e9',
-          700: '#0369a1',
-          900: '#0c4a6e',
+        // NoFish Brand Colors
+        'maritime-teal': {
+          600: '#00796b',
+          700: '#00695c',
+          800: '#004d40',
         },
-        sand: {
-          100: '#fef3c7',
-          500: '#f59e0b',
+        'coastal-red': {
+          600: '#e53935',
+          700: '#d32f2f',
+          800: '#c62828',
         },
       },
     },

@@ -59,7 +59,7 @@ function FeedbackContent() {
   };
 
   return (
-    <div className="min-h-screen bg-ocean-50">
+    <div className="min-h-screen bg-gray-50">
       <Header>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -70,7 +70,7 @@ function FeedbackContent() {
 
       <main className="max-w-2xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-lg" style={{ padding: '2rem 1.5rem' }}>
-          <h2 className="text-2xl font-bold text-ocean-900 mb-1">Submit Feedback</h2>
+          <h2 className="text-2xl font-bold text-maritime-teal-700 mb-1">Submit Feedback</h2>
           <p className="text-sm text-gray-500 mb-6">
             Report inaccurate data or suggest improvements. Your feedback will be submitted as a GitHub issue.
           </p>
@@ -84,7 +84,7 @@ function FeedbackContent() {
                 {items.map(item => (
                   <div key={item.id} className="flex items-start gap-2 bg-gray-50 rounded p-3 text-sm">
                     <div className="flex-1 min-w-0">
-                      <span className="font-semibold text-ocean-700">[{item.page}]</span>{' '}
+                      <span className="font-semibold text-maritime-teal-700">[{item.page}]</span>{' '}
                       <span className="text-gray-600">{item.time}</span>
                       <br />
                       <span className="text-gray-500">{item.summary}</span>

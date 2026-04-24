@@ -170,7 +170,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-ocean-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <Header>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -197,7 +197,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
           {/* Location header */}
           <div className="mb-6">
             {locationData && (
-              <h2 className="text-2xl font-bold text-ocean-900 mb-1">
+              <h2 className="text-2xl font-bold text-maritime-teal-800 mb-1">
                 {locationData.name}
                 {locationData.municipality && locationData.municipality !== 'Unknown municipality' && locationData.municipality !== locationData.name && (
                   <span className="text-lg font-normal text-gray-500">, {locationData.municipality}</span>
@@ -219,7 +219,7 @@ export default async function DetailsPage({ searchParams }: PageProps) {
               <div className="mt-2 space-y-0.5">
                 {oceanForecastDistance !== null && oceanForecastLat !== undefined && oceanForecastLng !== undefined && (
                   <p className="text-xs text-gray-400">
-                    <span className="font-medium text-ocean-600">{waveForecastSource === 'barentswatch' ? 'Barentswatch Waves' : 'MET Ocean'}</span>
+                    <span className="font-medium text-maritime-teal-600">{waveForecastSource === 'barentswatch' ? 'Barentswatch Waves' : 'MET Ocean'}</span>
                     {' '}· forecast grid point {formatDistance(oceanForecastDistance)} away
                     {' '}({oceanForecastLat.toFixed(4)}°N, {oceanForecastLng.toFixed(4)}°E)
                   </p>

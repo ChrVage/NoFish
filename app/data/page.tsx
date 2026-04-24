@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Header from '@/components/Header';
+import Logo from '@/components/Logo';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -9,20 +10,17 @@ export const metadata: Metadata = {
 
 export default function DataPage() {
   return (
-    <div className="min-h-screen bg-ocean-50">
+    <div className="min-h-screen bg-gray-50">
       <Header>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-ocean-800 hover:text-ocean-600 no-underline">
-            <span className="text-lg">🎣</span>
-            <span className="font-bold">NoFish</span>
-          </Link>
+          <Logo href="/" showText={true} />
         </div>
       </Header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-lg" style={{ padding: '2rem 1.5rem' }}>
 
-          <h1 className="text-2xl font-bold text-ocean-900 mb-2">Data Column Reference</h1>
+          <h1 className="text-2xl font-bold text-maritime-teal-800 mb-2">Data Column Reference</h1>
           <p className="text-sm text-gray-500 mb-4">
             Descriptions of every column shown on the Details and Tide pages, with notes on how the values relate to real-world conditions.
           </p>
@@ -39,13 +37,13 @@ export default function DataPage() {
 
             {/* Details Page — Forecast Table */}
             <section>
-              <h2 className="text-lg font-bold text-ocean-900 mt-2 mb-2">Details Page — Forecast Table</h2>
+              <h2 className="text-lg font-bold text-maritime-teal-800 mt-2 mb-2">Details Page — Forecast Table</h2>
               <p className="text-sm text-gray-500 mb-3">
                 Columns are grouped by API source. Ocean columns (wave, current, sea temp, tide) are only shown for coastal locations where the nearest Barentswatch grid point is within 1 km.
               </p>
 
               {/* MET Norway Locationforecast */}
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">MET Norway Locationforecast</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">MET Norway Locationforecast</h3>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full">
                   <thead><tr className="text-left border-b border-gray-200"><th className="pb-1 pr-3">Column</th><th className="pb-1 pr-3">Unit</th><th className="pb-1">Description</th></tr></thead>
@@ -64,7 +62,7 @@ export default function DataPage() {
               </p>
 
               {/* Barentswatch Waveforecast */}
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">Barentswatch Waveforecast</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">Barentswatch Waveforecast</h3>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full">
                   <thead><tr className="text-left border-b border-gray-200"><th className="pb-1 pr-3">Column</th><th className="pb-1 pr-3">Unit</th><th className="pb-1">Description</th></tr></thead>
@@ -80,7 +78,7 @@ export default function DataPage() {
               </p>
 
               {/* Barentswatch Sea Current */}
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">Barentswatch Sea Current</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">Barentswatch Sea Current</h3>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full">
                   <thead><tr className="text-left border-b border-gray-200"><th className="pb-1 pr-3">Column</th><th className="pb-1 pr-3">Unit</th><th className="pb-1">Description</th></tr></thead>
@@ -95,7 +93,7 @@ export default function DataPage() {
               </p>
 
               {/* MET Sea Temp */}
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">MET Sea Temp</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">MET Sea Temp</h3>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full">
                   <thead><tr className="text-left border-b border-gray-200"><th className="pb-1 pr-3">Column</th><th className="pb-1 pr-3">Unit</th><th className="pb-1">Description</th></tr></thead>
@@ -109,7 +107,7 @@ export default function DataPage() {
               </p>
 
               {/* Kartverket */}
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">Kartverket</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">Kartverket</h3>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full">
                   <thead><tr className="text-left border-b border-gray-200"><th className="pb-1 pr-3">Column</th><th className="pb-1">Description</th></tr></thead>
@@ -123,7 +121,7 @@ export default function DataPage() {
               </p>
 
               {/* Calculated */}
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">Calculated columns</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">Calculated columns</h3>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full">
                   <thead><tr className="text-left border-b border-gray-200"><th className="pb-1 pr-3">Column</th><th className="pb-1">Description</th></tr></thead>
@@ -138,7 +136,7 @@ export default function DataPage() {
               </p>
 
               {/* Confidence */}
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">Confidence indicators</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">Confidence indicators</h3>
               <p className="text-sm">The Details page shows a confidence legend above the table:</p>
               <ul className="list-disc pl-5 space-y-1 text-sm">
                 <li><strong>High</strong> — first ~24 hours; NWP model skill is strong</li>
@@ -150,7 +148,7 @@ export default function DataPage() {
 
             {/* Tide Page */}
             <section>
-              <h2 className="text-lg font-bold text-ocean-900 mt-8 mb-2">Tide Page</h2>
+              <h2 className="text-lg font-bold text-maritime-teal-800 mt-8 mb-2">Tide Page</h2>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full">
                   <thead><tr className="text-left border-b border-gray-200"><th className="pb-1 pr-3">Column</th><th className="pb-1 pr-3">Unit</th><th className="pb-1">Description</th></tr></thead>
@@ -165,7 +163,7 @@ export default function DataPage() {
                 Source: <a href="https://kartverket.no/til-sjos/se-havniva/" target="_blank" rel="noopener noreferrer" className="underline">Kartverket – Se havnivå</a> — tide gauge station network. Data is interpolated to the requested position; station name and distance shown in the page header.
               </p>
 
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">What affects the tide?</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">What affects the tide?</h3>
               <ul className="list-disc pl-5 space-y-1 text-sm">
                 <li><strong>Spring tides</strong> (largest range) occur around new moon and full moon.</li>
                 <li><strong>Neap tides</strong> (smallest range) occur around first and last quarter.</li>
@@ -180,9 +178,9 @@ export default function DataPage() {
 
             {/* Data Quality and Sources */}
             <section>
-              <h2 className="text-lg font-bold text-ocean-900 mt-8 mb-2">Data Quality and Sources</h2>
+              <h2 className="text-lg font-bold text-maritime-teal-800 mt-8 mb-2">Data Quality and Sources</h2>
 
-              <h3 className="text-base font-bold text-ocean-800 mt-4 mb-2">Source ratings</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-4 mb-2">Source ratings</h3>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full">
                   <thead><tr className="text-left border-b border-gray-200"><th className="pb-1 pr-2">Source</th><th className="pb-1 pr-2">Data</th><th className="pb-1 pr-2">Quality</th><th className="pb-1 pr-2">Grid</th><th className="pb-1 pr-2">Next-hour</th><th className="pb-1">Next-week</th></tr></thead>
@@ -197,7 +195,7 @@ export default function DataPage() {
                 </table>
               </div>
 
-              <h3 className="text-base font-bold text-ocean-800 mt-6 mb-2">Key limitations</h3>
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">Key limitations</h3>
 
               <div className="space-y-3">
                 <div>
@@ -240,7 +238,7 @@ export default function DataPage() {
 
             <section className="mt-6">
               <p className="text-sm text-gray-500">
-                See <Link href="/score/about" className="text-ocean-600 underline">Fishing Score Algorithm</Link> for how these values feed into the fishing score.
+                See <Link href="/score/about" className="text-maritime-teal-600 underline">Fishing Score Algorithm</Link> for how these values feed into the fishing score.
               </p>
             </section>
           </div>

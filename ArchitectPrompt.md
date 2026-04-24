@@ -34,7 +34,11 @@ Make sure all functionality is updated in the documentation. Also read all docum
 Found in the [README.md](README.md) file.
 
 ## To implement before release
-- Create a colour palette, then a better icon and logo, maybe with https://realfavicongenerator.net/
+- Add UV to an appropriate section of the details page 
+- Include drift ice in safety warnings
+
+- Consider where in the water column each species should be caught.
+- Implement seasons for the different species, where applicable
 
 - Also support Norwegian language.
 

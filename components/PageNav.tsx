@@ -69,7 +69,7 @@ export default function PageNav({ lat, lng, zoom, sea, boat, fish, method, curre
           };
           const currentStyle: React.CSSProperties = {
             ...baseStyle,
-            backgroundColor: '#9ca3af',
+            backgroundColor: '#00695c',
             color: 'white',
             cursor: 'default',
           };

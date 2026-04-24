@@ -67,7 +67,7 @@ export default async function StatisticsPage() {
   const weekTrend = stats.prev7 > 0 ? Math.round(((stats.last7 - stats.prev7) / stats.prev7) * 100) : null;
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%)' }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #f0faf9 0%, #e6f4f1 100%)' }}>
       <Header>
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <BackButton />
@@ -89,14 +89,14 @@ export default async function StatisticsPage() {
               className="rounded-2xl p-5 sm:p-6 text-center transition-shadow hover:shadow-md"
               style={{
                 background: card.accent
-                  ? 'linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%)'
+                  ? 'linear-gradient(135deg, #00796b 0%, #00695c 100%)'
                   : '#ffffff',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
               }}
             >
               <p
                 className="text-3xl sm:text-4xl font-extrabold tabular-nums"
-                style={{ color: card.accent ? '#ffffff' : '#0369a1' }}
+                style={{ color: card.accent ? '#ffffff' : '#00695c' }}
               >
                 {card.value.toLocaleString()}
               </p>
@@ -146,7 +146,7 @@ export default async function StatisticsPage() {
                     >
                       <span
                         className="text-[10px] font-bold tabular-nums mb-1 transition-colors"
-                        style={{ color: isCurrentWeek ? '#0369a1' : '#94a3b8' }}
+                        style={{ color: isCurrentWeek ? '#00695c' : '#94a3b8' }}
                       >
                         {w.count}
                       </span>
@@ -156,8 +156,8 @@ export default async function StatisticsPage() {
                           height: `${barH}px`,
                           borderRadius: '6px 6px 2px 2px',
                           background: isCurrentWeek
-                            ? 'linear-gradient(180deg, #0369a1 0%, #0c4a6e 100%)'
-                            : 'linear-gradient(180deg, #38bdf8 0%, #0ea5e9 100%)',
+                            ? 'linear-gradient(180deg, #00796b 0%, #004d40 100%)'
+                            : 'linear-gradient(180deg, #4db6ac 0%, #26a69a 100%)',
                         }}
                         title={`Week of ${weekLabel}: ${w.count} lookups`}
                         role="img"
@@ -165,7 +165,7 @@ export default async function StatisticsPage() {
                       />
                       <span
                         className="text-[9px] font-semibold mt-2 whitespace-nowrap"
-                        style={{ color: isCurrentWeek ? '#0369a1' : '#b0b8c4' }}
+                        style={{ color: isCurrentWeek ? '#00695c' : '#b0b8c4' }}
                       >
                         {weekLabel}
                       </span>

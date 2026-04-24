@@ -16,6 +16,16 @@ export const metadata: Metadata = {
   title: "NoFish.no | Fishing Forecast Map for Small Boats",
   description: "Because fishing in bad weather is worse than no fishing at all. Get precise wind, wave, and tide maps curated for small boat safety.",
   referrer: "no-referrer-when-downgrade",
+  icons: {
+    icon: [
+      { url: "/favicon.ico?v=20260424" },
+      { url: "/favicon.svg?v=20260424", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png?v=20260424", sizes: "96x96", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png?v=20260424", sizes: "180x180", type: "image/png" }],
+    shortcut: ["/favicon.ico?v=20260424"],
+  },
+  manifest: "/site.webmanifest?v=20260424",
   openGraph: {
     title: "NoFish.no | Fishing Forecast Map for Small Boats",
     description: "Because fishing in bad weather is worse than no fishing at all. Get precise wind, wave, and tide maps curated for small boat safety.",

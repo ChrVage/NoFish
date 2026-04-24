@@ -99,7 +99,7 @@ function PopupContent({ lat, lng, loading, name, elevation, isSea, showScore, sh
 
   return (
     <div style={{ minWidth: '220px', fontSize: '0.875rem' }}>
-      <strong className="text-ocean-700" style={{ display: 'block', marginBottom: '0.25rem' }}>
+      <strong className="text-maritime-teal-700" style={{ display: 'block', marginBottom: '0.25rem' }}>
         {loading ? 'Loading...' : (name ?? `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`)}
       </strong>
       {!loading && elevation !== undefined && (
@@ -132,8 +132,8 @@ function PopupContent({ lat, lng, loading, name, elevation, isSea, showScore, sh
                 <div style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <div style={{
                     width: 22, height: 22,
-                    border: '3px solid rgba(56,189,248,0.25)',
-                    borderTopColor: '#0ea5e9',
+                    border: '3px solid rgba(0,121,107,0.25)',
+                    borderTopColor: '#00796b',
                     borderRadius: '50%',
                     animation: 'popup-spin 0.7s linear infinite',
                   }} />
@@ -225,10 +225,10 @@ export default function Map() {
       }
     );
 
-    // Custom marker icon using ocean theme
+    // Custom marker icon using maritime-teal theme
     const customIcon = L.divIcon({
       className: 'custom-marker',
-      html: `<div class="w-8 h-8 bg-ocean-500 border-4 border-white rounded-full shadow-lg flex items-center justify-center cursor-pointer hover:bg-ocean-700 transition-colors">
+      html: `<div class="w-8 h-8 bg-maritime-teal-600 border-4 border-white rounded-full shadow-lg flex items-center justify-center cursor-pointer hover:bg-maritime-teal-700 transition-colors">
         <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
           <path d="M10 2a6 6 0 00-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 00-6-6z"/>
         </svg>

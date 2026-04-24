@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Header from '@/components/Header';
+import Logo from '@/components/Logo';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -9,20 +10,17 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-ocean-50">
+    <div className="min-h-screen bg-gray-50">
       <Header>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-ocean-800 hover:text-ocean-600 no-underline">
-            <span className="text-lg">🎣</span>
-            <span className="font-bold">NoFish</span>
-          </Link>
+          <Logo href="/" showText={true} />
         </div>
       </Header>
 
       <main className="max-w-3xl mx-auto w-full min-w-0 px-4 py-8">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ padding: '2rem 1.5rem' }}>
 
-          <h1 className="text-2xl font-bold text-ocean-900 mb-2">About NoFish</h1>
+          <h1 className="text-2xl font-bold text-maritime-teal-800 mb-2">About NoFish</h1>
           <p className="text-sm text-gray-500 mb-6 italic">
             ... because fishing in bad weather is worse than no fishing at all.
           </p>
@@ -30,7 +28,7 @@ export default function AboutPage() {
           <div className="prose prose-sm max-w-none text-gray-700 space-y-6 break-words [overflow-wrap:anywhere] [&_table]:w-full [&_th]:whitespace-normal [&_td]:whitespace-normal [&_th]:align-top [&_td]:align-top">
 
             <section>
-              <h2 className="text-lg font-bold text-ocean-900 mt-6 mb-2">What it does</h2>
+              <h2 className="text-lg font-bold text-maritime-teal-800 mt-6 mb-2">What it does</h2>
               <p>
                 NoFish gives small boat fishers access to wind, wave, and tide forecasts for <strong>any point on the Norwegian coast</strong> — so they can make a good decision before they leave the dock.
               </p>
@@ -39,7 +37,7 @@ export default function AboutPage() {
               </p>
               <ul className="list-disc pl-5 space-y-1">
                 <li><strong>Score</strong> — combined fishing suitability rating (0–100 %) based on wind, waves, tide, light, and weather.
-                  See <Link href="/score/about" className="text-ocean-600 underline">About Fishing Score</Link> for how it works.</li>
+                  See <Link href="/score/about" className="text-maritime-teal-600 underline">About Fishing Score</Link> for how it works.</li>
                 <li><strong>Details</strong> — hourly forecast table (up to ~48 hours) with columns grouped by data source.
                   Wind speed and wave height are the primary safety numbers.</li>
                 <li><strong>Tides</strong> — high/low tide events for the next 10 days, with peak high and lowest low highlighted.</li>
@@ -50,7 +48,7 @@ export default function AboutPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ocean-900 mt-6 mb-2">How to use it</h2>
+              <h2 className="text-lg font-bold text-maritime-teal-800 mt-6 mb-2">How to use it</h2>
               <p>
                 When the forecast responds, a sky-blue dot and dashed line appear on the map showing the wave forecast grid point (Barentswatch) closest to your click.
               </p>
@@ -69,10 +67,10 @@ export default function AboutPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ocean-900 mt-6 mb-2">Forecast table</h2>
+              <h2 className="text-lg font-bold text-maritime-teal-800 mt-6 mb-2">Forecast table</h2>
               <p>
                 The Details page shows an hourly forecast table with columns grouped by API source. See the{' '}
-                <Link href="/data" className="text-ocean-600 underline">Data Column Reference</Link> for a full description of every column.
+                <Link href="/data" className="text-maritime-teal-600 underline">Data Column Reference</Link> for a full description of every column.
               </p>
               <div className="overflow-x-auto">
                 <table className="text-xs mt-2 w-full table-auto">
@@ -96,14 +94,14 @@ export default function AboutPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ocean-900 mt-6 mb-2">Not a substitute for judgment</h2>
+              <h2 className="text-lg font-bold text-maritime-teal-800 mt-6 mb-2">Not a substitute for judgment</h2>
               <p>
                 This is <strong>not</strong> powered by AI. NoFish does not make recommendations. Every skipper on the Norwegian coast must use their own experience, <strong>local knowledge</strong>, and real intelligence before heading out on the water. The numbers here inform that decision — they do not replace it.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ocean-900 mt-6 mb-2">Security &amp; privacy</h2>
+              <h2 className="text-lg font-bold text-maritime-teal-800 mt-6 mb-2">Security &amp; privacy</h2>
               <ul className="list-disc pl-5 space-y-1">
                 <li>All external API calls are made <strong>server-side</strong> — no credentials exposed to the browser</li>
                 <li>No cookies, no tracking, no third-party scripts</li>
@@ -112,19 +110,19 @@ export default function AboutPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ocean-900 mt-6 mb-2">More information</h2>
+              <h2 className="text-lg font-bold text-maritime-teal-800 mt-6 mb-2">More information</h2>
               <ul className="list-disc pl-5 space-y-1">
-                <li><Link href="/data" className="text-ocean-600 underline">Data Column Reference</Link> — every column explained, source ratings, and data quality</li>
-                <li><Link href="/score/about" className="text-ocean-600 underline">Fishing Score Algorithm</Link> — how the 0–100 % score is calculated</li>
-                <li><a href="https://github.com/ChrVage/NoFish" target="_blank" rel="noopener noreferrer" className="text-ocean-600 underline">Source code on GitHub</a></li>
+                <li><Link href="/data" className="text-maritime-teal-600 underline">Data Column Reference</Link> — every column explained, source ratings, and data quality</li>
+                <li><Link href="/score/about" className="text-maritime-teal-600 underline">Fishing Score Algorithm</Link> — how the 0–100 % score is calculated</li>
+                <li><a href="https://github.com/ChrVage/NoFish" target="_blank" rel="noopener noreferrer" className="text-maritime-teal-600 underline">Source code on GitHub</a></li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ocean-900 mt-6 mb-2">Feedback</h2>
+              <h2 className="text-lg font-bold text-maritime-teal-800 mt-6 mb-2">Feedback</h2>
               <p>
                 Found an issue or have a wish for new functionality?{' '}
-                <a href="https://github.com/ChrVage/NoFish/issues/new/choose" target="_blank" rel="noopener noreferrer" className="text-ocean-600 underline">
+                <a href="https://github.com/ChrVage/NoFish/issues/new/choose" target="_blank" rel="noopener noreferrer" className="text-maritime-teal-600 underline">
                   Create a new issue on GitHub
                 </a>.
               </p>
