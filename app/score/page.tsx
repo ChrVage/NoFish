@@ -47,18 +47,20 @@ export default async function ScorePage({ searchParams }: PageProps) {
   const hasTuningSelection = parsedTuning.boat !== undefined || parsedTuning.fish !== undefined || parsedTuning.method !== undefined;
   const bestWindowHeading = (() => {
     if (!hasTuningSelection) {return 'Best fishing windows:';}
-    const parts: string[] = ['Best fishing window for fishing'];
+    const parts: string[] = ['Best window'];
     if (parsedTuning.method) {
       const label = FISHING_METHOD_OPTIONS.find((o) => o.value === parsedTuning.method)?.label ?? parsedTuning.method;
-      parts.push(`with ${label.toLowerCase()}`);
+      parts.push(`for ${label.toLowerCase()}`);
+    } else {
+      parts.push('for fishing');
     }
     if (parsedTuning.fish && parsedTuning.fish !== 'general') {
       const label = FISH_TARGET_OPTIONS.find((o) => o.value === parsedTuning.fish)?.label ?? parsedTuning.fish;
-      parts.push(`after ${label}`);
+      parts.push(`targeting ${label.toLowerCase()}`);
     }
     if (parsedTuning.boat) {
       const label = BOAT_SIZE_OPTIONS.find((o) => o.value === parsedTuning.boat)?.label ?? parsedTuning.boat;
-      parts.push(`in a ${label} boat`);
+      parts.push(`from a ${label} boat`);
     }
     return `${parts.join(' ')}:`;
   })();
