@@ -15,7 +15,7 @@ import FeedbackButton from '@/components/FeedbackButton';
 import FeedbackBanner from '@/components/FeedbackBanner';
 import BookingButton, { type BookingEntry } from '@/components/BookingButton';
 import TuningControls from '@/components/TuningControls';
-import { FISHING_METHOD_OPTIONS, parseTuningFromSearchParams, resolveTuningSelection } from '@/lib/utils/tuning';
+import { BOAT_SIZE_OPTIONS, FISH_TARGET_OPTIONS, FISHING_METHOD_OPTIONS, parseTuningFromSearchParams, resolveTuningSelection } from '@/lib/utils/tuning';
 
 /** True when ≥50 % of the hour is in the "day" sun phase. */
 function isDaylight(segments: { phase: string; fraction: number }[] | undefined): boolean {
@@ -42,7 +42,26 @@ export default async function ScorePage({ searchParams }: PageProps) {
   }
 
   const isSea = seaStr === '0' ? false : seaStr === '1' ? true : undefined;
-  const tuning = resolveTuningSelection(parseTuningFromSearchParams({ boat: boatStr, fish: fishStr, method: methodStr }));
+  const parsedTuning = parseTuningFromSearchParams({ boat: boatStr, fish: fishStr, method: methodStr });
+  const tuning = resolveTuningSelection(parsedTuning);
+  const hasTuningSelection = parsedTuning.boat !== undefined || parsedTuning.fish !== undefined || parsedTuning.method !== undefined;
+  const bestWindowHeading = (() => {
+    if (!hasTuningSelection) {return 'Best fishing windows:';}
+    const parts: string[] = ['Best fishing window for fishing'];
+    if (parsedTuning.method) {
+      const label = FISHING_METHOD_OPTIONS.find((o) => o.value === parsedTuning.method)?.label ?? parsedTuning.method;
+      parts.push(`with ${label.toLowerCase()}`);
+    }
+    if (parsedTuning.fish && parsedTuning.fish !== 'general') {
+      const label = FISH_TARGET_OPTIONS.find((o) => o.value === parsedTuning.fish)?.label ?? parsedTuning.fish;
+      parts.push(`after ${label}`);
+    }
+    if (parsedTuning.boat) {
+      const label = BOAT_SIZE_OPTIONS.find((o) => o.value === parsedTuning.boat)?.label ?? parsedTuning.boat;
+      parts.push(`in a ${label} boat`);
+    }
+    return `${parts.join(' ')}:`;
+  })();
 
   const [locationData, weatherResult, protectionZones] = await Promise.all([
     reverseGeocode(lat, lng),
@@ -175,7 +194,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                 </ul>
               </div>
             )}
-            <h3 className="text-sm font-bold text-maritime-teal-800 mt-2" style={{ marginBottom: '2px' }}>Best fishing windows:</h3>
+            <h3 className="text-sm font-bold text-maritime-teal-800 mt-2" style={{ marginBottom: '2px' }}>{bestWindowHeading}</h3>
             {bestWindows.length > 0 ? (() => {
               const dateFmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short', timeZone: timezone });
               const timeFmt = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone });
