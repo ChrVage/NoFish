@@ -28,6 +28,13 @@ Make sure all functionality is updated in the documentation. Also read all docum
 Found in the [README.md](README.md) file.
 
 ## To implement before release
+- In Details, display UV with one decimal if it existsIn Details, display UV with one decimal if it exists
+- When fishing method is net, the safety score should be high if it is safe to both set it and pick it up again. It should be explained that these algorithms are tuned for overnight fishing. Fishing score should be high if the conditions are good during the night.
+- Grouping species on fishing score?
+- Make sure that the blue dot marks the last spot where the weather or wave forecast was collected from. It should also show when I click "Back" from a details, score or tide view.
+- Waves with period of 9.2 seconds and a height of 1.2 meters is no problem for a 20 ft boat.
+- the boarders in details 
+
 - Also support Norwegian language.
 
 - Explore which license is right for this project.

@@ -399,7 +399,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
                             ? 'text-amber-700 font-medium'
                             : 'text-gray-600'
                     }>
-                      {Math.round(forecast.uvIndex)}
+                      {forecast.uvIndex.toFixed(1)}
                     </span>
                   ) : '—'}
                 </td>
