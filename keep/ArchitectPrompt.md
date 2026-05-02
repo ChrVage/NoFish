@@ -32,7 +32,7 @@ Found in the [README.md](README.md) file.
 
 - Fish species should be grouped together so that all species with same properties that affects fishing score are grouped together.
 
-- Also support Norwegian language.
+- Also support Norwegian, German, Dutch and Polish language.
 
 - Explore which license is right for this project.
 
