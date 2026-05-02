@@ -27,12 +27,10 @@ Make sure all functionality is updated in the documentation. Also read all docum
 ## Reason for existing
 Found in the [README.md](README.md) file.
 
-## To implement before release
+## First prio changes
 - When fishing method is net, the safety score should be high if it is safe to both set it and pick it up again. It should be explained that these algorithms are tuned for overnight fishing in the score-documentation. Fishing score should be high if the conditions for fishing with net are good some time during the night.
 
 - Fish species should be grouped together so that all species with same properties that affects fishing score are grouped together.
-
-- The borders between the cells in the details page should be more beautiful, and continuous. 
 
 - Also support Norwegian language.
 
@@ -40,7 +38,7 @@ Found in the [README.md](README.md) file.
 
 - SEO to make sure people find the site.
 
-### To implement later (in case number of users increase)
+### Second prio changes
 - Implment an **API** so others can collect next best fishing times based on coordinates. One for score and detail and one for tide. Make sure I can contact the caller, so I don't need authentication on this solution. Also implement limiting so that I will not take down my data sources. API optionally can include boat size, species and method. Use default if not provided.
 - API should support input for other scores than fishing score, such as wind strength and direction, high and low tide values, wave height [and direction]. 
 
