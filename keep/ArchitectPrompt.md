@@ -32,8 +32,6 @@ Found in the [README.md](README.md) file.
 
 - Fish species should be grouped together so that all species with same properties that affects fishing score are grouped together.
 
-- Waves with period of 9.2 seconds and a height of 1.2 meters is no problem for a 20 ft boat.
-
 - The borders between the cells in the details page should be more beautiful, and continuous. 
 
 - Also support Norwegian language.

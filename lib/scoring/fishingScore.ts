@@ -603,14 +603,39 @@ export function computeFishingScore(f: HourlyForecast, depthOrOptions?: number |
   let waveFactor = 0.90; // default when no wave data
   if (f.waveHeight !== undefined) {
     const wh = f.waveHeight;
-    if (wh <= boatSafety.waveCalm) {
+
+    // Long-period swell is far more manageable than short-period chop of the
+    // same height. Use wave steepness (deep-water approximation) to derive an
+    // effective height for the bracket/factor computation while keeping the
+    // actual height in all feedback messages.
+    //   Steepness ≈ H × 0.640 / T²   (from dispersion relation g·T²/2π)
+    //   T = 9.2 s, H = 1.2 m  →  S ≈ 0.009  (gentle rolling swell, no problem)
+    //   T = 5.0 s, H = 1.2 m  →  S ≈ 0.031  (short chop, uncomfortable)
+    let effectiveWh = wh;
+    if (f.wavePeriod !== undefined && f.wavePeriod > 0) {
+      const T = f.wavePeriod;
+      const steepness = (wh * 0.640) / (T * T);
+      if (steepness < 0.012) {
+        effectiveWh = wh * 0.55;                            // very gentle rolling swell
+      } else if (steepness < 0.025) {
+        const t = (steepness - 0.012) / 0.013;
+        effectiveWh = wh * (0.55 + 0.45 * t);              // blends back to full at S=0.025
+      }
+      // steepness ≥ 0.025: short chop — penalise full actual height
+    }
+
+    if (effectiveWh <= boatSafety.waveCalm) {
       waveFactor = 1.0;
       good(`Calm seas ${wh.toFixed(1)}m`, 'safety');
-    } else if (wh <= boatSafety.waveModerate) {
-      waveFactor = 1.0 - 0.4 * sigmoid01(wh, boatSafety.waveCalm, boatSafety.waveModerate);
-      if (wh <= 0.7) {good(`Low waves ${wh.toFixed(1)}m`, 'safety');}
-    } else if (wh <= boatSafety.waveDanger) {
-      waveFactor = 0.6 - 0.5 * sigmoid01(wh, boatSafety.waveModerate, boatSafety.waveDanger);
+    } else if (effectiveWh <= boatSafety.waveModerate) {
+      waveFactor = 1.0 - 0.4 * sigmoid01(effectiveWh, boatSafety.waveCalm, boatSafety.waveModerate);
+      if (wh > 0.8 && effectiveWh < wh * 0.85) {
+        good(`${wh.toFixed(1)}m — long-period swell`, 'safety');
+      } else if (wh <= 0.7) {
+        good(`Low waves ${wh.toFixed(1)}m`, 'safety');
+      }
+    } else if (effectiveWh <= boatSafety.waveDanger) {
+      waveFactor = 0.6 - 0.5 * sigmoid01(effectiveWh, boatSafety.waveModerate, boatSafety.waveDanger);
       if (wh > 1.5) {
         const gustVal = f.windGust ?? f.windSpeed ?? 0;
         if (gustVal > 5) {
@@ -623,7 +648,7 @@ export function computeFishingScore(f: HourlyForecast, depthOrOptions?: number |
         bad(`Waves ${wh.toFixed(1)}m`, 'safety');
       }
     } else {
-      waveFactor = Math.max(0, 0.1 - 0.1 * sigmoid01(wh, boatSafety.waveDanger, boatSafety.waveDanger + 1.0));
+      waveFactor = Math.max(0, 0.1 - 0.1 * sigmoid01(effectiveWh, boatSafety.waveDanger, boatSafety.waveDanger + 1.0));
       danger(`⚠️ Dangerous seas ${wh.toFixed(1)}m`, 'safety');
     }
   }
@@ -762,26 +787,8 @@ export function computeFishingScore(f: HourlyForecast, depthOrOptions?: number |
 
     // Blend toward 1.0 for smaller waves
     wavePeriodFactor = 1.0 - heightScale * (1.0 - rawPeriodFactor);
-
-    // Long, soft swell can make slightly-too-high waves manageable when wind is low.
-    // This only applies in the marginal range (1.0–1.4 m) and never to big seas.
-    if (wp >= 10 && wh <= 1.4) {
-      const ws = f.windSpeed ?? 0;
-      const gs = f.windGust ?? ws;
-      const windStress = Math.max(ws, gs * 0.7);
-      const swellStrength = lerp01(wp, 10, 14);
-      const marginalWaves = 1.0 - lerp01(wh, 1.0, 1.4);
-      const lowWind = 1.0 - lerp01(windStress, 5, 8);
-      const relief = swellStrength * marginalWaves * lowWind;
-
-      if (relief > 0) {
-        const relaxedTarget = 0.88;
-        waveFactor += (relaxedTarget - waveFactor) * relief;
-        if (relief >= 0.25) {
-          good('Long-period swell softens wave risk', 'safety');
-        }
-      }
-    }
+    // Note: long-period swell relief is now handled in section 6 via steepness-based
+    // effectiveWh, so no separate waveFactor adjustment is needed here.
 
     if (reason && heightScale >= 0.5) {
       reasons.push({ ...reason, category: 'safety' as const });
