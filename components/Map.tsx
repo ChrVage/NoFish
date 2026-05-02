@@ -333,9 +333,10 @@ export default function Map() {
       // Fetch location name and ocean forecast grid point in parallel
       void (async () => {
         try {
-          const [geoResponse, oceanResponse] = await Promise.all([
+          const [geoResponse, oceanResponse, weatherPointResponse] = await Promise.all([
             fetch(`/api/geocoding?lat=${lat}&lon=${lng}`, { signal }),
             fetch(`/api/ocean-point?lat=${lat}&lon=${lng}`, { signal }),
+            fetch(`/api/weather-point?lat=${lat}&lon=${lng}`, { signal }),
           ]);
 
           let popupName: string | undefined;
@@ -384,6 +385,33 @@ export default function Map() {
               );
             } else {
               hasOcean = false;
+            }
+          } else {
+            hasOcean = false;
+          }
+
+          if (!hasOcean && weatherPointResponse.ok) {
+            const weatherPointResult = await weatherPointResponse.json();
+            const wLat: number | undefined = weatherPointResult.weatherForecastLat;
+            const wLng: number | undefined = weatherPointResult.weatherForecastLng;
+            if (wLat !== undefined && wLng !== undefined && map.getContainer().isConnected) {
+              activeOceanLine = L.polyline([[lat, lng], [wLat, wLng]], {
+                color: '#38bdf8',
+                weight: 2,
+                dashArray: '5, 6',
+                opacity: 0.85,
+              }).addTo(map);
+              activeOceanDot = L.circleMarker([wLat, wLng], {
+                radius: 6,
+                color: '#0284c7',
+                fillColor: '#38bdf8',
+                fillOpacity: 0.9,
+                weight: 2,
+              }).addTo(map);
+              activeOceanDot.bindTooltip(
+                `Weather forecast point — MET Norway (${wLat.toFixed(4)}°N, ${wLng.toFixed(4)}°E)`,
+                { direction: 'top', offset: [0, -4] }
+              );
             }
           }
 
@@ -453,6 +481,11 @@ export default function Map() {
         singleClickTimer = null;
       }
       map.setView(e.latlng, map.getZoom() + 4, { animate: true });
+    });
+
+    // Close active popup when zooming so stale marker UI does not linger
+    map.on('zoomstart', () => {
+      map.closePopup();
     });
 
     // Auto-toggle sea chart based on zoom level

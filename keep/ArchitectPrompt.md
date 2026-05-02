@@ -28,12 +28,13 @@ Make sure all functionality is updated in the documentation. Also read all docum
 Found in the [README.md](README.md) file.
 
 ## To implement before release
-- In Details, display UV with one decimal if it existsIn Details, display UV with one decimal if it exists
-- When fishing method is net, the safety score should be high if it is safe to both set it and pick it up again. It should be explained that these algorithms are tuned for overnight fishing. Fishing score should be high if the conditions are good during the night.
-- Grouping species on fishing score?
-- Make sure that the blue dot marks the last spot where the weather or wave forecast was collected from. It should also show when I click "Back" from a details, score or tide view.
+- When fishing method is net, the safety score should be high if it is safe to both set it and pick it up again. It should be explained that these algorithms are tuned for overnight fishing in the score-documentation. Fishing score should be high if the conditions for fishing with net are good some time during the night.
+
+- Fish species should be grouped together so that all species with same properties that affects fishing score are grouped together.
+
 - Waves with period of 9.2 seconds and a height of 1.2 meters is no problem for a 20 ft boat.
-- the boarders in details 
+
+- The borders between the cells in the details page should be more beautiful, and continuous. 
 
 - Also support Norwegian language.
 
@@ -42,14 +43,14 @@ Found in the [README.md](README.md) file.
 - SEO to make sure people find the site.
 
 ### To implement later (in case number of users increase)
-- Implement function for optional payment
-
 - Implment an **API** so others can collect next best fishing times based on coordinates. One for score and detail and one for tide. Make sure I can contact the caller, so I don't need authentication on this solution. Also implement limiting so that I will not take down my data sources. API optionally can include boat size, species and method. Use default if not provided.
+- API should support input for other scores than fishing score, such as wind strength and direction, high and low tide values, wave height [and direction]. 
 
-- Functionality for subscribing to calendar appointments with good fishing times.
+- Functionality for subscribing to calendar appointments with good fishing times or other score models.
 
 - Add possibility for fish logging, and add weather to the logged fish, so that you can know in which conditions you fish the fish. Send mail after fishing appointment to collect the data via link.
 
+- Implement function for optional payment
 ## Instructions for response
 
 Provide a brief summary of the overall code quality in the context of the NoFish architecture, reason to exist and future plans.
