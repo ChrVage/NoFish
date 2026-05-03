@@ -30,8 +30,6 @@ Found in the [README.md](README.md) file.
 ## First prio changes
 - Also support Norwegian, German, Dutch and Polish language.
 
-- Explore which license is right for this project.
-
 - SEO to make sure people find the site.
 
 ### Second prio changes
