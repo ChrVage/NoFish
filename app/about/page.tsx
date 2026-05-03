@@ -126,6 +126,10 @@ export default function AboutPage() {
                   Create a new issue on GitHub
                 </a>.
               </p>
+              <p className="mt-2">
+                For direct contact:{' '}
+                <a href="mailto:hi@nofish.no" className="text-maritime-teal-600 underline">hi@nofish.no</a>
+              </p>
             </section>
           </div>
 

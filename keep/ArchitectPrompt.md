@@ -21,8 +21,6 @@ Make sure all functionality is updated in the documentation. Also read all docum
     readme-technical.md should contain more detailed information on the platform, components used and how it all connects.
 8. Design
     Everything should look beautiful and consistent.
-    
-
 
 ## Reason for existing
 Found in the [README.md](README.md) file.
@@ -40,7 +38,7 @@ Found in the [README.md](README.md) file.
 
 - Add possibility for fish logging, and add weather to the logged fish, so that you can know in which conditions you fish the fish. Send mail after fishing appointment to collect the data via link.
 
-- Implement function for optional payment
+- Implement function for optional payment, like "buy me a coffee" or something like that - to cover the development and hosting costs.
 ## Instructions for response
 
 Provide a brief summary of the overall code quality in the context of the NoFish architecture, reason to exist and future plans.
