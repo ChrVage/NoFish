@@ -51,7 +51,7 @@ export const FISH_TARGET_GROUPS = [
 export type FishTarget = (typeof FISH_TARGET_GROUPS)[number]['items'][number]['value'];
 
 export const FISH_TARGET_OPTIONS: ReadonlyArray<{ readonly value: FishTarget; readonly label: string }> =
-  FISH_TARGET_GROUPS.flatMap((g) => g.items);
+  FISH_TARGET_GROUPS.flatMap((g) => g.items as ReadonlyArray<{ value: FishTarget; label: string }>);
 
 export const FISHING_METHOD_OPTIONS = [
   { value: 'trolling', label: 'Trolling' },
