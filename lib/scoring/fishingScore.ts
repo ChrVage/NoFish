@@ -61,6 +61,7 @@ export interface ComputeScoreOptions {
   depth?: number;
   boat?: BoatSizePreset;
   fish?: FishTarget;
+  method?: FishingMethod;
   timezone?: string;
 }
 
@@ -355,6 +356,76 @@ const SYNODIC_DAYS = 29.53058770576;
 function moonAge(date: Date): number {
   const days = (date.getTime() - NEW_MOON_EPOCH_MS) / 86_400_000;
   return ((days % SYNODIC_DAYS) + SYNODIC_DAYS) % SYNODIC_DAYS;
+}
+
+/**
+ * Net fishing method factor — adapts to seasonal daylight changes.
+ *
+ * Setting:    Near dusk (evening twilight) — any hour when dominant phase is
+ *             'civil' or 'nautical' in the evening (roughly 16:00–23:00).
+ *             Peaks during civil twilight. Full score if actively setting in
+ *             good light to see the net.
+ *
+ * Collecting: Near dawn (morning twilight) — any hour when dominant phase is
+ *             'civil' or 'nautical' in the morning (roughly 04:00–08:00).
+ *             Peaks during civil twilight just before/after sunrise.
+ *
+ * Winter: Sunset ~16:00 (civil twilight 15:00–16:30) → setting scores well at 16:00
+ * Summer: Sunset ~22:00 (civil twilight 21:00–22:30) → setting scores well at 22:00
+ *
+ * Other hours: 0 (full daylight or deep night without twilight transitions)
+ */
+function netFishingMethodFactor(hour: number, sunPhaseSegments: Array<{ phase: string; fraction: number }> | undefined): number {
+  if (!sunPhaseSegments || sunPhaseSegments.length === 0) {
+    return 0.0; // No sun data, can't score reliably
+  }
+
+  const dominant = sunPhaseSegments.reduce((a, b) => b.fraction > a.fraction ? b : a);
+  const civilFrac = sunPhaseSegments.find(s => s.phase === 'civil')?.fraction ?? 0;
+  const nauticalFrac = sunPhaseSegments.find(s => s.phase === 'nautical')?.fraction ?? 0;
+
+  // ─── EVENING SETTING: ~16:00–23:00 (covers winter/summer seasonal shifts) ────
+  if (hour >= 15 && hour < 23) {
+    // Best: civil twilight (good light to set net properly)
+    if (dominant.phase === 'civil' && civilFrac > 0.5) {
+      return 1.0; // Perfect setting time
+    }
+    // Good: mix of civil and nautical (transitioning to night)
+    if ((dominant.phase === 'civil' || dominant.phase === 'nautical') && (civilFrac + nauticalFrac) > 0.6) {
+      return 0.85;
+    }
+    // Acceptable: nautical twilight (can still set, but dimmer)
+    if (dominant.phase === 'nautical' && nauticalFrac > 0.5) {
+      return 0.7;
+    }
+    // Marginal: approaching night but some twilight present
+    if (nauticalFrac > 0.2) {
+      return 0.5;
+    }
+  }
+
+  // ─── EARLY MORNING COLLECTING: ~04:00–08:00 (covers seasonal dawn shifts) ────
+  if (hour >= 3 && hour <= 8) {
+    // Best: civil twilight (sunrise/dawn light, ideal for collecting)
+    if (dominant.phase === 'civil' && civilFrac > 0.5) {
+      return 1.0; // Perfect collecting time
+    }
+    // Good: mix of nautical and civil (approaching dawn)
+    if ((dominant.phase === 'civil' || dominant.phase === 'nautical') && (civilFrac + nauticalFrac) > 0.6) {
+      return 0.85;
+    }
+    // Acceptable: nautical twilight (starting to brighten)
+    if (dominant.phase === 'nautical' && nauticalFrac > 0.5) {
+      return 0.7;
+    }
+    // Marginal: very early, still mostly night but twilight approaching
+    if (nauticalFrac > 0.2) {
+      return 0.5;
+    }
+  }
+
+  // All other hours or conditions: not ideal for net fishing
+  return 0.0;
 }
 
 // ── The scoring function ────────────────────────────────────────────────────
@@ -843,9 +914,20 @@ export function computeFishingScore(f: HourlyForecast, depthOrOptions?: number |
     }
   }
 
+  // ═══ 13. FISHING METHOD — e.g. net fishing restricted to set/collect times ═
+  let methodFactor = 1.0;
+  if (options.method === 'net') {
+    const timezone = options.timezone ?? 'UTC';
+    const h = localHour(f.time, timezone);
+    methodFactor = netFishingMethodFactor(h, f.sunPhaseSegments);
+    if (methodFactor === 0) {
+      bad('Net fishing: only available at set/collect times (evening/early morning)', 'fishing');
+    }
+  }
+
   // ═══ COMBINE — multiply factors, scale to 0–100 ══════════════════════
   const safetyRaw = windFactor * waveFactor * lightFactor * wavePeriodFactor;
-  const fishingRaw = currentFactor * tideFactor * moonFactor * precipFactor * tempFactor * speciesColumnFactor * speciesSeasonFactor * pressureFactor * lightFishingFactor;
+  const fishingRaw = currentFactor * tideFactor * moonFactor * precipFactor * tempFactor * speciesColumnFactor * speciesSeasonFactor * pressureFactor * lightFishingFactor * methodFactor;
   const raw = safetyRaw * fishingRaw;
   const score = Math.round(Math.max(0, Math.min(100, raw * 100)));
   const safetyScore = Math.round(Math.max(0, Math.min(100, safetyRaw * 100)));

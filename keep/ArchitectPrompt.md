@@ -26,9 +26,6 @@ Make sure all functionality is updated in the documentation. Also read all docum
 Found in the [README.md](README.md) file.
 
 ## First prio changes
-
-- for net fishing, all hours that are not around setting and collecting the net should show 0%. You score for setting in the evening. Close to dark is higher. Then the very early morning hours score highest for collecting the net without the crabs that arrives with daylight. So only the evening and morning receives scores.
-
 - Also support Norwegian, German, Dutch and Polish languages in app and in documentation.
 
 - SEO to make sure people find the site.
