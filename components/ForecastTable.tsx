@@ -54,7 +54,7 @@ const getWeatherSymbol = (symbolCode: string | undefined) => {
 // Beaufort scale from m/s
 function speedToBeaufort(mps: number): number {
   const b = [0.3, 1.6, 3.4, 5.5, 8.0, 10.8, 13.9, 17.2, 20.8, 24.5, 28.5, 32.7];
-  for (let i = 0; i < b.length; i++) { if (mps < b[i]) return i; }
+  for (let i = 0; i < b.length; i++) { if (mps < b[i]) { return i; } }
   return 12;
 }
 
@@ -76,8 +76,8 @@ const WindBarb = ({
   const cardinals = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   const cardinal = cardinals[Math.round(degrees / 45) % 8];
   const bft = speedMps !== undefined ? speedToBeaufort(speedMps) : undefined;
-  const label = bft !== undefined
-    ? `Wind from ${cardinal}, Beaufort ${bft} (${speedMps!.toFixed(1)} m/s)`
+  const label = bft !== undefined && speedMps !== undefined
+    ? `Wind from ${cardinal}, Beaufort ${bft} (${speedMps.toFixed(1)} m/s)`
     : `Wind from ${cardinal}`;
 
   // Arrow points toward where the wind is blowing TO (same convention as DirectionArrow)
