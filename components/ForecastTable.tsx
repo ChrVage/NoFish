@@ -51,6 +51,86 @@ const getWeatherSymbol = (symbolCode: string | undefined) => {
   return '☁️';
 };
 
+// Beaufort scale from m/s
+function speedToBeaufort(mps: number): number {
+  const b = [0.3, 1.6, 3.4, 5.5, 8.0, 10.8, 13.9, 17.2, 20.8, 24.5, 28.5, 32.7];
+  for (let i = 0; i < b.length; i++) { if (mps < b[i]) return i; }
+  return 12;
+}
+
+// Meteorological wind barb: direction arrow with barbs encoding speed.
+// Barbs are drawn at the shaft TAIL (the "from" end after rotation):
+//   half barb = 5 kn, full barb = 10 kn, pennant = 50 kn.
+// Calm (< 3 kn) → open circle.
+const WindBarb = ({
+  degrees,
+  speedMps,
+  className = '',
+}: {
+  degrees: number | undefined;
+  speedMps: number | undefined;
+  className?: string;
+}) => {
+  if (degrees === undefined) { return <span aria-hidden="true">—</span>; }
+
+  const cardinals = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const cardinal = cardinals[Math.round(degrees / 45) % 8];
+  const bft = speedMps !== undefined ? speedToBeaufort(speedMps) : undefined;
+  const label = bft !== undefined
+    ? `Wind from ${cardinal}, Beaufort ${bft} (${speedMps!.toFixed(1)} m/s)`
+    : `Wind from ${cardinal}`;
+
+  // Arrow points toward where the wind is blowing TO (same convention as DirectionArrow)
+  const displayDegrees = (degrees + 180) % 360;
+
+  // Convert to knots, round to nearest 5 for standard barb decomposition
+  const knots = speedMps !== undefined ? speedMps * 1.944 : 0;
+  const roundedKnots = Math.round(knots / 5) * 5;
+  let rem = roundedKnots;
+  const pennants = Math.floor(rem / 50); rem -= pennants * 50;
+  const fullBarbs = Math.floor(rem / 10); rem -= fullBarbs * 10;
+  const halfBarbs = rem >= 5 ? 1 : 0;
+  const isCalm = roundedKnots < 3;
+
+  // Barbs are drawn from the TAIL of the shaft (y=20, moving upward).
+  // After rotation the tail end is the FROM direction end (correct for met wind barbs).
+  const barbs: React.ReactNode[] = [];
+  let y = 20;
+  for (let i = 0; i < pennants; i++) {
+    barbs.push(<polygon key={`p${i}`} points={`12,${y} 20,${y} 12,${y - 4}`} fill="currentColor" />);
+    y -= 5;
+  }
+  for (let i = 0; i < fullBarbs; i++) {
+    barbs.push(<line key={`f${i}`} x1={12} y1={y} x2={20} y2={y - 3} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />);
+    y -= 3.5;
+  }
+  if (halfBarbs) {
+    barbs.push(<line key="h" x1={12} y1={y} x2={16} y2={y - 1.5} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />);
+  }
+
+  return (
+    <svg
+      role="img"
+      aria-label={label}
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      className={`inline-block ${className}`}
+      style={{ transform: `rotate(${displayDegrees}deg)` }}
+    >
+      {isCalm ? (
+        <circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      ) : (
+        <>
+          <line x1="12" y1="22" x2="12" y2="4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <polygon points="12,2 9,8 15,8" fill="currentColor" />
+          {barbs}
+        </>
+      )}
+    </svg>
+  );
+};
+
 // Arrow component for direction visualization
 // For "from" directions (wind), adds 180° to point toward where it's going
 // For "to" directions (current), uses the value as-is
@@ -389,7 +469,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
                   {formatWind(forecast.windSpeed, forecast.windGust)}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700 text-center">
-                  <DirectionArrow degrees={forecast.windDirection} isFromDirection={true} className="text-amber-700" />
+                  <WindBarb degrees={forecast.windDirection} speedMps={forecast.windSpeed} className="text-amber-700" />
                 </td>
                 <td className="px-4 py-3 text-2xl text-center">
                   {getWeatherSymbol(forecast.symbolCode)}

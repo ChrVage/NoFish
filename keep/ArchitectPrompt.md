@@ -28,8 +28,6 @@ Make sure all functionality is updated in the documentation. Also read all docum
 Found in the [README.md](README.md) file.
 
 ## First prio changes
-- Check if wind arrows can be replaced by wind arrows with symbols for wind strength.
-
 - Also support Norwegian, German, Dutch and Polish language.
 
 - Explore which license is right for this project.
