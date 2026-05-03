@@ -86,12 +86,27 @@ export default async function ScorePage({ searchParams }: PageProps) {
   }));
   const methodRecommendations = recommendFishingMethods(scoredForecasts, timezone, tuning.fish);
 
-  // Find best fishing windows (top 2 non-overlapping, 1–3 hours)
-  const bestWindows = findBestWindows(scoredForecasts);
+  // Find best fishing windows (top 2–3 non-overlapping)
+  // For nets: 6–8 hour windows with safe deployment and retrieval.
+  // For other methods: 1–3 hour windows.
+  const bestWindows = findBestWindows(scoredForecasts, {
+    method: tuning.method,
+    timezone,
+  });
 
   // Map each row index → window index (for data-window attribute)
   const rowToWindow = new Map<number, number>();
   bestWindows.forEach((w, wIdx) => { for (let j = 0; j < w.len; j++) { rowToWindow.set(w.start + j, wIdx); } });
+
+  // For net method: mark the first and last row of each window as set/pickup
+  const netSetHours = new Set<number>();
+  const netPickupHours = new Set<number>();
+  if (tuning.method === 'net') {
+    bestWindows.forEach((w) => {
+      netSetHours.add(w.start);
+      netPickupHours.add(w.start + w.len - 1);
+    });
+  }
 
   // Location name for booking entries
   const locationName = locationData?.municipality && locationData.municipality !== 'Unknown municipality' && locationData.name !== locationData.municipality
@@ -247,13 +262,14 @@ export default async function ScorePage({ searchParams }: PageProps) {
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="text-xs text-gray-400 text-left">
-                    <th rowSpan={2} className="pb-2" style={{ width: '1%' }}>Time and Score</th>
-                    <th colSpan={3} className="pb-0">Score</th>
+                    <th rowSpan={2} className="pb-2 pr-2" style={{ width: '1%' }}>Time</th>
+                    <th colSpan={4} className="pb-0">Score</th>
                     <th colSpan={2} className="pb-0">Why</th>
                     <th rowSpan={2} className="pb-2" aria-label="Feedback" />
                   </tr>
                   <tr className="border-b border-gray-200 text-xs text-gray-400 text-left">
                     <th className="pb-2" aria-label="Calendar" />
+                    <th className="pb-2">Total</th>
                     <th className="pb-2">Safety</th>
                     <th className="pb-2">Fishing</th>
                     <th className="pb-2">Safety</th>
@@ -272,7 +288,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
                     if (isMidnight) {
                       rows.push(
                         <tr key={`midnight-${forecast.time}`} aria-hidden="true">
-                          <td colSpan={7} style={{ height: '3px', padding: 0, backgroundColor: '#d1d5db' }} />
+                          <td colSpan={8} style={{ height: '3px', padding: 0, backgroundColor: '#d1d5db' }} />
                         </tr>
                       );
                     }
@@ -306,18 +322,32 @@ export default async function ScorePage({ searchParams }: PageProps) {
                             }}
                           >
                             <span>{formatTime(forecast.time)}</span>
-                            <span style={{
-                              fontWeight: (score >= 50 || score < 35) ? 800 : 500,
-                              lineHeight: '1',
-                              padding: '2px 5px',
-                              borderRadius: '3px',
-                              color: getScoreColor(score),
-                              backgroundColor: getScoreBg(score),
-                              whiteSpace: 'nowrap',
-                            }}>
-                              {score}%
-                            </span>
                           </Link>
+                          {netSetHours.has(i) && (
+                            <span style={{ display: 'block', fontSize: '9px', fontWeight: 700, color: '#0369a1', letterSpacing: '0.05em', marginTop: '2px', paddingLeft: '7px' }}
+                              title="Recommended net deployment time">
+                              SET NET ▼
+                            </span>
+                          )}
+                          {netPickupHours.has(i) && (
+                            <span style={{ display: 'block', fontSize: '9px', fontWeight: 700, color: '#0369a1', letterSpacing: '0.05em', marginTop: '2px', paddingLeft: '7px' }}
+                              title="Recommended net retrieval time">
+                              PICKUP ▲
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 text-center tabular-nums text-sm" style={{
+                          fontWeight: (score >= 50 || score < 35) ? 800 : 500,
+                        }}>
+                          <span style={{
+                            padding: '2px 5px',
+                            borderRadius: '3px',
+                            color: getScoreColor(score),
+                            backgroundColor: getScoreBg(score),
+                            whiteSpace: 'nowrap',
+                          }}>
+                            {score}%
+                          </span>
                         </td>
                         <td className="py-2 text-center">
                           <BookingButton entry={{

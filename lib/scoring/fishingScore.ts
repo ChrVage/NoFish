@@ -630,7 +630,7 @@ export function computeFishingScore(f: HourlyForecast, depthOrOptions?: number |
     } else if (effectiveWh <= boatSafety.waveModerate) {
       waveFactor = 1.0 - 0.4 * sigmoid01(effectiveWh, boatSafety.waveCalm, boatSafety.waveModerate);
       if (wh > 0.8 && effectiveWh < wh * 0.85) {
-        good(`${wh.toFixed(1)}m — long-period swell`, 'safety');
+        good(`Long-period swell softens wave risk (${wh.toFixed(1)}m)`, 'safety');
       } else if (wh <= 0.7) {
         good(`Low waves ${wh.toFixed(1)}m`, 'safety');
       }
@@ -958,8 +958,8 @@ export function recommendFishingMethods(
         return sum + calmFit;
       }, 0) / next48h.length)),
       reason: morningAfterCalm
-        ? 'Good only because both deployment window and morning-after retrieval look calm.'
-        : 'Penalized because morning-after calm conditions are not stable enough.',
+        ? 'Good — overnight soak requires calm deployment and calm retrieval at dawn.'
+        : 'Penalized — overnight retrieval at dawn may see worse conditions than deployment.',
       recommended: false,
     },
     {
@@ -1017,9 +1017,116 @@ export function getScoreBg(score: number): string {
 // ── Best fishing window finder ──────────────────────────────────────────────
 
 /**
+ * Check if an hour is within overnight fishing period (22:00–05:00 local time).
+ * Nets are typically deployed before or at dusk, soaked overnight, retrieved at dawn.
+ */
+function isOvernightHour(time: string, timezone: string): boolean {
+  const h = localHour(time, timezone);
+  // 22:00–23:59 or 00:00–05:00
+  return h >= 22 || h <= 5;
+}
+
+/**
+ * Find best fishing windows for net deployment.
+ * For net fishing: requires safe conditions for both deployment AND retrieval,
+ * preferably overnight (22:00–05:00). Searches for 6–8 hour windows where:
+ *   1. Set hour (start) has safetyScore ≥ 65, no danger
+ *   2. Pickup hour (start + 6/7/8) has safetyScore ≥ 65, no danger
+ *   3. Prefers overnight timing (set after 21:00, pickup before 06:00)
+ *   4. Average score across the full window is reasonable
+ *
+ * Returns up to 2 net-specific windows (longer soak duration preferred).
+ */
+export function findNetFishingWindows(
+  scoredForecasts: ScoredForecast[],
+  timezone: string,
+): BestWindow[] {
+  if (scoredForecasts.length === 0) {return [];}
+
+  const hasDanger = (idx: number) =>
+    scoredForecasts[idx].reasons.some(r => r.tone === 'danger');
+
+  const isSafeForDeployment = (idx: number): boolean =>
+    idx < scoredForecasts.length
+      && !hasDanger(idx)
+      && scoredForecasts[idx].safetyScore >= 65;
+
+  // Find candidate windows: (set hour, soak duration, pickup hour)
+  const candidates: BestWindow[] = [];
+  const SOAK_DURATIONS = [6, 7, 8]; // hours
+
+  for (let setIdx = 0; setIdx < scoredForecasts.length; setIdx++) {
+    if (!isSafeForDeployment(setIdx)) {continue;}
+
+    for (const soakHours of SOAK_DURATIONS) {
+      const pickupIdx = setIdx + soakHours;
+      if (pickupIdx >= scoredForecasts.length) {continue;}
+
+      if (!isSafeForDeployment(pickupIdx)) {continue;}
+
+      // Calculate average score for the full soak window
+      let sum = 0;
+      let allOk = true;
+      for (let j = 0; j <= soakHours; j++) {
+        if (j < scoredForecasts.length) {
+          sum += scoredForecasts[setIdx + j].score;
+        } else {
+          allOk = false;
+          break;
+        }
+      }
+      if (!allOk) {continue;}
+
+      const avg = sum / (soakHours + 1);
+
+      // Prefer overnight timing: set after 21:00, pickup before 06:00
+      const setTime = scoredForecasts[setIdx].forecast.time;
+      const pickupTime = scoredForecasts[pickupIdx].forecast.time;
+      const setOvernight = isOvernightHour(setTime, timezone) || localHour(setTime, timezone) === 21;
+      const pickupEarly = localHour(pickupTime, timezone) <= 5;
+      const overnightBonus = (setOvernight && pickupEarly) ? 10 : 0;
+
+      candidates.push({
+        start: setIdx,
+        len: soakHours + 1, // includes both set and pickup hours
+        avg: avg + overnightBonus, // boost score for overnight timing
+      });
+    }
+  }
+
+  if (candidates.length === 0) {return [];}
+
+  // Sort by adjusted avg (overnight bonus included), then by soak duration (longer preferred)
+  const sorted = candidates
+    .sort((a, b) => {
+      const avgDiff = b.avg - a.avg;
+      if (Math.abs(avgDiff) > 0.5) {return avgDiff;}
+      return b.len - a.len;
+    });
+
+  // Pick top 2 non-overlapping windows
+  const best: BestWindow[] = [];
+  for (const c of sorted) {
+    if (best.length >= 2) {break;}
+    const overlaps = best.some(w =>
+      c.start < w.start + w.len && c.start + c.len > w.start
+    );
+    if (!overlaps) {
+      best.push(c);
+    }
+  }
+
+  best.sort((a, b) => a.start - b.start);
+  return best;
+}
+
+/**
  * Find best fishing windows (1–3 hours) from a list of scored forecasts.
  * Returns up to 3 non-overlapping windows, sorted by time.
  * Prefers the longest consistent window whose average is within 5 points of the best.
+ *
+ * When method='net', uses specialized net-specific window logic to find safe
+ * deployment + retrieval pairs with multi-hour soak windows (6–8 hours).
  *
  * If the best window starts at the very beginning of the forecast (index 0),
  * the search widens to topAvg−15 to ensure at least one future alternative is
@@ -1028,7 +1135,14 @@ export function getScoreBg(score: number): string {
  * Windows are only shown when the hours are free of danger-level conditions.
  * If every hour in the forecast has a danger reason, "No safe fishing periods" is shown.
  */
-export function findBestWindows(scoredForecasts: ScoredForecast[]): BestWindow[] {
+export function findBestWindows(
+  scoredForecasts: ScoredForecast[],
+  options?: { method?: FishingMethod; timezone?: string },
+): BestWindow[] {
+  // Delegate to net-specific logic when method='net'
+  if (options?.method === 'net' && options?.timezone) {
+    return findNetFishingWindows(scoredForecasts, options.timezone);
+  }
   if (scoredForecasts.length === 0) {return [];}
 
   // A window is eligible only if none of its hours have a danger-tone reason

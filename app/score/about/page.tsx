@@ -219,7 +219,7 @@ totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
             <section>
               <h2 className="text-lg font-bold text-maritime-teal-800 mt-8 mb-2">Best fishing windows</h2>
               <p className="text-sm">
-                The Score page highlights up to 2 non-overlapping 1–3 hour stretches with the highest average score. Each window is shown as a card with the average score, date/time range, and links to add the event to Google Calendar, Outlook.com, or download an .ics file.
+                The Score page highlights up to 2 non-overlapping windows with the highest average score. The window type depends on your selected fishing method:
               </p>
               <ul className="list-disc pl-5 text-sm space-y-1 mt-2">
                 <li>Hours with any danger-level condition are excluded</li>
@@ -229,6 +229,36 @@ totalScore   = round( safetyScore × fishingScore / 100 )`}</code></pre>
               </ul>
               <p className="text-sm mt-2">
                 In the hourly table, Total score cells within a best window are highlighted with a <strong>blue border</strong>.
+              </p>
+
+              <h3 className="text-base font-bold text-maritime-teal-700 mt-6 mb-2">Net-specific fishing windows (6–8 hour soaks)</h3>
+              <p className="text-sm">
+                When you select <strong>&quot;Fishing with net&quot;</strong> as your method, the algorithm shifts from 1–3 hour windows to <strong>6–8 hour overnight soak windows</strong>. This recognizes that net fishing has fundamentally different safety and logistics constraints than active methods.
+              </p>
+
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 my-4">
+                <h4 className="font-bold text-blue-900 text-sm mb-2">Why overnight nets require a different algorithm:</h4>
+                <ul className="list-disc pl-5 text-xs text-blue-800 space-y-1">
+                  <li><strong>Safety at deployment:</strong> You need safe conditions to set the net (typically 21:00–23:00 local time)</li>
+                  <li><strong>Safety at retrieval:</strong> Conditions 6–8 hours later (04:00–07:00) must also be safe for pickup</li>
+                  <li><strong>No mid-soak escape:</strong> Unlike active fishing, you cannot abandon gear if weather deteriorates; the net soaks unattended</li>
+                  <li><strong>Overnight preference:</strong> Small-boat net fishing is almost always overnight (less visible, cooler water), so windows are restricted to 21:00–06:00 local time</li>
+                  <li><strong>Gear loss risk:</strong> A calm deployment but stormy retrieval = lost net, gear damage, injury</li>
+                </ul>
+              </div>
+
+              <p className="text-sm">
+                A net-specific window requires:
+              </p>
+              <ul className="list-disc pl-5 text-sm space-y-1 mt-2">
+                <li><strong>Set hour:</strong> Safety score ≥ 65, no danger conditions, ideally after 21:00</li>
+                <li><strong>Pickup hour:</strong> Safety score ≥ 65, no danger conditions, ideally before 06:00 local time</li>
+                <li><strong>Soak duration:</strong> 6, 7, or 8 hours (the algorithm finds all valid soaks)</li>
+                <li><strong>Overnight bonus:</strong> +10 points to the average score if deployment is after 21:00 AND retrieval is before 06:00</li>
+              </ul>
+
+              <p className="text-sm mt-3 text-gray-600 italic">
+                Example: If conditions are calm at 22:00 but will worsen by 04:00 retrieval, the window is flagged as risky and loses the overnight bonus.
               </p>
             </section>
 

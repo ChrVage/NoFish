@@ -28,9 +28,9 @@ Make sure all functionality is updated in the documentation. Also read all docum
 Found in the [README.md](README.md) file.
 
 ## First prio changes
-- When fishing method is net, the safety score should be high if it is safe to both set it and pick it up again. It should be explained that these algorithms are tuned for overnight fishing in the score-documentation. Fishing score should be high if the conditions for fishing with net are good some time during the night.
-
 - Fish species should be grouped together so that all species with same properties that affects fishing score are grouped together.
+
+- Check if wind arrows can be replaced by wind arrows with symbols for wind strength.
 
 - Also support Norwegian, German, Dutch and Polish language.
 

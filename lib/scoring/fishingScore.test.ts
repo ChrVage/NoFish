@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   computeFishingScore,
   findBestWindows,
+  findNetFishingWindows,
   getScoreColor,
   getScoreBg,
   getDepthProfile,
@@ -502,6 +503,128 @@ describe('findBestWindows', () => {
     // Could be one window of length 3
     const totalHours = windows.reduce((sum, w) => sum + w.len, 0);
     expect(totalHours).toBeGreaterThanOrEqual(2);
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Net-specific fishing windows
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe('findNetFishingWindows', () => {
+  const TZ = 'Europe/Oslo';
+
+  // Utility: create forecasts with specific times for overnight testing
+  function mkNetForecasts(scores: number[], hourOffsets: number[] = []): ScoredForecast[] {
+    const base = new Date('2026-05-03T20:00:00Z');
+    return scores.map((score, i) => {
+      const hour = hourOffsets[i] ?? i;
+      const time = new Date(base);
+      time.setUTCHours(time.getUTCHours() + hour);
+      return {
+        forecast: mkForecast({ time: time.toISOString() }),
+        score,
+        safetyScore: score,
+        fishingScore: score,
+        reasons: score < 20 ? [{ text: 'Too dangerous', tone: 'danger', category: 'safety' }] : [],
+      };
+    });
+  }
+
+  it('returns empty list when no safe windows', () => {
+    const forecasts = mkNetForecasts([10, 15, 20]);
+    const windows = findNetFishingWindows(forecasts, TZ);
+    expect(windows).toEqual([]);
+  });
+
+  it('requires safety score ≥ 65 at both set and pickup', () => {
+    // Setup: safe at 0, unsafe at +6, safe at +7
+    const forecasts = mkNetForecasts(
+      [70, 60, 60, 60, 60, 60, 40, 70],
+      [0, 1, 2, 3, 4, 5, 6, 7]
+    );
+    const windows = findNetFishingWindows(forecasts, TZ);
+    // Should find the 7-hour window (0→7) since both 0 and 7 are ≥65
+    expect(windows.some(w => w.start === 0 && w.len === 8)).toBe(true);
+  });
+
+  it('finds 6-hour soak windows', () => {
+    // All safe with high scores
+    const forecasts = mkNetForecasts(
+      [75, 72, 70, 71, 72, 70, 75],
+      [0, 1, 2, 3, 4, 5, 6]
+    );
+    const windows = findNetFishingWindows(forecasts, TZ);
+    expect(windows.length).toBeGreaterThan(0);
+    // Should have at least one 7-hour window (6-hour soak + set hour)
+    expect(windows.some(w => w.len >= 7)).toBe(true);
+  });
+
+  it('prefers overnight timing (deployment after 21:00, pickup before 06:00)', () => {
+    // Create two identical scenarios: one overnight, one daytime
+    // Overnight: deploy at 22:00 (UTC 20:00), pickup at 04:00 (UTC 02:00)
+    const overnightForecasts = mkNetForecasts(
+      [75, 72, 70, 71, 72, 70, 75],
+      [0, 1, 2, 3, 4, 5, 6]
+    );
+    const overnightWindows = findNetFishingWindows(overnightForecasts, TZ);
+
+    // Daytime: deploy at 08:00 (UTC 06:00), pickup at 14:00 (UTC 12:00)
+    const daytimeBase = new Date('2026-05-03T06:00:00Z');
+    const daytimeForecasts = [75, 72, 70, 71, 72, 70, 75].map((score, i) => {
+      const time = new Date(daytimeBase);
+      time.setUTCHours(time.getUTCHours() + i);
+      return {
+        forecast: mkForecast({ time: time.toISOString() }),
+        score,
+        safetyScore: score,
+        fishingScore: score,
+        reasons: [],
+      };
+    });
+    const daytimeWindows = findNetFishingWindows(daytimeForecasts, TZ);
+
+    // Both should find windows, but overnight should have higher adjusted avg
+    expect(overnightWindows.length).toBeGreaterThan(0);
+    expect(daytimeWindows.length).toBeGreaterThan(0);
+    if (overnightWindows.length > 0 && daytimeWindows.length > 0) {
+      expect(overnightWindows[0].avg).toBeGreaterThan(daytimeWindows[0].avg);
+    }
+  });
+
+  it('returns at most 2 non-overlapping windows', () => {
+    // Multiple high-score periods
+    const forecasts = mkNetForecasts(
+      [75, 72, 70, 30, 75, 72, 70, 30, 75, 72]
+    );
+    const windows = findNetFishingWindows(forecasts, TZ);
+    expect(windows.length).toBeLessThanOrEqual(2);
+
+    // Check no overlap
+    for (let i = 1; i < windows.length; i++) {
+      const prev = windows[i - 1];
+      const curr = windows[i];
+      expect(curr.start).toBeGreaterThanOrEqual(prev.start + prev.len);
+    }
+  });
+
+  it('finds longer soaks when multiple durations are valid', () => {
+    // 12 consecutive safe hours: should prefer 8-hour soaks over 6-hour
+    const forecasts = mkNetForecasts([75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75]);
+    const windows = findNetFishingWindows(forecasts, TZ);
+    expect(windows.length).toBeGreaterThan(0);
+    // With 12 hours and max 2 windows, we should get 8-hour soaks (len=9)
+    expect(windows.some(w => w.len >= 8)).toBe(true);
+  });
+
+  it('integrates with findBestWindows when method=net', () => {
+    const forecasts = mkNetForecasts([75, 72, 70, 71, 72, 70, 75]);
+    const windows = findBestWindows(forecasts, { method: 'net', timezone: TZ });
+    // Should use net-specific logic and return multi-hour windows
+    expect(windows.length).toBeGreaterThan(0);
+    // Net windows should be longer than typical 1–3 hour windows
+    if (windows.length > 0) {
+      expect(windows[0].len).toBeGreaterThanOrEqual(6);
+    }
   });
 });
 
