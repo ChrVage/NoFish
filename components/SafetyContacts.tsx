@@ -1,9 +1,12 @@
+import { getTranslations } from 'next-intl/server';
+
 /**
  * Compact safety contact bar for sea locations.
  * Shows VHF emergency channel and Kystradioen phone number.
  * Pure server component — no interactivity needed.
  */
-export default function SafetyContacts() {
+export default async function SafetyContacts() {
+  const t = await getTranslations('safety');
   return (
     <div
       style={{
@@ -20,7 +23,7 @@ export default function SafetyContacts() {
       }}
     >
       <span style={{ fontSize: '12px', fontWeight: 700, color: '#991b1b' }}>
-        🚨 Emergency:
+        🚨 {t('emergency')}
       </span>
       <span
         style={{
@@ -40,7 +43,7 @@ export default function SafetyContacts() {
           textDecoration: 'none',
         }}
       >
-        📞 Kystradioen: 120
+        {t('kystradioen')}
       </a>
     </div>
   );

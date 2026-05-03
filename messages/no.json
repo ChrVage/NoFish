@@ -1,0 +1,435 @@
+{
+  "common": {
+    "back": "Tilbake",
+    "tryAgain": "Prøv igjen",
+    "backToMap": "Tilbake til kartet",
+    "pleaseWait": "Vennligst vent",
+    "menu": "Meny",
+    "loading": "Laster...",
+    "tagline": "... fordi å fiske i dårlig vær er verre enn ikke å fiske i det hele tatt"
+  },
+  "nav": {
+    "score": "Score",
+    "details": "Detaljer",
+    "tide": "Tidevann",
+    "ariaLabel": "Sidenavigasjon"
+  },
+  "footer": {
+    "aboutNoFish": "Om NoFish",
+    "dataReference": "Datareferanse",
+    "feedback": "Tilbakemelding",
+    "aboutScore": "Om score"
+  },
+  "menu": {
+    "aboutNoFish": "Om NoFish",
+    "feedback": "Tilbakemelding",
+    "statistics": "Statistikk"
+  },
+  "home": {
+    "loadingMap": "Laster kart...",
+    "resetAriaLabel": "Tilbakestill kart og fjern valgt sted",
+    "resetTitle": "Tilbakestill kart"
+  },
+  "map": {
+    "score": "Score",
+    "details": "Detaljer",
+    "tides": "Tidevann",
+    "viewScore": "Vis score",
+    "viewDetails": "Vis detaljert prognose",
+    "viewTides": "Vis tidevann",
+    "depth": "Dybde: {depth} m",
+    "elevation": "Høyde: {elevation} m",
+    "loading": "Laster...",
+    "locateAriaLabel": "Gå til min posisjon",
+    "searchPlaceholder": "Søk etter et sted...",
+    "seaChartLabel": "Sjøkart",
+    "locationUnavailable": "Kan ikke hente din posisjon. Sjekk nettlesertillatelser."
+  },
+  "error": {
+    "fishingScore": "fiskescore",
+    "forecastDetails": "prognosedetaljer",
+    "tideData": "tidevannsdata",
+    "page": "denne siden",
+    "mapPage": "kartet",
+    "scorePage": "fiskescore",
+    "detailsPage": "prognosedetaljer",
+    "tidePage": "tidevannsdata",
+    "statisticsPage": "statistikk",
+    "failedToLoad": "Kunne ikke laste {label}",
+    "dataSourceMessage": "En av datakildene (MET Norge, Barentswatch eller Kartverket) kan være midlertidig utilgjengelig. Dette kan skje ved dårlig tilkobling eller tjenesteavbrudd.",
+    "errorId": "Feil-ID: {id}",
+    "tryAgain": "Prøv igjen",
+    "backToMap": "Tilbake til kart"
+  },
+  "loading": {
+    "scores": "Laster score...",
+    "forecast": "Laster prognose...",
+    "tides": "Laster tidevann...",
+    "statistics": "Laster statistikk...",
+    "pleaseWait": "Vennligst vent"
+  },
+  "safety": {
+    "emergency": "🚨 Nødsituasjon:",
+    "vhf": "VHF kanal 16",
+    "kystradioen": "📞 Kystradioen: 120"
+  },
+  "feedbackBanner": {
+    "itemsFlagged": "{count, plural, one {# element markert} other {# elementer markert}}",
+    "submit": "Send tilbakemelding →",
+    "clear": "Fjern utvalg"
+  },
+  "booking": {
+    "book": "Legg til i kalender",
+    "close": "Lukk",
+    "hoursSlots": "{hours, plural, one {# time} other {# timer}}, {slots, plural, one {# slot} other {# slots}}",
+    "addedCount": "{count, plural, one {# time valgt} other {# timer valgt}}",
+    "submit": "Legg til i kalender →",
+    "clear": "Fjern utvalg",
+    "downloadIcs": "Last ned .ics",
+    "googleCalendar": "Google Kalender",
+    "outlookCalendar": "Outlook",
+    "restrictionNote": "⚠ Gjeldende fiskeforbud:"
+  },
+  "tuning": {
+    "boatLabel": "Båtstørrelse",
+    "fishLabel": "Målart",
+    "methodLabel": "Fiskemetode",
+    "ariaLabel": "Fiskeinnstillinger",
+    "fish": {
+      "general": "Generell anbefaling",
+      "mackerel": "Makrell",
+      "saithe": "Sei",
+      "cod": "Torsk",
+      "plaice": "Rødspette",
+      "pollock": "Lyr",
+      "haddock": "Hyse",
+      "wolffish": "Steinbit",
+      "monkfish": "Breiflabb",
+      "halibut": "Kveite",
+      "hake": "Lysing",
+      "ling": "Lange",
+      "tusk": "Brosme",
+      "redfish": "Uer"
+    },
+    "fishGroup": {
+      "shallow": "Grunt (< 100 m)",
+      "mid": "Middels dybde (100–200 m)",
+      "deep": "Dypt (> 200 m)"
+    },
+    "method": {
+      "trolling": "Trolling",
+      "same-spot": "Stansing",
+      "net": "Garnfiske",
+      "pot": "Teiner"
+    }
+  },
+  "score": {
+    "metaTitle": "NoFish — Fiskescore",
+    "forecastFor": "Prognose for:",
+    "coordDepth": "Dybde: {depth} m",
+    "coordElevation": "Høyde: {elevation} m",
+    "noCurrentWarning": "⚠ Ingen pålitelig strømprognose — strømhastighet ikke inkludert i score",
+    "restrictionHeading": "⚠ Fiskeforbud på dette stedet:",
+    "noForecastData": "Ingen prognosedata tilgjengelig.",
+    "methodScores": "Metodescorer",
+    "settings": "Innstillinger",
+    "aboutScore": "Om fiskescore",
+    "aboutNoFish": "Om NoFish",
+    "feedback": "Tilbakemelding",
+    "fishingRules": "Fiskeregler per art ↗",
+    "table": {
+      "time": "Tid",
+      "score": "Score",
+      "total": "Total",
+      "safety": "Sikkerhet",
+      "fishing": "Fiske",
+      "notes": "Merknader"
+    },
+    "season": {
+      "prime": "Høysesong",
+      "shoulder": "Skulder-sesong",
+      "offSeason": "Lavsesong"
+    },
+    "windows": {
+      "heading": "Beste fiskevinduer:",
+      "headingWith": "Beste vindu {description}:",
+      "forMethod": "for {method}",
+      "forFish": "for {fish}",
+      "fromBoat": "fra en {boat}-båt",
+      "noSafePeriods": "Ingen trygge fiskperioder på dette stedet i prognoseperioden."
+    },
+    "dark": {
+      "currentlyDark": "Det er mørkt nå (borgerlig tussmørke sluttet kl. {time}).",
+      "darkBy": "⚠ Det blir mørkt kl. {time}."
+    },
+    "depth": "Havbunnsdybde: ca. {depth} m",
+    "elevation": "Høyde: ca. {elevation} m",
+    "noOceanData": "Ingen havprognose tilgjengelig — kun landvær vises."
+  },
+  "details": {
+    "metaTitle": "NoFish — Prognosedetaljer",
+    "forecastFor": "Prognose for:",
+    "waveSource": "Bølgegitter: {source}",
+    "distanceFrom": "{distance} fra valgt sted",
+    "distanceAway": "prognoserutenett {distance} unna",
+    "nearestStation": "nærmeste stasjon {distance} unna",
+    "tideStation": "Tidevannsstasjon: {name}",
+    "currentlyDark": "Det er mørkt nå",
+    "civilDaylightEnds": "Borgerlig dagslys slutter",
+    "nowWarning": "Nå:",
+    "sourceLabel": "Kilde:",
+    "coordDepth": "Dybde: {depth} m",
+    "coordElevation": "Høyde: {elevation} m",
+    "confidence": {
+      "high": "Høy pålitelighet (0–24 t)",
+      "medium": "Middels pålitelighet (24–48 t)"
+    }
+  },
+  "tide": {
+    "metaTitle": "NoFish — Tidevann",
+    "forecastFor": "Prognose for:",
+    "high": "Flo",
+    "low": "Fjære",
+    "station": "Stasjon:",
+    "stationDistance": "{distance} fra valgt sted",
+    "chartDatum": "Nivåer relativt til sjøkartnull (CD)",
+    "noData": "Ingen tidevannsdata tilgjengelig for dette stedet.",
+    "tableCaption": "Tidevanns­prediksjoner fra Kartverket. Vannstander i cm relativt til sjøkartnull (CD).",
+    "timeHeader": "Tid",
+    "levelHeader": "Nivå",
+    "typeHeader": "Type",
+    "lastObservation": "Siste observasjon",
+    "rising": "Stigende",
+    "falling": "Fallende",
+    "sourceLabel": "Kilde:",
+    "peak": "Høyeste flo",
+    "lowest": "Laveste fjære"
+  },
+  "about": {
+    "metaTitle": "Om NoFish — Fiskeprognose for småbåter",
+    "metaDescription": "Hva NoFish gjør, hvordan du bruker det, og hvorfor det finnes. Vind-, bølge- og tidevanns­prognoser for ethvert punkt på norskekysten.",
+    "title": "Om NoFish",
+    "tagline": "... fordi å fiske i dårlig vær er verre enn ikke å fiske i det hele tatt.",
+    "whatItDoes": {
+      "heading": "Hva gjør den?",
+      "intro": "NoFish gir småbåtfiskere tilgang til vind-, bølge- og tidevanns­prognoser for <strong>ethvert punkt på norskekysten</strong> — slik at de kan ta en god beslutning før de forlater brygga.",
+      "clickInstruction": "Klikk hvor som helst på kartet for å plassere en markør. En boble viser stedsnavn, koordinater og navigasjonsknapper:",
+      "scoreFeature": "<strong>Score</strong> — kombinert fiskeegnethetsvurdering (0–100 %) basert på vind, bølger, tidevann, lys og vær. Se <scoreLink>Om fiskescore</scoreLink> for detaljer.",
+      "detailsFeature": "<strong>Detaljer</strong> — timesprognosetabell (opptil ca. 48 timer) med kolonner gruppert etter datakilde. Vindhastighet og bølgehøyde er de viktigste sikkerhetstallene.",
+      "tideFeature": "<strong>Tidevann</strong> — høyvann- og lavvannhendelser for de neste 10 dagene, med høyeste høyvann og laveste lavvann uthevet.",
+      "oceanNote": "Score- og Tidevanns-knapper vises bare når havprognosens rutepunkt er innenfor 1 km fra klikket. Innlandspunkter viser bare Detaljer-knappen."
+    },
+    "howToUse": {
+      "heading": "Slik bruker du det",
+      "waveGridDot": "Når prognosen svarer, vises en lyseblå prikk og stiplet linje på kartet som indikerer bølgeprognosens rutepunkt (Barentswatch) nærmest klikket ditt.",
+      "locateButton": "En <strong>posisjonsknapp</strong> (kryssikone) sitter under zoomkontrollene. Trykk på den for å bruke nettleserens posisjons-API og navigere direkte til Detaljer-siden for din nåværende posisjon.",
+      "logoBack": "<strong>🎣 NoFish</strong>-logoen øverst til venstre på hver side er også en tilbakeknapp — trykk på den for å gå tilbake til kartet med forrige posisjon og zoomnivå.",
+      "footerBar": "Hver underside har en bunntekstlinje med knappene <strong>Om NoFish</strong>, <strong>Datareferanse</strong> og <strong>Tilbakemelding</strong>. Score-siden legger til en <strong>Om fiskescore</strong>-knapp.",
+      "backRestores": "Å navigere tilbake gjenoppretter forrige zoomnivå, kartposisjon og åpner boblen på nytt ved det opprinnelige klikkunkte."
+    },
+    "forecastTable": {
+      "heading": "Prognosetabell",
+      "intro": "Detaljer-siden viser en timesprognosetabell med kolonner gruppert etter API-kilde. Se <dataLink>Datareferansen</dataLink> for en fullstendig beskrivelse av hver kolonne.",
+      "groupHeader": "Gruppe",
+      "columnsHeader": "Kolonner",
+      "notesHeader": "Merknader",
+      "rows": {
+        "met": "MET Norge",
+        "metColumns": "Vind, Vindpil, Vær, Regn/Snø, Temp, Trykk",
+        "metNotes": "Vises alltid",
+        "waves": "Barentswatch bølger",
+        "wavesColumns": "Bølgehøyde, Bølgeretning",
+        "wavesNotes": "Kun kyst; interpolert per time",
+        "current": "Barentswatch havstrøm",
+        "currentColumns": "Strømstyrke, Strømretning",
+        "currentNotes": "Kun kyst",
+        "seaTemp": "MET havtemperatur",
+        "seaTempColumns": "Havtemperatur",
+        "seaTempNotes": "Fra MET Oceanforecast",
+        "kartverket": "Kartverket",
+        "kartverketColumns": "Tidevann",
+        "kartverketNotes": "Høyvann/lavvann-etikett",
+        "calculated": "Beregnet",
+        "calculatedColumns": "Sol",
+        "calculatedNotes": "Soloppgang/solnedgang/tussmørke"
+      }
+    },
+    "notSubstitute": {
+      "heading": "Ikke en erstatning for erfaring",
+      "text": "Dette er <strong>ikke</strong> drevet av kunstig intelligens. NoFish gir ingen anbefalinger. Enhver skipper på norskekysten må bruke sin egen erfaring, <strong>lokalkunnskap</strong> og sunn fornuft før de legger ut. Tallene her informerer beslutningen — de erstatter den ikke."
+    },
+    "security": {
+      "heading": "Sikkerhet og personvern",
+      "serverSide": "Alle eksterne API-kall gjøres <strong>serversiden</strong> — ingen legitimasjon eksponeres for nettleseren",
+      "noCookies": "Ingen informasjonskapsler, ingen sporing, ingen tredjeparts-skript",
+      "headers": "Content Security Policy, HSTS og X-Frame-Options håndheves på alle svar"
+    },
+    "moreInfo": {
+      "heading": "Mer informasjon",
+      "dataRef": "Datareferanse",
+      "dataRefDesc": "hver kolonne forklart, kildevurderinger og datakvalitet",
+      "scoreAlgo": "Fiskescore-algoritmen",
+      "scoreAlgoDesc": "hvordan 0–100 %-scoren beregnes",
+      "github": "Kildekode på GitHub"
+    },
+    "feedback": {
+      "heading": "Tilbakemelding",
+      "text": "Funnet et problem eller har et ønske om ny funksjonalitet?",
+      "githubLink": "Opprett en ny sak på GitHub",
+      "contact": "For direkte kontakt:",
+      "email": "hi@nofish.no"
+    }
+  },
+  "data": {
+    "metaTitle": "NoFish — Datareferanse",
+    "metaDescription": "Alle kolonner på NoFish sine prognose- og tidevannssider forklart, med kildevurderinger og merknader om datakvalitet.",
+    "title": "Datareferanse",
+    "subtitle": "Beskrivelse av alle kolonner på Detaljer- og Tidevannssidene, med merknader om hvordan verdiene relaterer seg til virkelige forhold.",
+    "disclaimer": {
+      "title": "⚠ Alle data som vises er prognoser",
+      "text": "Verdiene på NoFish er <strong>prediksjoner fra numeriske værvarslings­modeller</strong>, ikke sanntidsobservasjoner. Prognoser kan ikke fange opp alle lokale effekter — fjordkanalisering, undervannsskjær, plutselige byger eller stormflo. <strong>Lokalkunnskap er avgjørende.</strong> Krysssjekk alltid med din egen erfaring, VHF-værmeldinger og forholdene ved kaia før du legger ut. Prognosen informerer din beslutning — den erstatter den ikke."
+    },
+    "detailsSection": {
+      "heading": "Detaljer-siden — Prognosetabell",
+      "intro": "Kolonner er gruppert etter API-kilde. Hav-kolonner (bølger, strøm, havtemperatur, tidevann) vises kun for kystlokasjoner der nærmeste Barentswatch-rutepunkt er innenfor 1 km.",
+      "columnHeader": "Kolonne",
+      "unitHeader": "Enhet",
+      "descriptionHeader": "Beskrivelse"
+    },
+    "met": {
+      "heading": "MET Norge Locationforecast",
+      "wind": "Vedvarende 10-minutters gjennomsnittlig vindhastighet (uthevet) etterfulgt av vindkast i parentes. Vindkast er den forventede sterkeste 3-sekunders vindhastigheten innen timen.",
+      "windDir": "Meteorologisk vindpil — viser både retning og styrke. Skaftet peker mot dit vinden er på vei; faner koder hastighet: halv fane = 5 kn, hel fane = 10 kn, vimpel = 50 kn. Stille vind viser en åpen sirkel.",
+      "weather": "Værsymbol som oppsummerer nedbørstype, skydekke og himmelforhold for neste 1-timers periode.",
+      "rain": "Forventet nedbør neste time. Kolonneoverskriften veksler mellom «Regn» og «Snø» basert på lufttemperaturen. Null nedbør er skjult.",
+      "temp": "Lufttemperatur 2 m over bakken.",
+      "pressure": "Lufttrykk ved havnivå. Brukes i fiskescoren — moderat lavtrykk (1010–1020 hPa) er ideelt for fiskeaktivitet.",
+      "source": "MET Norge Locationforecast 2.0 — ~2,5 km rutenett (HARMONIE-AROME-modellen)."
+    },
+    "waves": {
+      "heading": "Barentswatch bølgevarsel",
+      "height": "Signifikant bølgehøyde (Hs) — gjennomsnittshøyden for den høyeste tredjedelen av bølgene. Omtrent 1 av 10 bølger vil være ~1,3× Hs, og maksimal bølgehøyde kan nå ~1,9× Hs. Uthevede verdier er ekte datapunkter; grå kursiv er lineær interpolasjon.",
+      "dir": "Gjennomsnittlig retning bølgene beveger seg fra. Pilen peker i retningen bølgene er på vei.",
+      "period": "Toppbølgeperiode — tid mellom dominerende bølgetopper. Lengre perioder (≥ 10 s) = komfortabel dønning; korte perioder (< 5 s) = bratt, farlig sjøgang. Interpoleres som bølgehøyde.",
+      "source": "Barentswatch bølgevarsel — ~4 km rutenett. Data ankommer med 3-timers intervaller; NoFish interpolerer lineært for å fylle hver time."
+    },
+    "current": {
+      "heading": "Barentswatch havstrøm",
+      "speed": "Overflate­havstrøm­hastighet. Over ~0,5 m/s indikerer sterk strøm. 0,25–0,55 m/s anses som ideelt for dypvannsfiske.",
+      "dir": "Retningen strømmen flyter mot. Pilen peker dit vannet beveger seg.",
+      "source": "Barentswatch havstrøm — ~800 m rutenett; timesoppløsning. Nøyaktigheten er moderat — strømmer er svært sensitive for lokal bathymetri og vind."
+    },
+    "seaTemp": {
+      "heading": "MET havtemperatur",
+      "temp": "Sjøoverflatetemperatur fra MET Norges NorKyst800-havmodell.",
+      "source": "MET Norge Oceanforecast 2.0 — ~800 m rutenett (NorKyst800), norske kystfarvann."
+    },
+    "kartverket": {
+      "heading": "Kartverket",
+      "tide": "Tidevanns­faseetikett relativt til nærmeste høyvann/lavvann-hendelse, f.eks. «Hi (13:18)» ved toppen, «Hi+1» en time etter høyvann, «Faller» under fjæring, «Lo-2» to timer før lavvann.",
+      "source": "Kartverket Tidevann-API — basert på nærmeste tidevannsmålestasjon."
+    },
+    "calculated": {
+      "heading": "Beregnede kolonner",
+      "sun": "Sol­fase: Dagslys, Borgerlig tussmørke, Nautisk tussmørke eller Natt. Overgangstidspunkter vises i parentes. Tidkolonne­bakgrunnsfargen gjenspeiler solfasen.",
+      "moon": "Gjeldende månefase med emoji. Syklus: 🌑 Nymåne → 🌕 Fullmåne → 🌑 Nymåne.",
+      "source": "Sol­posisjon beregnes fra breddegrad, lengdegrad og UTC-tid. Månefase er en astronomisk beregning basert på juliansk dato."
+    },
+    "confidence": {
+      "heading": "Pålitelighets­indikatorer",
+      "intro": "Detaljer-siden viser en pålitelighets­forklaring over tabellen:",
+      "high": "Høy — første ~24 timer; NWP-modellnøyaktigheten er god",
+      "medium": "Middels — time 24–48; fortsatt nyttig, men mindre presis",
+      "low": "Lav — etter 48 timer (vises ikke — tabellen er beskåret ved METs siste 1-times intervall)",
+      "interpolated": "Interpolerte bølgeverdier (grå kursiv) har i seg selv lavere pålitelighet enn ekte 3-timers datapunkter."
+    },
+    "tideSection": {
+      "heading": "Tidevann-siden",
+      "intro": "Tidevann-siden viser fremtidige høyvann- og lavvann-hendelser for nærmeste målestasjon.",
+      "time": "Lokal dato og tid for høyvann- eller lavvann-hendelsen.",
+      "flag": "Om hendelsen er høyvann (Flo) eller lavvann (Fjære).",
+      "height": "Forventet vannstand ved hendelsen, matchet til nærmeste 10-minutters prognose. Høyeste høyvann og laveste lavvann er uthevet i tabellen.",
+      "source": "Kartverket sjønivå-API (sehavniva.kartverket.no) — basert på harmonisk analyse av nærmeste tidevannsmålestasjon."
+    }
+  },
+  "scoreAbout": {
+    "metaTitle": "NoFish — Fiskescore-algoritmen",
+    "metaDescription": "Hvordan NoFish-fiskescoren beregnes: sikkerhets- og fiske­faktorer, vekter, beste vinduer og fargekodings­system.",
+    "title": "Fiskescore-algoritmen",
+    "subtitle": "Score-siden viser en fiskeegnethetsvurdering per time fra 0 % (farligst / ikke fiskbart) til 100 % (perfekte forhold). Hver rad inkluderer tid, tre scorer (Total, Sikkerhet, Fiske) og korte forklaringer per kategori.",
+    "intro": "Algoritmen er designet for dypvannsfiske (50–200 m) på den eksponerte norskekysten, der Den norske kyststrømmen (NCC) ofte skjærer inn i og overgår normal tidevannsstrøm. Kjernefilosofien er «Ingen strøm, ingen fisk» — vannbevegelse er den primære drivkraften for fiskeatferd hos dypvanns­predatorer som lange, brosme, torsk og sei.",
+    "design": {
+      "heading": "Algoritmedesign",
+      "text": "I stedet for harde if/else-grenser bruker algoritmen kontinuerlige matematiske funksjoner — Gaussiske kurver, sigmoider og jevn interpolasjon — for å produsere en finkornet, lineær 0–100 %-skala. Tolv uavhengige variabler evalueres hver som en 0,0–1,0-faktor. Faktorene deles i sikkerhets- og fiske-grupper, multipliseres innen hver gruppe og kombineres.",
+      "formula": "sikkerhetScore  = round( vindF × bølgeF × lysF × bølgePeriodeF × 100 )\nfiskeScore      = round( strømF × tideF × månF × nedbørF × tempF × artsDybdeF × artsSesonF × trykkF × lysFiskeF × 100 )\ntotalScore      = round( sikkerhetScore × fiskeScore / 100 )",
+      "note": "En enkelt farlig tilstand (faktor → 0) driver hele scoren mot 0 %. Inndelingen lar brukere se om en lav score skyldes farlig vær eller dårlige fiskeforhold."
+    },
+    "safety": {
+      "heading": "Sikkerhetsfaktorer",
+      "wind": {
+        "heading": "1. Vindhastighet og strøm­interaksjon",
+        "desc": "Vind påvirker overflatedrift, som avgjør om dypvannsutstyr kan holde bunnkontakt.",
+        "stormOverride": "Vind > 15 m/s eller vindkast > 22 m/s → 0,00 (storm)",
+        "strongWindOverride": "Vind > 12 m/s eller vindkast > 18 m/s → 0,05–0,25 (sterk vind)"
+      },
+      "wave": {
+        "heading": "2. Bølgehøyde",
+        "desc": "Påvirker utstyrs­håndterings­effektivitet og fartøyets sikkerhet."
+      },
+      "light": {
+        "heading": "3. Lys og tid på dagen",
+        "desc": "Å fiske om natten eller i svakt lys øker risikoen. Sikkerhetsfaktoren faller fra 1,0 (fullt dagslys) til 0,45 (borgerlig tussmørke) til 0,15 (natt)."
+      },
+      "period": {
+        "heading": "4. Bølgeperiode",
+        "desc": "Korte, bratte bølger er farlige uavhengig av høyde. Under 4 s periode → faktor → 0."
+      }
+    },
+    "fishing": {
+      "heading": "Fiskefaktorer",
+      "current": "Strømhastighet — Gaussisk topp tilpasset havbunnsdybde",
+      "tide": "Tidevanns­fase — biologisk modifikator; fiskeaktivitet topper ved tidevanns­skift",
+      "moon": "Månefase — tidevanns­amplituden modifikator; springflo forbedrer strømdrevet fôring",
+      "precip": "Nedbør — mindre modifikator; kraftig regn reduserer scoren noe",
+      "temp": "Havtemperatur — artsbestemt komfort­temperatur",
+      "species": "Art/dybdeprofil — tilpasser strøm- og tidevannsvekter til målart",
+      "season": "Sesongaktivitet — høy-, skulder- eller lavsesong for målart",
+      "pressure": "Lufttrykk — moderat lavtrykk (1010–1020 hPa) er ideelt",
+      "light": "Daggry/skumrings-bonuslys — fôring topper ved lysoverganger for de fleste arter"
+    },
+    "windows": {
+      "heading": "Beste fiskevinduer",
+      "text": "Beste-vindu-algoritmen skanner alle scorede timer og finner ikke-overlappende tidsblokker der gjennomsnittlig totalscoren er høyest. For trolling og stansing er vinduene 1–3 timer. For garnfiske er vinduene 6–8 timer med sikre sett- og hentingsforhold."
+    },
+    "colours": {
+      "heading": "Score-fargekoding",
+      "text": "0–30 %: Rød (utrygt eller ikke fiskbart), 31–49 %: Oransje (marginalt), 50–69 %: Gul (brukbart), 70–84 %: Lysgrønn (bra), 85–100 %: Grønn (utmerket)."
+    }
+  },
+  "feedbackPage": {
+    "metaTitle": "NoFish — Send tilbakemelding",
+    "title": "Send tilbakemelding",
+    "subtitle": "Rapporter unøyaktige data eller foreslå forbedringer. Du kan sende via GitHub eller e-post.",
+    "commentLabel": "Beskrivelse (valgfritt)",
+    "commentPlaceholder": "Beskriv problemet eller forslaget...",
+    "noItems": "Ingen datapunkter valgt.",
+    "howToFlag": "På Score- eller Detaljer-siden klikker du flagg-knappen (🚩) ved en rad for å legge den til her.",
+    "dataPointsHeading": "Valgte datapunkter:",
+    "submitGitHub": "Send på GitHub",
+    "submitEmail": "Send via e-post",
+    "clearAll": "Fjern alle"
+  },
+  "statistics": {
+    "metaTitle": "NoFish — Bruksstatistikk",
+    "metaDescription": "Samlet bruksstatistikk for NoFish.no",
+    "title": "Bruksstatistikk",
+    "totalLookups": "Totalt antall oppslag",
+    "today": "I dag",
+    "last7Days": "Siste 7 dager",
+    "vsWeekBefore": "vs. forrige uke",
+    "weeklyActivity": "Ukentlig aktivitet (siste 13 uker)",
+    "topCities": "Topp byer",
+    "lookups": "oppslag",
+    "noData": "Ingen data ennå"
+  }
+}

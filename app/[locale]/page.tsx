@@ -1,0 +1,64 @@
+'use client';
+
+import dynamic from 'next/dynamic';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
+import Header from '@/components/Header';
+import HeaderMenu from '@/components/Footer';
+
+// Import Map with SSR disabled (Leaflet requires browser window object)
+const Map = dynamic(() => import('@/components/Map'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full bg-gray-50">
+      <div className="text-center" role="status" aria-label="Loading map">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-maritime-teal-600 mx-auto mb-4" aria-hidden="true"></div>
+        <p className="text-maritime-teal-700">Loading map...</p>
+      </div>
+    </div>
+  ),
+});
+
+export default function Home() {
+  const router = useRouter();
+  const [mapInstanceKey, setMapInstanceKey] = useState(0);
+  const t = useTranslations('home');
+  const tc = useTranslations('common');
+  const locale = useLocale();
+
+  const handleLogoReset = () => {
+    router.replace(locale !== 'no' ? `/${locale}` : '/');
+    setMapInstanceKey(k => k + 1);
+  };
+
+  return (
+    <div className="flex flex-col h-dvh overflow-hidden bg-gray-50">
+      {/* Header */}
+      <Header className="relative z-[1100] shrink-0 overflow-visible">
+        <div className="flex items-center max-w-7xl mx-auto">
+          <button
+            type="button"
+            onClick={handleLogoReset}
+            className="flex items-center shrink-0 bg-transparent border-0 p-0 m-0 appearance-none cursor-pointer"
+            aria-label={t('resetAriaLabel')}
+            title={t('resetTitle')}
+          >
+            <Image src="/NoFish-logo.png" alt="NoFish" width={32} height={32} className="rounded-full shrink-0" />
+            <span className="text-base whitespace-nowrap shrink-0 ml-2">NoFish</span>
+          </button>
+          <span className="text-[10px] italic font-light opacity-60 text-center flex-1 px-3">{tc('tagline')}</span>
+          <div className="shrink-0">
+            <HeaderMenu />
+          </div>
+        </div>
+      </Header>
+
+      {/* Main content — z-0 creates a stacking context so map overlays stay below the header menu */}
+      <div className="flex-1 min-h-0 relative overflow-hidden z-0">
+        <Map key={mapInstanceKey} />
+      </div>
+    </div>
+  );
+}

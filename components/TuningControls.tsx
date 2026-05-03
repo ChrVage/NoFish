@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { buildLocationUrl } from '@/lib/utils/params';
 import {
   BOAT_SIZE_OPTIONS,
@@ -46,6 +47,8 @@ function writeStoredTuning(selection: TuningSelection) {
 export default function TuningControls({ currentPage, lat, lng, zoom, sea, fields, onChange }: TuningControlsProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const t = useTranslations('tuning');
+  const locale = useLocale();
   const urlSelection = useMemo(() => parseTuningFromSearchParams({
     boat: searchParams.get('boat') ?? undefined,
     fish: searchParams.get('fish') ?? undefined,
@@ -67,9 +70,9 @@ export default function TuningControls({ currentPage, lat, lng, zoom, sea, field
         boat: selection.boat,
         fish: selection.fish,
         method: selection.method,
-      }), { scroll: false });
+      }, locale), { scroll: false });
     }
-  }, [currentPage, lat, lng, onChange, router, sea, selection, urlSelection.boat, urlSelection.fish, urlSelection.method, zoom]);
+  }, [currentPage, lat, lng, locale, onChange, router, sea, selection, urlSelection.boat, urlSelection.fish, urlSelection.method, zoom]);
 
   const updateSelection = (patch: Partial<TuningSelection>) => {
     const next = resolveTuningSelection({ ...selection, ...patch }, {});
@@ -83,7 +86,7 @@ export default function TuningControls({ currentPage, lat, lng, zoom, sea, field
       boat: next.boat,
       fish: next.fish,
       method: next.method,
-    }), { scroll: false });
+    }, locale), { scroll: false });
   };
 
   const labelStyle: React.CSSProperties = {
@@ -115,7 +118,7 @@ export default function TuningControls({ currentPage, lat, lng, zoom, sea, field
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.625rem' }}>
         {showBoat && (
           <label style={labelStyle} htmlFor="boat-size-select">
-            Boat size
+            {t('boatLabel')}
             <select
               id="boat-size-select"
               style={selectStyle}
@@ -131,7 +134,7 @@ export default function TuningControls({ currentPage, lat, lng, zoom, sea, field
 
         {showFish && (
           <label style={labelStyle} htmlFor="fish-target-select">
-            Target species
+            {t('fishLabel')}
             <select
               id="fish-target-select"
               style={selectStyle}
@@ -140,14 +143,14 @@ export default function TuningControls({ currentPage, lat, lng, zoom, sea, field
             >
               {FISH_TARGET_GROUPS.map((group) =>
                 group.label ? (
-                  <optgroup key={group.label} label={group.label}>
+                  <optgroup key={group.label} label={t(`fishGroup.${group.label === 'Shallow (< 100 m)' ? 'shallow' : group.label === 'Mid-depth (100–200 m)' ? 'mid' : 'deep'}`)}>
                     {group.items.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
+                      <option key={o.value} value={o.value}>{t(`fish.${o.value}`)}</option>
                     ))}
                   </optgroup>
                 ) : (
                   group.items.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
+                    <option key={o.value} value={o.value}>{t(`fish.${o.value}`)}</option>
                   ))
                 )
               )}
@@ -157,7 +160,7 @@ export default function TuningControls({ currentPage, lat, lng, zoom, sea, field
 
         {showMethod && (
           <label style={labelStyle} htmlFor="method-select">
-            Fishing method
+            {t('methodLabel')}
             <select
               id="method-select"
               style={selectStyle}
@@ -165,7 +168,7 @@ export default function TuningControls({ currentPage, lat, lng, zoom, sea, field
               onChange={(e) => updateSelection({ method: e.target.value as TuningSelection['method'] })}
             >
               {FISHING_METHOD_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
+                <option key={o.value} value={o.value}>{t(`method.${o.value}`)}</option>
               ))}
             </select>
           </label>

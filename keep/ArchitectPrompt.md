@@ -21,12 +21,14 @@ Make sure all functionality is updated in the documentation. Also read all docum
     readme-technical.md should contain more detailed information on the platform, components used and how it all connects.
 8. Design
     Everything should look beautiful and consistent.
+9. Documentation on the site should be revieved in English, then all translations should be verified.
+
 
 ## Reason for existing
 Found in the [README.md](README.md) file.
 
 ## First prio changes
-- Also support Norwegian, German, Dutch and Polish languages in app and in documentation.
+- Implement versioning counting in the CI/CD pipeline, so that dev and prod is equal.
 
 - SEO to make sure people find the site.
 

@@ -24,8 +24,9 @@ export function parseZoomParam(zoomStr?: string): number | undefined {
  * Build a location URL for page navigation.
  * Centralises the `?lat=…&lng=…&zoom=…&sea=…` pattern used across the app.
  *
- * @param page  Route segment: '' (home), 'score', 'details', 'tide'
- * @param opts  Coordinate and optional params
+ * @param page    Route segment: '' (home), 'score', 'details', 'tide'
+ * @param opts    Coordinate and optional params
+ * @param locale  Active locale (omit or pass default locale 'no' for no prefix)
  */
 export function buildLocationUrl(
   page: '' | 'score' | 'details' | 'tide',
@@ -38,6 +39,7 @@ export function buildLocationUrl(
     fish?: FishTarget;
     method?: FishingMethod;
   },
+  locale?: string,
 ): string {
   const lat = typeof opts.lat === 'number' ? opts.lat.toFixed(4) : opts.lat;
   const lng = typeof opts.lng === 'number' ? opts.lng.toFixed(4) : opts.lng;
@@ -47,6 +49,7 @@ export function buildLocationUrl(
   if (opts.boat !== undefined) {params.set('boat', opts.boat);}
   if (opts.fish !== undefined) {params.set('fish', opts.fish);}
   if (opts.method !== undefined) {params.set('method', opts.method);}
-  const prefix = page ? `/${page}` : '/';
-  return `${prefix}?${params.toString()}`;
+  const localePrefix = locale && locale !== 'no' ? `/${locale}` : '';
+  const pagePath = page ? `/${page}` : '/';
+  return `${localePrefix}${pagePath}?${params.toString()}`;
 }

@@ -1,0 +1,435 @@
+{
+  "common": {
+    "back": "Back",
+    "tryAgain": "Try again",
+    "backToMap": "Back to map",
+    "pleaseWait": "Please wait",
+    "menu": "Menu",
+    "loading": "Loading...",
+    "tagline": "... because fishing in bad weather is worse than no fishing at all"
+  },
+  "nav": {
+    "score": "Score",
+    "details": "Details",
+    "tide": "Tides",
+    "ariaLabel": "Page navigation"
+  },
+  "footer": {
+    "aboutNoFish": "About NoFish",
+    "dataReference": "Data Reference",
+    "feedback": "Feedback",
+    "aboutScore": "About Score"
+  },
+  "menu": {
+    "aboutNoFish": "About NoFish",
+    "feedback": "Feedback",
+    "statistics": "Statistics"
+  },
+  "home": {
+    "loadingMap": "Loading map...",
+    "resetAriaLabel": "Reset map and clear selected location",
+    "resetTitle": "Reset map"
+  },
+  "map": {
+    "score": "Score",
+    "details": "Details",
+    "tides": "Tides",
+    "viewScore": "View score",
+    "viewDetails": "View forecast details",
+    "viewTides": "View tides",
+    "depth": "Depth: {depth} m",
+    "elevation": "Elevation: {elevation} m",
+    "loading": "Loading...",
+    "locateAriaLabel": "Go to my location",
+    "searchPlaceholder": "Search for a place...",
+    "seaChartLabel": "Nautical chart",
+    "locationUnavailable": "Unable to get your location. Check browser permissions."
+  },
+  "error": {
+    "fishingScore": "fishing score",
+    "forecastDetails": "forecast details",
+    "tideData": "tide data",
+    "page": "this page",
+    "mapPage": "the map",
+    "scorePage": "fishing score",
+    "detailsPage": "forecast details",
+    "tidePage": "tide data",
+    "statisticsPage": "statistics",
+    "failedToLoad": "Failed to load {label}",
+    "dataSourceMessage": "One of the data sources (MET Norway, Barentswatch, or Kartverket) may be temporarily unavailable. This can happen during poor connectivity or service outages.",
+    "errorId": "Error ID: {id}",
+    "tryAgain": "Try again",
+    "backToMap": "Back to map"
+  },
+  "loading": {
+    "scores": "Loading scores...",
+    "forecast": "Loading forecast...",
+    "tides": "Loading tides...",
+    "statistics": "Loading statistics...",
+    "pleaseWait": "Please wait"
+  },
+  "safety": {
+    "emergency": "🚨 Emergency:",
+    "vhf": "VHF Ch. 16",
+    "kystradioen": "📞 Kystradioen: 120"
+  },
+  "feedbackBanner": {
+    "itemsFlagged": "{count, plural, one {# item flagged} other {# items flagged}}",
+    "submit": "Submit Feedback →",
+    "clear": "Clear selection"
+  },
+  "booking": {
+    "book": "Add to calendar",
+    "close": "Close",
+    "hoursSlots": "{hours, plural, one {# hour} other {# hours}}, {slots, plural, one {# slot} other {# slots}}",
+    "addedCount": "{count, plural, one {# hour selected} other {# hours selected}}",
+    "submit": "Add to calendar →",
+    "clear": "Clear selection",
+    "downloadIcs": "Download .ics",
+    "googleCalendar": "Google Calendar",
+    "outlookCalendar": "Outlook",
+    "restrictionNote": "⚠ Fishing restrictions in effect:"
+  },
+  "tuning": {
+    "boatLabel": "Boat size",
+    "fishLabel": "Target species",
+    "methodLabel": "Fishing method",
+    "ariaLabel": "Fishing settings",
+    "fish": {
+      "general": "General recommendation",
+      "mackerel": "Mackerel",
+      "saithe": "Saithe / Coalfish",
+      "cod": "Cod",
+      "plaice": "Plaice",
+      "pollock": "Pollock",
+      "haddock": "Haddock",
+      "wolffish": "Wolffish",
+      "monkfish": "Monkfish",
+      "halibut": "Halibut",
+      "hake": "Hake",
+      "ling": "Ling",
+      "tusk": "Tusk",
+      "redfish": "Redfish"
+    },
+    "fishGroup": {
+      "shallow": "Shallow (< 100 m)",
+      "mid": "Mid-depth (100–200 m)",
+      "deep": "Deep (> 200 m)"
+    },
+    "method": {
+      "trolling": "Trolling",
+      "same-spot": "Fishing on same spot",
+      "net": "Fishing with net",
+      "pot": "Fish pot on bottom"
+    }
+  },
+  "score": {
+    "metaTitle": "NoFish — Fishing Score",
+    "forecastFor": "Forecast for:",
+    "coordDepth": "Depth: {depth} m",
+    "coordElevation": "Elevation: {elevation} m",
+    "noCurrentWarning": "⚠ No reliable current forecast — current speed not included in score",
+    "restrictionHeading": "⚠ Fishing restrictions at this location:",
+    "noForecastData": "No forecast data available.",
+    "methodScores": "Method scores",
+    "settings": "Settings",
+    "aboutScore": "About Fishing Score",
+    "aboutNoFish": "About NoFish",
+    "feedback": "Feedback",
+    "fishingRules": "Fishing Rules by Species ↗",
+    "table": {
+      "time": "Time",
+      "score": "Score",
+      "total": "Total",
+      "safety": "Safety",
+      "fishing": "Fishing",
+      "notes": "Notes"
+    },
+    "season": {
+      "prime": "Prime season",
+      "shoulder": "Shoulder season",
+      "offSeason": "Off season"
+    },
+    "windows": {
+      "heading": "Best fishing windows:",
+      "headingWith": "Best window {description}:",
+      "forMethod": "for {method}",
+      "forFish": "targeting {fish}",
+      "fromBoat": "from a {boat} boat",
+      "noSafePeriods": "No safe fishing periods at this location in the forecast period."
+    },
+    "dark": {
+      "currentlyDark": "It is currently dark (civil twilight ended at {time}).",
+      "darkBy": "⚠ It will be dark by {time}."
+    },
+    "depth": "Seabed depth: approx. {depth} m",
+    "elevation": "Elevation: approx. {elevation} m",
+    "noOceanData": "No ocean forecast available — only land weather shown."
+  },
+  "details": {
+    "metaTitle": "NoFish — Forecast Details",
+    "forecastFor": "Forecast for:",
+    "waveSource": "Wave grid: {source}",
+    "distanceFrom": "{distance} from selected location",
+    "distanceAway": "forecast grid point {distance} away",
+    "nearestStation": "nearest station {distance} away",
+    "tideStation": "Tide station: {name}",
+    "currentlyDark": "Currently: Dark",
+    "civilDaylightEnds": "Civil daylight ends",
+    "nowWarning": "Now:",
+    "sourceLabel": "Source:",
+    "coordDepth": "Depth: {depth} m",
+    "coordElevation": "Elevation: {elevation} m",
+    "confidence": {
+      "high": "High confidence (0–24 h)",
+      "medium": "Medium confidence (24–48 h)"
+    }
+  },
+  "tide": {
+    "metaTitle": "NoFish — Tides",
+    "forecastFor": "Forecast for:",
+    "high": "High",
+    "low": "Low",
+    "station": "Station:",
+    "stationDistance": "{distance} from selected location",
+    "chartDatum": "Levels relative to chart datum (CD)",
+    "noData": "No tide data available for this location.",
+    "tableCaption": "Tide predictions from Kartverket. Water levels in cm relative to chart datum (CD).",
+    "timeHeader": "Time",
+    "levelHeader": "Level",
+    "typeHeader": "Type",
+    "lastObservation": "Last observation",
+    "rising": "Rising",
+    "falling": "Falling",
+    "sourceLabel": "Source:",
+    "peak": "Peak high",
+    "lowest": "Lowest low"
+  },
+  "about": {
+    "metaTitle": "About NoFish — Fishing Forecast for Small Boats",
+    "metaDescription": "What NoFish does, how to use it, and why it exists. Wind, wave, and tide forecasts for any point on the Norwegian coast.",
+    "title": "About NoFish",
+    "tagline": "... because fishing in bad weather is worse than no fishing at all.",
+    "whatItDoes": {
+      "heading": "What it does",
+      "intro": "NoFish gives small boat fishers access to wind, wave, and tide forecasts for <strong>any point on the Norwegian coast</strong> — so they can make a good decision before they leave the dock.",
+      "clickInstruction": "Click anywhere on the map to place a marker. A popup shows the location name, coordinates, and navigation buttons:",
+      "scoreFeature": "<strong>Score</strong> — combined fishing suitability rating (0–100 %) based on wind, waves, tide, light, and weather. See <scoreLink>About Fishing Score</scoreLink> for how it works.",
+      "detailsFeature": "<strong>Details</strong> — hourly forecast table (up to ~48 hours) with columns grouped by data source. Wind speed and wave height are the primary safety numbers.",
+      "tideFeature": "<strong>Tides</strong> — high/low tide events for the next 10 days, with peak high and lowest low highlighted.",
+      "oceanNote": "Score and Tides buttons are only shown when the ocean forecast grid point is within 1 km of the clicked location. Inland points show only the Details button."
+    },
+    "howToUse": {
+      "heading": "How to use it",
+      "waveGridDot": "When the forecast responds, a sky-blue dot and dashed line appear on the map showing the wave forecast grid point (Barentswatch) closest to your click.",
+      "locateButton": "A <strong>location button</strong> (crosshair icon) sits below the zoom controls. Tapping it uses the browser's geolocation API and navigates directly to the Details page for your current position.",
+      "logoBack": "The <strong>🎣 NoFish</strong> logo in the top-left of every page is also a back button — tap it to return to the map at your last position and zoom.",
+      "footerBar": "Every sub-page has a footer bar with <strong>About NoFish</strong>, <strong>Data Reference</strong>, and <strong>Feedback</strong> buttons. The Score page adds an <strong>About Fishing Score</strong> button.",
+      "backRestores": "Navigating back restores the previous zoom level, map position, and reopens the popup at the original click point."
+    },
+    "forecastTable": {
+      "heading": "Forecast table",
+      "intro": "The Details page shows an hourly forecast table with columns grouped by API source. See the <dataLink>Data Column Reference</dataLink> for a full description of every column.",
+      "groupHeader": "Group",
+      "columnsHeader": "Columns",
+      "notesHeader": "Notes",
+      "rows": {
+        "met": "MET Norway",
+        "metColumns": "Wind, Wind barb, Weather, Rain/Snow, Temp, Pressure",
+        "metNotes": "Always shown",
+        "waves": "Barentswatch Waves",
+        "wavesColumns": "Wave height, Wave dir",
+        "wavesNotes": "Coastal only; interpolated hourly",
+        "current": "Barentswatch Current",
+        "currentColumns": "Current speed, Current dir",
+        "currentNotes": "Coastal only",
+        "seaTemp": "MET Sea Temp",
+        "seaTempColumns": "Sea temp",
+        "seaTempNotes": "From MET Oceanforecast",
+        "kartverket": "Kartverket",
+        "kartverketColumns": "Tide",
+        "kartverketNotes": "High/low phase label",
+        "calculated": "Calculated",
+        "calculatedColumns": "Sun",
+        "calculatedNotes": "Sunrise/sunset/twilight"
+      }
+    },
+    "notSubstitute": {
+      "heading": "Not a substitute for judgment",
+      "text": "This is <strong>not</strong> powered by AI. NoFish does not make recommendations. Every skipper on the Norwegian coast must use their own experience, <strong>local knowledge</strong>, and real intelligence before heading out on the water. The numbers here inform that decision — they do not replace it."
+    },
+    "security": {
+      "heading": "Security & privacy",
+      "serverSide": "All external API calls are made <strong>server-side</strong> — no credentials exposed to the browser",
+      "noCookies": "No cookies, no tracking, no third-party scripts",
+      "headers": "Content Security Policy, HSTS, and X-Frame-Options enforced on all responses"
+    },
+    "moreInfo": {
+      "heading": "More information",
+      "dataRef": "Data Column Reference",
+      "dataRefDesc": "every column explained, source ratings, and data quality",
+      "scoreAlgo": "Fishing Score Algorithm",
+      "scoreAlgoDesc": "how the 0–100 % score is calculated",
+      "github": "Source code on GitHub"
+    },
+    "feedback": {
+      "heading": "Feedback",
+      "text": "Found an issue or have a wish for new functionality?",
+      "githubLink": "Create a new issue on GitHub",
+      "contact": "For direct contact:",
+      "email": "hi@nofish.no"
+    }
+  },
+  "data": {
+    "metaTitle": "NoFish — Data Column Reference",
+    "metaDescription": "Every column on the NoFish forecast and tide pages explained, with source ratings and data quality notes.",
+    "title": "Data Column Reference",
+    "subtitle": "Descriptions of every column shown on the Details and Tide pages, with notes on how the values relate to real-world conditions.",
+    "disclaimer": {
+      "title": "⚠ All data shown is forecast only",
+      "text": "The values on NoFish are <strong>predictions from numerical weather models</strong>, not real-time observations. Forecasts cannot capture every local effect — fjord funnelling, underwater ridges, sudden squalls, or storm surge. <strong>Local knowledge is essential.</strong> Always cross-check with your own experience, VHF weather broadcasts, and conditions at the dock before heading out. The forecast informs your decision — it does not replace it."
+    },
+    "detailsSection": {
+      "heading": "Details Page — Forecast Table",
+      "intro": "Columns are grouped by API source. Ocean columns (wave, current, sea temp, tide) are only shown for coastal locations where the nearest Barentswatch grid point is within 1 km.",
+      "columnHeader": "Column",
+      "unitHeader": "Unit",
+      "descriptionHeader": "Description"
+    },
+    "met": {
+      "heading": "MET Norway Locationforecast",
+      "wind": "Sustained 10-minute mean wind speed (bold) followed by gust speed in parentheses. Gust is the expected strongest 3-second wind speed within the hour.",
+      "windDir": "Meteorological wind barb — shows both direction and strength. The shaft points toward where the wind is heading; barbs at the tail encode speed: half barb = 5 kn, full barb = 10 kn, pennant = 50 kn. Calm winds show an open circle.",
+      "weather": "Weather symbol summarising precipitation type, cloud cover, and sky conditions for the next 1-hour period.",
+      "rain": "Expected precipitation in the next hour. Column header switches between \"Rain\" and \"Snow\" based on the air temperature. Zero precipitation is hidden.",
+      "temp": "Air temperature at 2 m above ground.",
+      "pressure": "Air pressure at sea level. Used in the fishing score — moderate low pressure (1010–1020 hPa) is ideal for fish activity.",
+      "source": "MET Norway Locationforecast 2.0 — ~2.5 km grid (HARMONIE-AROME model)."
+    },
+    "waves": {
+      "heading": "Barentswatch Waveforecast",
+      "height": "Significant wave height (Hs) — the average height of the highest one-third of waves. Roughly 1 in 10 waves will be ~1.3× Hs, and maximum wave height can reach ~1.9× Hs. Bold values are real data points; grey italic values are linearly interpolated.",
+      "dir": "Mean direction the waves are travelling from. The arrow points in the direction the waves are heading.",
+      "period": "Peak wave period — time between dominant wave crests. Longer periods (≥ 10 s) = comfortable swell; short periods (< 5 s) = steep, dangerous chop. Interpolated like wave height.",
+      "source": "Barentswatch Waveforecast — ~4 km grid. Data arrives at 3-hour intervals; NoFish interpolates linearly to fill every hourly row."
+    },
+    "current": {
+      "heading": "Barentswatch Sea Current",
+      "speed": "Surface ocean current speed. Above ~0.5 m/s indicates strong current. 0.25–0.55 m/s is considered ideal for deep-water fishing.",
+      "dir": "Direction the current is flowing towards. The arrow points where the water is moving.",
+      "source": "Barentswatch Sea Current — ~800 m grid; hourly. Accuracy is moderate — currents are highly sensitive to local bathymetry and wind."
+    },
+    "seaTemp": {
+      "heading": "MET Sea Temp",
+      "temp": "Sea surface temperature from MET Norway's NorKyst800 ocean model.",
+      "source": "MET Norway Oceanforecast 2.0 — ~800 m grid (NorKyst800), Norwegian coastal waters."
+    },
+    "kartverket": {
+      "heading": "Kartverket",
+      "tide": "Tidal phase label relative to the nearest high/low event, e.g. \"Hi (13:18)\" at the peak, \"Hi+1\" one hour after high tide, \"Falling\" during ebb, \"Lo-2\" two hours before low tide.",
+      "source": "Kartverket Tide API — based on the nearest tide gauge station."
+    },
+    "calculated": {
+      "heading": "Calculated columns",
+      "sun": "Sun phase: Daylight, Civil twilight, Nautical twilight, or Night. Transition times shown in parentheses. Time column background colour reflects the sun phase.",
+      "moon": "Current moon phase with emoji. Cycle: 🌑 New Moon → 🌕 Full Moon → 🌑 New Moon.",
+      "source": "Sun position is calculated from latitude, longitude, and UTC time. Moon phase is an astronomical calculation based on the Julian date."
+    },
+    "confidence": {
+      "heading": "Confidence indicators",
+      "intro": "The Details page shows a confidence legend above the table:",
+      "high": "High — first ~24 hours; NWP model skill is strong",
+      "medium": "Medium — hours 24–48; still useful but less precise",
+      "low": "Low — beyond 48 hours (not shown — table is trimmed at MET's last 1-hour interval)",
+      "interpolated": "Interpolated wave values (grey italic) inherently have lower confidence than real 3-hour data points."
+    },
+    "tideSection": {
+      "heading": "Tide Page",
+      "intro": "The Tide page shows future high and low tide events for the nearest gauge station.",
+      "time": "Local date and time of the high or low tide event.",
+      "flag": "Whether the event is a high tide (High) or low tide (Low).",
+      "height": "Predicted water height at the event, matched to the nearest 10-minute forecast. Peak high and lowest low tide are highlighted in the table.",
+      "source": "Kartverket Sea Level API (sehavniva.kartverket.no) — based on harmonic analysis of the nearest tide gauge station."
+    }
+  },
+  "scoreAbout": {
+    "metaTitle": "NoFish — Fishing Score Algorithm",
+    "metaDescription": "How the NoFish fishing score is calculated: safety and fishing factors, weights, best windows, and score colour coding.",
+    "title": "Fishing Score Algorithm",
+    "subtitle": "The Score page shows a per-hour fishing suitability rating from 0 % (most dangerous / unfishable) to 100 % (perfect conditions). Each row includes the time, three scores (Total, Safety, Fishing), and brief explanations by category.",
+    "intro": "The algorithm is designed for deep-water fishing (50–200 m) on the exposed Norwegian coast, where the Norwegian Coastal Current (NCC) often intersects with tidal flow. The core philosophy is \"No current, no fish\" — water movement is the primary driver for feeding behaviour in deep-water predators such as Ling, Tusk, Cod, and Saithe.",
+    "design": {
+      "heading": "Algorithm design",
+      "text": "Instead of hard if/else brackets, the algorithm uses continuous mathematical functions — Gaussian curves, sigmoids, and smooth interpolation — to produce a fine-grained, linear 0–100 % scale. Twelve independent variables are each evaluated as a 0.0–1.0 factor. The factors are split into safety and fishing groups, then multiplied within each group and combined.",
+      "formula": "safetyScore  = round( windF × waveF × lightF × wavePeriodF × 100 )\nfishingScore = round( currentF × tideF × moonF × precipF × tempF × speciesDepthF × speciesSeasonF × pressureF × lightFishingF × 100 )\ntotalScore   = round( safetyScore × fishingScore / 100 )",
+      "note": "A single dangerous condition (factor → 0) drives the entire score toward 0 %. The split lets users see whether a low score is due to unsafe weather or poor fishing conditions."
+    },
+    "safety": {
+      "heading": "Safety factors",
+      "wind": {
+        "heading": "1. Wind Speed & Current Interaction",
+        "desc": "Wind affects surface drift, which determines whether deep-water gear can maintain bottom contact.",
+        "stormOverride": "Wind > 15 m/s or gusts > 22 m/s → 0.00 (storm)",
+        "strongWindOverride": "Wind > 12 m/s or gusts > 18 m/s → 0.05–0.25 (strong wind)"
+      },
+      "wave": {
+        "heading": "2. Wave Height",
+        "desc": "Affects gear handling efficiency and vessel safety."
+      },
+      "light": {
+        "heading": "3. Light & Time of Day",
+        "desc": "Fishing at night or in low light adds risk. Safety factor falls from 1.0 (full daylight) to 0.45 (civil twilight) to 0.15 (night)."
+      },
+      "period": {
+        "heading": "4. Wave Period",
+        "desc": "Short, steep waves are dangerous regardless of height. Below 4 s period, factor → 0."
+      }
+    },
+    "fishing": {
+      "heading": "Fishing factors",
+      "current": "Current speed — Gaussian peak adapted to seabed depth",
+      "tide": "Tide phase — biological modifier; fish activity peaks near tide changes",
+      "moon": "Moon phase — tidal amplitude modifier; spring tides enhance current-driven feeding",
+      "precip": "Precipitation — minor modifier; heavy rain slightly reduces score",
+      "temp": "Sea temperature — species-specific comfort range",
+      "species": "Species/depth profile — adapts current and tide weights to target species",
+      "season": "Seasonal activity — prime, shoulder, or off-season for target species",
+      "pressure": "Barometric pressure — moderate low pressure (1010–1020 hPa) is ideal",
+      "light": "Dawn/dusk light bonus — feeding peaks at light transitions for most species"
+    },
+    "windows": {
+      "heading": "Best fishing windows",
+      "text": "The best-window algorithm scans all scored hours and finds non-overlapping time blocks where the average total score is highest. For trolling and spot fishing, windows are 1–3 hours. For net fishing, windows are 6–8 hours with safe set and pickup conditions."
+    },
+    "colours": {
+      "heading": "Score colour coding",
+      "text": "0–30 %: Red (unsafe or unfishable), 31–49 %: Orange (marginal), 50–69 %: Yellow (fair), 70–84 %: Light green (good), 85–100 %: Green (excellent)."
+    }
+  },
+  "feedbackPage": {
+    "metaTitle": "NoFish — Submit Feedback",
+    "title": "Submit Feedback",
+    "subtitle": "Report inaccurate data or suggest improvements. You can submit via GitHub or email.",
+    "commentLabel": "Description (optional)",
+    "commentPlaceholder": "Describe the issue or suggestion...",
+    "noItems": "No data points selected.",
+    "howToFlag": "On the Score or Details page, click the flag (🚩) button next to a row to add it here.",
+    "dataPointsHeading": "Selected data points:",
+    "submitGitHub": "Submit on GitHub",
+    "submitEmail": "Send by email",
+    "clearAll": "Clear all"
+  },
+  "statistics": {
+    "metaTitle": "NoFish — Usage Statistics",
+    "metaDescription": "Aggregate usage statistics for NoFish.no",
+    "title": "Usage Statistics",
+    "totalLookups": "Total lookups",
+    "today": "Today",
+    "last7Days": "Last 7 days",
+    "vsWeekBefore": "vs week before",
+    "weeklyActivity": "Weekly activity (last 13 weeks)",
+    "topCities": "Top cities",
+    "lookups": "lookups",
+    "noData": "No data yet"
+  }
+}

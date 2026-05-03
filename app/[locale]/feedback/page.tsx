@@ -1,0 +1,228 @@
+'use client';
+
+import { Suspense, useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
+import { getFeedbackItems, setFeedbackItems, clearFeedbackItems } from '@/components/FeedbackButton';
+import type { FeedbackItem } from '@/components/FeedbackButton';
+import Header from '@/components/Header';
+import BackButton from '@/components/BackButton';
+
+function FeedbackContent() {
+  const t = useTranslations('feedbackPage');
+  const [items, setItemsState] = useState<FeedbackItem[]>(() => getFeedbackItems());
+  const [comment, setComment] = useState('');
+
+  useEffect(() => {
+    const sync = () => setItemsState(getFeedbackItems());
+    window.addEventListener('feedback-updated', sync);
+    return () => window.removeEventListener('feedback-updated', sync);
+  }, []);
+
+  const removeItem = (id: string) => {
+    const updated = items.filter(i => i.id !== id);
+    setItemsState(updated);
+    setFeedbackItems(updated);
+  };
+
+  const buildFeedbackPayload = () => {
+    const locationInfo = items.length > 0
+      ? (items[0].locationName ?? `${items[0].lat.toFixed(4)}, ${items[0].lng.toFixed(4)}`)
+      : 'Unknown';
+
+    const title = items.length > 0
+      ? `Feedback: ${locationInfo} (${items.length} data point${items.length !== 1 ? 's' : ''})`
+      : 'Feedback';
+
+    const markdownBodyParts: string[] = [];
+    const plainBodyParts: string[] = [];
+
+    if (comment.trim()) {
+      markdownBodyParts.push(`## Description\n\n${comment.trim()}\n`);
+      plainBodyParts.push(`Description:\n${comment.trim()}\n`);
+    }
+
+    if (items.length > 0) {
+      const coords = `${items[0].lat.toFixed(4)}, ${items[0].lng.toFixed(4)}`;
+      markdownBodyParts.push(`## Selected Data Points\n`);
+      markdownBodyParts.push(`**Location:** ${locationInfo} (${coords})\n`);
+      plainBodyParts.push('Selected Data Points:\n');
+      plainBodyParts.push(`Location: ${locationInfo} (${coords})\n`);
+      for (const item of items) {
+        markdownBodyParts.push(`- **[${item.page}]** ${item.time} — ${item.summary}`);
+        plainBodyParts.push(`- [${item.page}] ${item.time} - ${item.summary}`);
+      }
+    }
+
+    return {
+      title,
+      markdownBody: markdownBodyParts.join('\n'),
+      plainBody: plainBodyParts.join('\n'),
+    };
+  };
+
+  const handleSubmitGitHub = () => {
+    const { title, markdownBody } = buildFeedbackPayload();
+    const params = new URLSearchParams({ title, body: markdownBody, labels: 'feedback' });
+    const url = `https://github.com/ChrVage/NoFish/issues/new?${params.toString()}`;
+
+    window.open(url, '_blank');
+  };
+
+  const handleSubmitEmail = () => {
+    const { title, plainBody } = buildFeedbackPayload();
+    const params = new URLSearchParams({
+      subject: title,
+      body: plainBody,
+    });
+    window.location.href = `mailto:feedback@nofish.no?${params.toString()}`;
+  };
+
+  const handleClear = () => {
+    clearFeedbackItems();
+    setItemsState([]);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header>
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <BackButton />
+          </div>
+        </div>
+      </Header>
+
+      <main className="max-w-2xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow-lg" style={{ padding: '2rem 1.5rem' }}>
+          <h2 className="text-2xl font-bold text-maritime-teal-700 mb-1">{t('title')}</h2>
+          <p className="text-sm text-gray-500 mb-6">
+            {t('subtitle')}
+          </p>
+
+          {items.length > 0 ? (
+            <div className="mb-6">
+              <h3 className="text-sm font-bold text-gray-700 mb-2">
+                {t('dataPointsHeading')} ({items.length})
+              </h3>
+              <div className="space-y-2">
+                {items.map(item => (
+                  <div key={item.id} className="flex items-start gap-2 bg-gray-50 rounded p-3 text-sm">
+                    <div className="flex-1 min-w-0">
+                      <span className="font-semibold text-maritime-teal-700">[{item.page}]</span>{' '}
+                      <span className="text-gray-600">{item.time}</span>
+                      <br />
+                      <span className="text-gray-500">{item.summary}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.id)}
+                      className="text-gray-400 hover:text-red-500"
+                      title="Remove"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '2px', flexShrink: 0 }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="mb-6 text-center py-8 bg-gray-50 rounded-lg">
+              <p className="text-gray-400">{t('noItems')}</p>
+              <p className="text-xs text-gray-400 mt-1">
+                {t('howToFlag')}
+              </p>
+            </div>
+          )}
+
+          <div className="mb-6">
+            <label htmlFor="feedback-comment" className="block text-sm font-bold text-gray-700 mb-2">
+              {t('commentLabel')} <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              id="feedback-comment"
+              value={comment}
+              onChange={e => setComment(e.target.value)}
+              placeholder={t('commentPlaceholder')}
+              rows={4}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid #d1d5db',
+                fontSize: '14px',
+                resize: 'vertical',
+              }}
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleSubmitGitHub}
+              disabled={!comment.trim()}
+              style={{
+                padding: '10px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: comment.trim() ? '#2563eb' : '#d1d5db',
+                color: comment.trim() ? '#fff' : '#9ca3af',
+                fontWeight: 700,
+                fontSize: '14px',
+                cursor: comment.trim() ? 'pointer' : 'not-allowed',
+              }}
+            >
+              {t('submitGitHub')}
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmitEmail}
+              disabled={!comment.trim()}
+              style={{
+                padding: '10px 16px',
+                borderRadius: '8px',
+                border: '1px solid #d1d5db',
+                backgroundColor: comment.trim() ? '#fff' : '#f3f4f6',
+                color: comment.trim() ? '#374151' : '#9ca3af',
+                fontWeight: 700,
+                fontSize: '14px',
+                cursor: comment.trim() ? 'pointer' : 'not-allowed',
+              }}
+            >
+              {t('submitEmail')}
+            </button>
+            {items.length > 0 && (
+              <button
+                type="button"
+                onClick={handleClear}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: '#fff',
+                  color: '#6b7280',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                }}
+              >
+                {t('clearAll')}
+              </button>
+            )}
+          </div>
+
+          <p className="text-xs text-gray-400 mt-4">
+            GitHub opens a pre-filled issue. Email opens your mail app with pre-filled subject and details to feedback@nofish.no.
+          </p>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default function FeedbackPage() {
+  return (
+    <Suspense>
+      <FeedbackContent />
+    </Suspense>
+  );
+}

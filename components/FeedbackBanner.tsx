@@ -1,10 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { getFeedbackItems, clearFeedbackItems } from './FeedbackButton';
 
 export default function FeedbackBanner() {
   const [count, setCount] = useState(0);
+  const t = useTranslations('feedbackBanner');
+  const locale = useLocale();
+  const feedbackHref = locale !== 'no' ? `/${locale}/feedback` : '/feedback';
 
   useEffect(() => {
     const sync = () => setCount(getFeedbackItems().length);
@@ -40,9 +44,9 @@ export default function FeedbackBanner() {
       <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2z" />
       </svg>
-      <span>{count} item{count !== 1 ? 's' : ''} flagged</span>
+      <span>{t('itemsFlagged', { count })}</span>
       <a
-        href="/feedback"
+        href={feedbackHref}
         style={{
           padding: '6px 16px',
           borderRadius: '8px',
@@ -53,7 +57,7 @@ export default function FeedbackBanner() {
           fontSize: '13px',
         }}
       >
-        Submit Feedback →
+        {t('submit')}
       </a>
       <button
         type="button"
@@ -67,7 +71,7 @@ export default function FeedbackBanner() {
           padding: '4px',
           lineHeight: 1,
         }}
-        title="Clear selection"
+        title={t('clear')}
       >
         ✕
       </button>

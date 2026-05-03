@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { getBookingEntries, clearBookingEntries, groupEntries, type BookingEntry } from './BookingButton';
 import { getTimezone, timeAnchor } from '@/lib/utils/timezone';
 
@@ -111,6 +112,7 @@ export default function BookingBanner({ restrictions }: { restrictions?: string[
   const [entries, setEntries] = useState<BookingEntry[]>(() => getBookingEntries());
   const [expanded, setExpanded] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const t = useTranslations('booking');
 
   const sync = useCallback(() => {
     setEntries(getBookingEntries());
@@ -202,7 +204,7 @@ export default function BookingBanner({ restrictions }: { restrictions?: string[
           <path d="M3 10h18" strokeLinecap="round" />
           <path d="M8 2v4M16 2v4" strokeLinecap="round" />
         </svg>
-        <span>{entries.length} hour{entries.length !== 1 ? 's' : ''} · {groups.length} slot{groups.length !== 1 ? 's' : ''}</span>
+        <span>{t('hoursSlots', { hours: entries.length, slots: groups.length })}</span>
         <button
           type="button"
           onClick={() => setExpanded(e => !e)}
@@ -217,7 +219,7 @@ export default function BookingBanner({ restrictions }: { restrictions?: string[
             cursor: 'pointer',
           }}
         >
-          {expanded ? 'Close' : 'Add to Calendar ↑'}
+          {expanded ? t('close') : t('book')}
         </button>
         <a
           href={icsHref}
@@ -232,7 +234,7 @@ export default function BookingBanner({ restrictions }: { restrictions?: string[
             fontSize: '13px',
             border: '1px solid #047857',
           }}
-          title="Download .ics file for all slots"
+          title={t('downloadIcs')}
         >
           .ics
         </a>
@@ -248,7 +250,7 @@ export default function BookingBanner({ restrictions }: { restrictions?: string[
             padding: '4px',
             lineHeight: 1,
           }}
-          title="Clear selection"
+          title={t('clear')}
         >
           ✕
         </button>

@@ -1,6 +1,8 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import { buildLocationUrl } from '@/lib/utils/params';
 import { parseBoatSize, parseFishTarget, parseFishingMethod } from '@/lib/utils/tuning';
 
@@ -23,6 +25,8 @@ const buttonStyle: React.CSSProperties = {
 export default function BackButton() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations('common');
+  const locale = useLocale();
 
   const handleBack = () => {
     const lat = searchParams.get('lat');
@@ -31,10 +35,11 @@ export default function BackButton() {
     const boat = parseBoatSize(searchParams.get('boat') ?? undefined);
     const fish = parseFishTarget(searchParams.get('fish') ?? undefined);
     const method = parseFishingMethod(searchParams.get('method') ?? undefined);
+    const home = locale !== 'no' ? `/${locale}` : '/';
     if (lat && lng) {
-      router.push(buildLocationUrl('', { lat, lng, zoom: zoom ?? undefined, boat, fish, method }));
+      router.push(buildLocationUrl('', { lat, lng, zoom: zoom ?? undefined, boat, fish, method }, locale));
     } else {
-      router.push('/');
+      router.push(home);
     }
   };
 
@@ -43,7 +48,7 @@ export default function BackButton() {
       <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
       </svg>
-      <span>Back</span>
+      <span>{t('back')}</span>
     </button>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { createRoot, type Root } from 'react-dom/client';
 import { flushSync } from 'react-dom';
 import L from 'leaflet';
@@ -53,9 +54,21 @@ interface PopupContentProps {
   showScore: boolean;
   showTide: boolean;
   onNavigate: (page: string) => void;
+  strings: {
+    loading: string;
+    score: string;
+    scoreAria: string;
+    details: string;
+    detailsAria: string;
+    tides: string;
+    tidesAria: string;
+    navigatingAria: string;
+    depth: (depth: number) => string;
+    elevation: (elev: number) => string;
+  };
 }
 
-function PopupContent({ lat, lng, loading, name, elevation, isSea, showScore, showTide, onNavigate }: PopupContentProps) {
+function PopupContent({ lat, lng, loading, name, elevation, isSea, showScore, showTide, onNavigate, strings }: PopupContentProps) {
   const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
 
   const handleClick = (key: string) => {
@@ -68,7 +81,7 @@ function PopupContent({ lat, lng, loading, name, elevation, isSea, showScore, sh
 
   if (showScore) {
     buttons.push({
-      key: 'score', label: 'Score', ariaLabel: 'View score',
+      key: 'score', label: strings.score, ariaLabel: strings.scoreAria,
       icon: (
         <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -78,7 +91,7 @@ function PopupContent({ lat, lng, loading, name, elevation, isSea, showScore, sh
   }
 
   buttons.push({
-    key: 'details', label: 'Details', ariaLabel: 'View forecast details',
+    key: 'details', label: strings.details, ariaLabel: strings.detailsAria,
     icon: (
       <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18M3 6h18M3 18h18" />
@@ -88,7 +101,7 @@ function PopupContent({ lat, lng, loading, name, elevation, isSea, showScore, sh
 
   if (showTide) {
     buttons.push({
-      key: 'tide', label: 'Tides', ariaLabel: 'View tides',
+      key: 'tide', label: strings.tides, ariaLabel: strings.tidesAria,
       icon: (
         <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24">
           <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
@@ -100,11 +113,11 @@ function PopupContent({ lat, lng, loading, name, elevation, isSea, showScore, sh
   return (
     <div style={{ minWidth: '220px', fontSize: '0.875rem' }}>
       <strong className="text-maritime-teal-700" style={{ display: 'block', marginBottom: '0.25rem' }}>
-        {loading ? 'Loading...' : (name ?? `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`)}
+        {loading ? strings.loading : (name ?? `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`)}
       </strong>
       {!loading && elevation !== undefined && (
         <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>
-          {isSea ? `Depth: ${Math.abs(Math.round(elevation))} m` : `Elevation: ${Math.round(elevation)} m`}
+          {isSea ? strings.depth(Math.abs(Math.round(elevation))) : strings.elevation(Math.round(elevation))}
         </div>
       )}
       <div style={{ color: '#6b7280', fontSize: '0.75rem', marginBottom: '0.75rem' }}>
@@ -120,7 +133,7 @@ function PopupContent({ lat, lng, loading, name, elevation, isSea, showScore, sh
               type="button"
               onClick={() => handleClick(btn.key)}
               disabled={disabled}
-              aria-label={isThis ? 'Loading...' : btn.ariaLabel}
+              aria-label={isThis ? strings.navigatingAria : btn.ariaLabel}
               style={{
                 ...popupButtonStyle,
                 borderRight: i < buttons.length - 1 ? '2px solid white' : 'none',
@@ -160,9 +173,27 @@ export default function Map() {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const seaChartLayerRef = useRef<L.TileLayer | null>(null);
+  const t = useTranslations('map');
+  const locale = useLocale();
+  const popupStrings = useMemo(() => ({
+    loading: t('loading'),
+    score: t('score'),
+    scoreAria: t('viewScore'),
+    details: t('details'),
+    detailsAria: t('viewDetails'),
+    tides: t('tides'),
+    tidesAria: t('viewTides'),
+    navigatingAria: t('loading'),
+    depth: (depth: number) => t('depth', { depth }),
+    elevation: (elev: number) => t('elevation', { elevation: elev }),
+  }), [t]);
   const openMarkerFnRef = useRef<((lat: number, lng: number) => void) | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const localeRef = useRef(locale);
+  const popupStringsRef = useRef(popupStrings);
+  localeRef.current = locale;
+  popupStringsRef.current = popupStrings;
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [showSeaChart, setShowSeaChart] = useState(() => {
@@ -304,8 +335,9 @@ export default function Map() {
         const zoom = map.getZoom();
         const sea = isLand ? '0' : '1';
         const tuning = resolveTuningSelection(tuningFromUrl, getStoredTuning());
+        const loc = localeRef.current;
         // Update current history entry so browser-back restores map position
-        window.history.replaceState(window.history.state, '', buildLocationUrl('', { lat, lng, zoom, boat: tuning.boat, fish: tuning.fish, method: tuning.method }));
+        window.history.replaceState(window.history.state, '', buildLocationUrl('', { lat, lng, zoom, boat: tuning.boat, fish: tuning.fish, method: tuning.method }, loc));
         router.push(buildLocationUrl(page as 'score' | 'details' | 'tide', {
           lat,
           lng,
@@ -314,13 +346,13 @@ export default function Map() {
           boat: tuning.boat,
           fish: tuning.fish,
           method: tuning.method,
-        }));
+        }, loc));
       };
 
       // Initial render — show loading state with all buttons visible
       flushSync(() => {
         popupRoot.render(
-          <PopupContent lat={lat} lng={lng} loading={true} showScore={true} showTide={true} onNavigate={navigate} />
+          <PopupContent lat={lat} lng={lng} loading={true} showScore={true} showTide={true} onNavigate={navigate} strings={popupStringsRef.current} />
         );
       });
 
@@ -423,6 +455,7 @@ export default function Map() {
                 name={popupName} elevation={elevation} isSea={isSea}
                 showScore={hasOcean} showTide={hasOcean}
                 onNavigate={navigate}
+                strings={popupStringsRef.current}
               />
             );
           });
@@ -433,7 +466,7 @@ export default function Map() {
           console.error('Map fetch error:', error);
           flushSync(() => {
             popupRoot.render(
-              <PopupContent lat={lat} lng={lng} loading={false} showScore={true} showTide={true} onNavigate={navigate} />
+              <PopupContent lat={lat} lng={lng} loading={false} showScore={true} showTide={true} onNavigate={navigate} strings={popupStringsRef.current} />
             );
           });
           tempMarker.getPopup()?.update();
@@ -667,7 +700,7 @@ export default function Map() {
           boat: tuning.boat,
           fish: tuning.fish,
           method: tuning.method,
-        }));
+        }, localeRef.current));
         router.push(buildLocationUrl('details', {
           lat: lat4,
           lng: lng4,
@@ -676,7 +709,7 @@ export default function Map() {
           boat: tuning.boat,
           fish: tuning.fish,
           method: tuning.method,
-        }));
+        }, localeRef.current));
       },
       (err) => {
         setLocating(false);

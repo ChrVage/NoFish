@@ -1,10 +1,14 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function HeaderMenu() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const t = useTranslations('menu');
+  const locale = useLocale();
+  const prefix = locale !== 'no' ? `/${locale}` : '';
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -21,7 +25,7 @@ export default function HeaderMenu() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Menu"
+        aria-label={t('aboutNoFish')}
         aria-expanded={open}
         style={{
           display: 'flex',
@@ -51,12 +55,12 @@ export default function HeaderMenu() {
           style={{ right: '0px', minWidth: '180px', backgroundColor: '#ffffff', border: '1px solid #e5e7eb' }}
         >
           <a
-            href="/about"
+            href={`${prefix}/about`}
             style={{ color: '#000000', fontWeight: 700, textDecoration: 'none', display: 'block', padding: '12px 24px', fontSize: '14px', whiteSpace: 'nowrap' }}
             className="hover:bg-gray-100 transition-colors"
             onClick={() => setOpen(false)}
           >
-            About NoFish
+            {t('aboutNoFish')}
           </a>
           <a
             href="https://github.com/ChrVage/NoFish/issues/new/choose"
@@ -66,15 +70,15 @@ export default function HeaderMenu() {
             className="hover:bg-gray-100 transition-colors"
             onClick={() => setOpen(false)}
           >
-            Feedback
+            {t('feedback')}
           </a>
           <a
-            href="/statistics"
+            href={`${prefix}/statistics`}
             style={{ color: '#000000', fontWeight: 700, textDecoration: 'none', display: 'block', padding: '12px 24px', fontSize: '14px', whiteSpace: 'nowrap' }}
             className="hover:bg-gray-100 transition-colors"
             onClick={() => setOpen(false)}
           >
-            Statistics
+            {t('statistics')}
           </a>
           <div
             style={{ color: '#9ca3af', fontSize: '12px', padding: '8px 24px 4px', borderTop: '1px solid #e5e7eb', marginTop: '4px' }}
@@ -88,6 +92,9 @@ export default function HeaderMenu() {
 }
 
 export function Footer({ showColumnRef }: { showColumnRef?: boolean } = {}) {
+  const t = useTranslations('footer');
+  const locale = useLocale();
+  const prefix = locale !== 'no' ? `/${locale}` : '';
   const linkStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'row',
@@ -103,23 +110,23 @@ export function Footer({ showColumnRef }: { showColumnRef?: boolean } = {}) {
     <div style={{ display: 'flex', justifyContent: 'center' }} className="mt-4">
       <div style={{ display: 'flex', borderRadius: '0.5rem', overflow: 'hidden' }}>
         <a
-          href="/about"
+          href={`${prefix}/about`}
           style={{ ...linkStyle, borderRight: '2px solid white' }}
         >
           <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>About NoFish</span>
+          <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>{t('aboutNoFish')}</span>
         </a>
         {showColumnRef && (
           <a
-            href="/data"
+            href={`${prefix}/data`}
             style={{ ...linkStyle, borderRight: '2px solid white' }}
           >
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Column Reference</span>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>{t('dataReference')}</span>
           </a>
         )}
         <a
@@ -131,7 +138,7 @@ export function Footer({ showColumnRef }: { showColumnRef?: boolean } = {}) {
           <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
-          <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Feedback</span>
+          <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>{t('feedback')}</span>
         </a>
       </div>
     </div>
