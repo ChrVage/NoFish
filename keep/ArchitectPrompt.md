@@ -31,9 +31,13 @@ Found in the [README.md](README.md) file.
 - SEO to make sure people find the site.
 
 ### Second prio changes
-- Implment an **API** so others can collect next best fishing times based on coordinates. One for score and detail and one for tide. Make sure I can contact the caller, so I don't need authentication on this solution. Also implement limiting so that I will not take down my data sources. API optionally can include boat size, species and method. Use default if not provided.
+- Implement a public API with two endpoints: GET /api/v1/score?lat=&lon= (returns best fishing windows + hourly scores) and GET /api/v1/tide?lat=&lon= (returns high/low tide events). Both accept optional boat=, fish=, and method= params; use defaults if omitted.
+Registration, not authentication: Callers must register a contact email once via POST /api/v1/register to receive an API key. The key is required on all requests as X-Api-Key: <key>. Keys are stored in the Neon DB. No login flow — the key is purely for contact and abuse tracing, not access control.
+Rate limiting: Apply per-key limits (e.g. 100 req/day, 10 req/min) in addition to the existing per-IP limits. Return 429 with a Retry-After header when exceeded.
+Do not implement CORS restrictions — the API is intended for server-to-server use and browser CORS headers would not protect it anyway.
+Response format: JSON only. Include a generated_at ISO timestamp and a source_credit field citing MET Norway / Barentswatch / Kartverket.
 - API should support input for other scores than fishing score, such as wind strength and direction, high and low tide values, wave height [and direction]. 
-- Explore collaboration with Fishbuddy
+- Explore how we could collaborate with other enthusiasts, such as Fishbuddy. Norway vs global presence.
 - Functionality for subscribing to calendar appointments with good fishing times or other score models.
 
 - Add possibility for fish logging, and add weather to the logged fish, so that you can know in which conditions you fish the fish. Send mail after fishing appointment to collect the data via link.
