@@ -206,7 +206,7 @@ const SPECIES_BEHAVIOR: Partial<Record<FishTarget, SpeciesBehaviorProfile>> = {
     displayName: 'Mackerel',
     preferredDepths: [25],
     season: { prime: [6, 7, 8, 9], shoulder: [5, 10] },
-    column: { habitatMinDepth: 10, habitatMaxDepth: 120, targetZoneLabel: 'upper water column (surface-40 m)' },
+    column: { habitatMinDepth: 10, habitatMaxDepth: 9999, targetZoneLabel: 'upper water column (surface-40 m)' },
   },
   pollock: {
     displayName: 'Pollock',
@@ -275,8 +275,8 @@ function speciesDepths(fish: FishTarget | undefined): number[] {
 
 function seasonFactorForMonth(season: SpeciesSeasonProfile, month: number): number {
   if (season.prime.includes(month)) {return 1.0;}
-  if ((season.shoulder ?? []).includes(month)) {return 0.9;}
-  return 0.78;
+  if ((season.shoulder ?? []).includes(month)) {return 0.45;}
+  return 0.05;
 }
 
 function monthInTimezone(date: Date, timezone: string | undefined): number {
@@ -709,12 +709,13 @@ export function computeFishingScore(f: HourlyForecast, depthOrOptions?: number |
     const month = monthInTimezone(entryDate, options.timezone);
     speciesSeasonFactor = seasonFactorForMonth(speciesBehavior.season, month);
 
-    if (speciesSeasonFactor >= 0.99) {
+    const isYearRound = speciesBehavior.season.prime.length === 12;
+    if (speciesSeasonFactor >= 0.99 && !isYearRound) {
       good(`${speciesBehavior.displayName}: in-season`, 'fishing');
-    } else if (speciesSeasonFactor >= 0.89) {
+    } else if (speciesSeasonFactor >= 0.40) {
       bad(`${speciesBehavior.displayName}: shoulder season`, 'fishing');
     } else {
-      bad(`${speciesBehavior.displayName}: off-season`, 'fishing');
+      bad(`${speciesBehavior.displayName}: off-season — not present`, 'fishing');
     }
   }
 
