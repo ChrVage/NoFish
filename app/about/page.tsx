@@ -82,7 +82,7 @@ export default function AboutPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    <tr><td className="py-1 pr-4">MET Norway</td><td className="py-1 pr-4">Wind, Wind dir, Weather, Rain/Snow, Temp</td><td className="py-1">Always shown</td></tr>
+                    <tr><td className="py-1 pr-4">MET Norway</td><td className="py-1 pr-4">Wind, Wind barb, Weather, Rain/Snow, Temp, Pressure</td><td className="py-1">Always shown</td></tr>
                     <tr><td className="py-1 pr-4">Barentswatch Waves</td><td className="py-1 pr-4">Wave height, Wave dir</td><td className="py-1">Coastal only; interpolated hourly</td></tr>
                     <tr><td className="py-1 pr-4">Barentswatch Current</td><td className="py-1 pr-4">Current speed, Current dir</td><td className="py-1">Coastal only</td></tr>
                     <tr><td className="py-1 pr-4">MET Sea Temp</td><td className="py-1 pr-4">Sea temp</td><td className="py-1">From MET Oceanforecast</td></tr>

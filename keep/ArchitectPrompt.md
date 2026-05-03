@@ -28,14 +28,14 @@ Make sure all functionality is updated in the documentation. Also read all docum
 Found in the [README.md](README.md) file.
 
 ## First prio changes
-- Also support Norwegian, German, Dutch and Polish language.
+- Also support Norwegian, German, Dutch and Polish languages.
 
 - SEO to make sure people find the site.
 
 ### Second prio changes
 - Implment an **API** so others can collect next best fishing times based on coordinates. One for score and detail and one for tide. Make sure I can contact the caller, so I don't need authentication on this solution. Also implement limiting so that I will not take down my data sources. API optionally can include boat size, species and method. Use default if not provided.
 - API should support input for other scores than fishing score, such as wind strength and direction, high and low tide values, wave height [and direction]. 
-
+- Explore collaboration with Fishbuddy
 - Functionality for subscribing to calendar appointments with good fishing times or other score models.
 
 - Add possibility for fish logging, and add weather to the logged fish, so that you can know in which conditions you fish the fish. Send mail after fishing appointment to collect the data via link.

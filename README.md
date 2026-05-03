@@ -40,10 +40,19 @@ cd NoFish
 npm install
 npm run dev        # http://localhost:3000
 npm run build      # production build
+npm test           # run all tests (vitest)
 npm run lint
 ```
 
 See [readme-technical.md](readme-technical.md) for prerequisites, database setup, and deployment.
+
+---
+
+## License
+
+[AGPL-3.0](LICENSE) — source must remain open if you run a modified version as a network service.
+
+Data is © MET Norway / Barentswatch / Kartverket under their respective open data licences.
 
 ---
 

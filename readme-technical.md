@@ -39,7 +39,8 @@ All external calls are made **server-side** to avoid CORS issues and comply with
 |---|---|
 | `GET /api/geocoding?lat=&lon=` | Reverse geocodes coordinates using "Maritime First" strategy (v9): parallel elevation + Kartverket SSR nearby-places fetch, maritime features prioritised for coastal locations, municipality from Kartverket `/sted` endpoint. Nominatim used only as fallback for non-Norwegian locations. Returns place name, elevation, terrain type, sea/land classification, and kommune number. 30-day cache. |
 | `GET /api/weather?lat=&lon=` | Returns the full 10-day merged `HourlyForecast[]` array plus ocean grid coordinates. Used by the Details, Score, and Tide pages via server-side direct lib calls; this route is exposed for external consumers. |
-| `GET /api/ocean-point?lat=&lon=` | Returns only `{ oceanForecastLat, oceanForecastLng }`. Used by the map to place the blue dot and determine whether Score/Tide buttons should be shown. Returns `undefined` coordinates when the grid point is more than 1 km away. Cache-backed \u2014 usually a hit when the Details page has already been visited. |
+| `GET /api/weather-point?lat=&lon=` | Returns only `{ weatherForecastLat, weatherForecastLng }`. Used by the map to determine the MET Norway grid point snapped to the request. Rate-limited (60 req/min/IP). |
+| `GET /api/ocean-point?lat=&lon=` | Returns only `{ oceanForecastLat, oceanForecastLng }`. Used by the map to place the blue dot and determine whether Score/Tide buttons should be shown. Returns `undefined` coordinates when the grid point is more than 1 km away. Cache-backed — usually a hit when the Details page has already been visited. |
 | `GET /api/search?q=` | Place name search via Kartverket Stedsnavn API. Returns up to 6 results with name, type, municipality, and coordinates. Fuzzy wildcard matching. Rate-limited (30 req/min/IP); cached 24 h. |
 | `GET /api/statistics` | Aggregate usage counts from the `lookups` table — total lookups, weekly series, today/7-day KPIs, top cities. Powers `/statistics` page. Rate-limited (10 req/min/IP); 5-minute ISR cache. |
 
@@ -80,6 +81,14 @@ Merged per-hour record combining Locationforecast, Barentswatch wave/current, Oc
 | `getTimezone(lat,lng)` | `lib/utils/timezone.ts` | IANA timezone string via tz-lookup, falls back to `UTC` |
 | `getTimezoneLabel(tz)` | `lib/utils/timezone.ts` | `"Europe/Oslo (GMT+2)"` — uses `Intl` for correct DST |
 | `enrichForecasts(forecasts)` | `lib/utils/enrichForecasts.ts` | Trims at last hourly MET row; interpolates Barentswatch 3-h wave data to fill every hour |
+| `buildLocationUrl(page, params)` | `lib/utils/params.ts` | Builds typed URL strings for all sub-pages with lat/lng/zoom/boat/fish/method params |
+| `validateCoordinates(lat, lon)` | `lib/utils/validation.ts` | Parses and clamps lat/lng from request params; returns `NextResponse` 400 on invalid input |
+| `checkRateLimit(request, opts)` | `lib/utils/rateLimit.ts` | In-memory sliding-window rate limiter for API routes |
+| `getSunPhaseStyle(segments)` | `lib/utils/sunPhaseStyle.ts` | Returns CSS background gradient for sun phase (dawn/day/dusk/night) |
+| `computeFishingScore(f, options)` | `lib/scoring/fishingScore.ts` | Per-hour 0–100 fishing score with safety/fishing split; species-aware |
+| `findBestWindows(scored, options)` | `lib/scoring/fishingScore.ts` | Finds up to 2 best non-overlapping windows; method-aware (net uses 6–8 h overnight logic) |
+| `recommendFishingMethods(scored, tz, fish)` | `lib/scoring/fishingScore.ts` | Returns ranked method recommendations for the forecast period |
+| `FISH_TARGET_GROUPS` | `lib/utils/tuning.ts` | Species grouped by scoring depth tier (< 100 m / 100–200 m / > 200 m); `FISH_TARGET_OPTIONS` is derived from these groups |
 
 ---
 
@@ -225,10 +234,20 @@ app/
 
 components/
   BackButton.tsx        # Client component — reads lat/lng/zoom from search params, navigates back to /?lat=&lng=&zoom=
-  Footer.tsx            # Inline button bar on sub-pages — "About NoFish" and "Feedback" links
-  ForecastTable.tsx     # Hourly forecast table; columns grouped by API source
+  BookingBanner.tsx     # Server component — renders active calendar booking for a previously booked fishing slot
+  BookingButton.tsx     # Client component — adds a fishing slot to the device calendar (ICS download)
+  ErrorFallback.tsx     # Client error boundary fallback — generic error message with retry
+  FeedbackBanner.tsx    # Server component — shows a feedback prompt after a booking
+  FeedbackButton.tsx    # Client component — opens feedback modal for a specific forecast row
+  Footer.tsx            # Inline button bar on sub-pages — "About NoFish", "Data Reference", and "Feedback" links
+  ForecastTable.tsx     # Hourly forecast table; columns grouped by API source; wind direction shown as met. wind barb
+  HashScroller.tsx      # Client component — scrolls to the URL hash anchor on page load
+  Header.tsx            # Top bar shared across all pages
+  Logo.tsx              # 🎣 NoFish logo — also serves as back-to-map button
   Map.tsx               # Leaflet map; click → marker + popup
   PageNav.tsx           # Header nav buttons (Score / Details / Tides)
+  SafetyContacts.tsx    # Emergency contacts list (HRS, VHF channel 16) shown on Score page
+  TuningControls.tsx    # Client component — boat size, target species (grouped by depth), and fishing method selects
 
 lib/
   api/
@@ -240,10 +259,19 @@ lib/
     index.ts            # Neon SQL client (reads DATABASE_URL)
     lookups.ts          # insertLookup() + ensureTable()
     cache.ts            # forecast_cache table — getCached() / setCached() / withInflight()
+  geo/                  # Geospatial helpers (coordinate utilities)
+  scoring/
+    fishingScore.ts     # computeFishingScore(), findBestWindows(), findNetFishingWindows(), recommendFishingMethods()
+    fishingScore.test.ts
   utils/
     distance.ts         # haversineDistance / formatDistance
-    timezone.ts         # getTimezone / getTimezoneLabel via tz-lookup
     enrichForecasts.ts  # Trims at last hourly MET row; interpolates Barentswatch 3-h wave data
+    params.ts           # buildLocationUrl() — typed URL builder for all sub-pages
+    rateLimit.ts        # checkRateLimit() — in-memory sliding-window rate limiter
+    sunPhaseStyle.ts    # getSunPhaseStyle() — CSS gradient for sun phase column
+    timezone.ts         # getTimezone / getTimezoneLabel via tz-lookup
+    tuning.ts           # FISH_TARGET_GROUPS, FISH_TARGET_OPTIONS, FISHING_METHOD_OPTIONS, BOAT_SIZE_OPTIONS, TuningSelection type
+    validation.ts       # validateCoordinates() — parses and clamps lat/lng at API boundary
 
 public/                 # Static assets (OG image, favicons)
 types/
@@ -326,6 +354,7 @@ Set in `next.config.ts` via `headers()`:
 | Header | Value |
 |---|---|
 | `Content-Security-Policy` | `default-src 'self'`; `script-src 'self' 'unsafe-inline'`; `img-src` allows OSM tile hosts; `connect-src 'self'` only |
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains` (2 years, enforces HTTPS) |
 | `X-Content-Type-Options` | `nosniff` |
 | `X-Frame-Options` | `DENY` |
 | `Referrer-Policy` | `no-referrer-when-downgrade` |
