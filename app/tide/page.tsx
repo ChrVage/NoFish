@@ -159,6 +159,7 @@ export default async function TidePage({ searchParams }: PageProps) {
             <p className="text-gray-500 text-center py-8">No tide data available for this location.</p>
           ) : (
             <table className="text-sm" style={{ borderSpacing: '1rem 0', borderCollapse: 'separate' }}>
+              <caption className="sr-only">Tide predictions from Kartverket. Water levels in cm relative to chart datum (CD).</caption>
               <thead>
                 <tr className="border-b border-gray-200 text-left text-xs text-gray-400">
                   <th className="pb-2">Time</th>

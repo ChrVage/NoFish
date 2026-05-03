@@ -120,7 +120,7 @@ function PopupContent({ lat, lng, loading, name, elevation, isSea, showScore, sh
               type="button"
               onClick={() => handleClick(btn.key)}
               disabled={disabled}
-              aria-label={btn.ariaLabel}
+              aria-label={isThis ? 'Loading...' : btn.ariaLabel}
               style={{
                 ...popupButtonStyle,
                 borderRight: i < buttons.length - 1 ? '2px solid white' : 'none',
@@ -811,7 +811,7 @@ export default function Map() {
       {/* My Location button — bottom right, above Leaflet attribution */}
       <div style={{ position: 'absolute', bottom: '28px', right: '12px', zIndex: 1100, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
         {locationError && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: '12px', borderRadius: '8px', padding: '8px 12px', maxWidth: '200px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: '12px', borderRadius: '8px', padding: '8px 12px', maxWidth: '200px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             {locationError}
           </div>
         )}

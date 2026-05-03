@@ -7,6 +7,7 @@ import { getTimeColumnStyle } from '@/lib/utils/sunPhaseStyle';
 import { timeAnchor } from '@/lib/utils/timezone';
 import { getScoreColor, getScoreBg } from '@/lib/scoring/fishingScore';
 import FeedbackButton from '@/components/FeedbackButton';
+import { formatForecastTime } from '@/lib/utils/formatTime';
 
 /** True when ≥50 % of the hour is in the "day" sun phase. */
 function isDaylight(segments: { phase: string; fraction: number }[] | undefined): boolean {
@@ -32,7 +33,7 @@ interface ForecastTableProps {
 
 // Weather symbol mapping — day/night-aware to match yr.no
 // MET API symbol_code values contain _day, _night, or _polartwilight suffixes
-const getWeatherSymbol = (symbolCode: string | undefined) => {
+const getWeatherSymbol = (symbolCode: string | undefined): string => {
   if (!symbolCode) {return '❓';}
   const code = symbolCode.toLowerCase();
   const isNight = code.includes('_night');
@@ -49,6 +50,25 @@ const getWeatherSymbol = (symbolCode: string | undefined) => {
   if (code.includes('lightrain') || code.includes('rainshowers')) {return isNight ? '🌧️' : '🌦️';}
   if (code.includes('rain'))           {return '🌧️';}
   return '☁️';
+};
+
+const getWeatherDescription = (symbolCode: string | undefined): string => {
+  if (!symbolCode) {return 'Unknown';}
+  const code = symbolCode.toLowerCase();
+  const isNight = code.includes('_night');
+  if (code.includes('clearsky'))       {return isNight ? 'Clear night' : 'Clear sky';}
+  if (code.includes('fair'))           {return isNight ? 'Fair night' : 'Fair';}
+  if (code.includes('partlycloudy'))   {return 'Partly cloudy';}
+  if (code.includes('cloudy'))         {return 'Cloudy';}
+  if (code.includes('fog'))            {return 'Fog';}
+  if (code.includes('thunder'))        {return 'Thunderstorm';}
+  if (code.includes('sleet'))          {return 'Sleet';}
+  if (code.includes('snow'))           {return 'Snow';}
+  if (code.includes('heavyrain'))      {return 'Heavy rain';}
+  if (code.includes('lightrain'))      {return 'Light rain';}
+  if (code.includes('rainshowers'))    {return 'Rain showers';}
+  if (code.includes('rain'))           {return 'Rain';}
+  return 'Cloudy';
 };
 
 // Beaufort scale from m/s
@@ -187,25 +207,7 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
   // Pre-enriched by the server component — use directly
   const displayForecasts = forecasts;
 
-  const formatTime = (isoString: string) => {
-    const date = new Date(isoString);
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      weekday: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: timezone,
-    });
-    
-    const parts = formatter.formatToParts(date);
-    const weekday = parts.find(p => p.type === 'weekday')?.value ?? '';
-    const day = parts.find(p => p.type === 'day')?.value ?? '';
-    const hour = parts.find(p => p.type === 'hour')?.value ?? '00';
-    const minute = parts.find(p => p.type === 'minute')?.value ?? '00';
-    
-    return `${weekday.slice(0, 2)} ${day}. ${hour}:${minute}`;
-  };
+  const formatTime = (isoString: string) => formatForecastTime(isoString, timezone);
 
   const formatValue = (value: number | undefined, decimals: number = 1, unit: string = '') => {
     if (value === undefined || value === null) {return '—';}
@@ -471,8 +473,8 @@ export default function ForecastTable({ forecasts, timezone, hideOceanData, lat,
                 <td className="px-4 py-3 text-sm text-gray-700 text-center">
                   <WindBarb degrees={forecast.windDirection} speedMps={forecast.windSpeed} className="text-amber-700" />
                 </td>
-                <td className="px-4 py-3 text-2xl text-center">
-                  {getWeatherSymbol(forecast.symbolCode)}
+                <td className="px-4 py-3 text-2xl text-center" aria-label={getWeatherDescription(forecast.symbolCode)}>
+                  <span aria-hidden="true">{getWeatherSymbol(forecast.symbolCode)}</span>
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700">
                   {forecast.precipitation ? formatValue(forecast.precipitation, 1, ' mm') : '—'}

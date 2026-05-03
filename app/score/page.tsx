@@ -16,6 +16,7 @@ import FeedbackBanner from '@/components/FeedbackBanner';
 import BookingButton, { type BookingEntry } from '@/components/BookingButton';
 import TuningControls from '@/components/TuningControls';
 import { BOAT_SIZE_OPTIONS, FISH_TARGET_OPTIONS, FISHING_METHOD_OPTIONS, parseTuningFromSearchParams, resolveTuningSelection } from '@/lib/utils/tuning';
+import { formatForecastTime } from '@/lib/utils/formatTime';
 
 /** True when ≥50 % of the hour is in the "day" sun phase. */
 function isDaylight(segments: { phase: string; fraction: number }[] | undefined): boolean {
@@ -113,23 +114,7 @@ export default async function ScorePage({ searchParams }: PageProps) {
     ? `${locationData.name}, ${locationData.municipality}`
     : locationData?.name ?? locationData?.municipality ?? `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
-  const formatTime = (isoString: string) => {
-    const date = new Date(isoString);
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      weekday: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: timezone,
-    });
-    const parts = formatter.formatToParts(date);
-    const weekday = parts.find(p => p.type === 'weekday')?.value ?? '';
-    const day = parts.find(p => p.type === 'day')?.value ?? '';
-    const hour = parts.find(p => p.type === 'hour')?.value ?? '00';
-    const minute = parts.find(p => p.type === 'minute')?.value ?? '00';
-    return `${weekday.slice(0, 2)} ${day}. ${hour}:${minute}`;
-  };
+  const formatTime = (isoString: string) => formatForecastTime(isoString, timezone);
 
   return (
     <div className="min-h-screen bg-gray-50">

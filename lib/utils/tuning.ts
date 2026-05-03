@@ -48,7 +48,10 @@ export const FISH_TARGET_GROUPS = [
   },
 ] as const;
 
-export const FISH_TARGET_OPTIONS = FISH_TARGET_GROUPS.flatMap((g) => g.items);
+export type FishTarget = (typeof FISH_TARGET_GROUPS)[number]['items'][number]['value'];
+
+export const FISH_TARGET_OPTIONS: ReadonlyArray<{ readonly value: FishTarget; readonly label: string }> =
+  FISH_TARGET_GROUPS.flatMap((g) => g.items);
 
 export const FISHING_METHOD_OPTIONS = [
   { value: 'trolling', label: 'Trolling' },
@@ -58,7 +61,6 @@ export const FISHING_METHOD_OPTIONS = [
 ] as const;
 
 export type BoatSizePreset = (typeof BOAT_SIZE_OPTIONS)[number]['value'];
-export type FishTarget = (typeof FISH_TARGET_OPTIONS)[number]['value'];
 export type FishingMethod = (typeof FISHING_METHOD_OPTIONS)[number]['value'];
 
 export interface TuningSelection {
