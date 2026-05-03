@@ -5,22 +5,50 @@ export const BOAT_SIZE_OPTIONS = [
   { value: '31-40', label: '31-40 ft' },
 ] as const;
 
-export const FISH_TARGET_OPTIONS = [
-  { value: 'general', label: 'General recommendation' },
-  { value: 'cod', label: 'Cod (Torsk)' },
-  { value: 'saithe', label: 'Saithe/Coalfish (Sei)' },
-  { value: 'haddock', label: 'Haddock (Hyse)' },
-  { value: 'mackerel', label: 'Mackerel (Makrell)' },
-  { value: 'pollock', label: 'Pollock (Lyr)' },
-  { value: 'halibut', label: 'Halibut (Kveite)' },
-  { value: 'ling', label: 'Ling (Lange)' },
-  { value: 'tusk', label: 'Tusk (Brosme)' },
-  { value: 'monkfish', label: 'Monkfish (Breiflabb)' },
-  { value: 'wolffish', label: 'Wolffish (Steinbit)' },
-  { value: 'redfish', label: 'Redfish (Uer)' },
-  { value: 'plaice', label: 'Plaice (Rødspette)' },
-  { value: 'hake', label: 'Hake (Lysing)' },
+// Grouped by scoring depth tier — species within the same group share the same
+// depth profile (currentMu, tideSpread, moonSpread) and similar season patterns,
+// so they respond nearly identically to current, tide and moon conditions.
+export const FISH_TARGET_GROUPS = [
+  {
+    label: '',
+    items: [
+      { value: 'general', label: 'General recommendation' },
+    ],
+  },
+  {
+    // preferredDepths < 100 m → shallow depth profile (tideSpread 0.90–1.00)
+    label: 'Shallow (< 100 m)',
+    items: [
+      { value: 'mackerel', label: 'Mackerel (Makrell)' },
+      { value: 'saithe', label: 'Saithe/Coalfish (Sei)' },
+      { value: 'cod', label: 'Cod (Torsk)' },
+      { value: 'plaice', label: 'Plaice (Rødspette)' },
+      { value: 'pollock', label: 'Pollock (Lyr)' },
+    ],
+  },
+  {
+    // preferredDepths 100–200 m → mid-depth profile (tideSpread 0.75)
+    label: 'Mid-depth (100–200 m)',
+    items: [
+      { value: 'haddock', label: 'Haddock (Hyse)' },
+      { value: 'wolffish', label: 'Wolffish (Steinbit)' },
+      { value: 'monkfish', label: 'Monkfish (Breiflabb)' },
+      { value: 'halibut', label: 'Halibut (Kveite)' },
+      { value: 'hake', label: 'Hake (Lysing)' },
+    ],
+  },
+  {
+    // preferredDepths > 200 m → deep profile (tideSpread 0.60, reduced light bonus)
+    label: 'Deep (> 200 m)',
+    items: [
+      { value: 'ling', label: 'Ling (Lange)' },
+      { value: 'tusk', label: 'Tusk (Brosme)' },
+      { value: 'redfish', label: 'Redfish (Uer)' },
+    ],
+  },
 ] as const;
+
+export const FISH_TARGET_OPTIONS = FISH_TARGET_GROUPS.flatMap((g) => g.items);
 
 export const FISHING_METHOD_OPTIONS = [
   { value: 'trolling', label: 'Trolling' },

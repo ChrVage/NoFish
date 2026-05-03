@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { buildLocationUrl } from '@/lib/utils/params';
 import {
   BOAT_SIZE_OPTIONS,
-  FISH_TARGET_OPTIONS,
+  FISH_TARGET_GROUPS,
   FISHING_METHOD_OPTIONS,
   type TuningSelection,
   parseTuningFromSearchParams,
@@ -138,9 +138,19 @@ export default function TuningControls({ currentPage, lat, lng, zoom, sea, field
               value={selection.fish}
               onChange={(e) => updateSelection({ fish: e.target.value as TuningSelection['fish'] })}
             >
-              {FISH_TARGET_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
+              {FISH_TARGET_GROUPS.map((group) =>
+                group.label ? (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.items.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </optgroup>
+                ) : (
+                  group.items.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))
+                )
+              )}
             </select>
           </label>
         )}
