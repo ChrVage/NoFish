@@ -4,6 +4,7 @@
   "license": "AGPL-3.0-or-later",
   "private": true,
   "scripts": {
+    "prepare": "git config core.hooksPath hooks",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

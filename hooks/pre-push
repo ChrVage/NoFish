@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+
+echo "Running pre-push checks..."
+
+echo "→ Type check"
+npx tsc --noEmit
+
+echo "→ Lint"
+npm run lint
+
+echo "→ Tests"
+npm test
+
+echo "All checks passed."

@@ -28,11 +28,11 @@ Make sure all functionality is updated in the documentation. Also read all docum
 Found in the [README.md](README.md) file.
 
 ## First prio changes
-- How can I make sure that a CI/CD that will fail is caught before I push sync in VS Code? Sometimes the last small fix will implement a small error that I don't catch during last test. Then I sync and go to bed, but the CI/CD fails. 
+
 
 - Implement versioning counting in the CI/CD pipeline, so that dev and prod is equal.
 
-- SEO to make sure people find the site.
+- Do great SEO to make sure people find the site.
 
 ### Second prio changes
 - Implement a public API with two endpoints: GET /api/v1/score?lat=&lon= (returns best fishing windows + hourly scores) and GET /api/v1/tide?lat=&lon= (returns high/low tide events). Both accept optional boat=, fish=, and method= params; use defaults if omitted.
