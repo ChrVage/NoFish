@@ -1,27 +1,22 @@
 import type { NextConfig } from "next";
 import { execSync } from 'child_process';
+import { version } from './package.json';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
 function getBuildVersion(): string {
-  let count = '';
   let sha = '';
 
   try {
-    // Vercel does a shallow clone; unshallow first so rev-list counts all commits
-    try { execSync('git fetch --unshallow', { encoding: 'utf-8', stdio: 'ignore' }); } catch { /* already full */ }
-    count = execSync('git rev-list --count HEAD', { encoding: 'utf-8' }).trim();
     sha = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
   } catch { /* git not available or failed */ }
 
   // Fallback: Vercel exposes the commit SHA at build time
   if (!sha) {sha = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? '';}
 
-  if (count && count !== '0' && sha) {return `${count} (${sha})`;}
-  if (count && count !== '0') {return count;}
-  if (sha) {return sha;}
-  return '0';
+  if (sha) {return `${version} (${sha})`;}
+  return version;
 }
 
 const CSP = [
