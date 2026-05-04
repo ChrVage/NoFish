@@ -192,8 +192,8 @@ export default function Map() {
   const searchParams = useSearchParams();
   const localeRef = useRef(locale);
   const popupStringsRef = useRef(popupStrings);
-  localeRef.current = locale;
-  popupStringsRef.current = popupStrings;
+  useEffect(() => { localeRef.current = locale; }, [locale]);
+  useEffect(() => { popupStringsRef.current = popupStrings; }, [popupStrings]);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [showSeaChart, setShowSeaChart] = useState(() => {

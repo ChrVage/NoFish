@@ -28,6 +28,8 @@ Make sure all functionality is updated in the documentation. Also read all docum
 Found in the [README.md](README.md) file.
 
 ## First prio changes
+- How can I make sure that a CI/CD that will fail is caught before I push sync in VS Code? Sometimes the last small fix will implement a small error that I don't catch during last test. Then I sync and go to bed, but the CI/CD fails. 
+
 - Implement versioning counting in the CI/CD pipeline, so that dev and prod is equal.
 
 - SEO to make sure people find the site.
