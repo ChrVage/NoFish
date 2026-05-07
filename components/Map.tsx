@@ -584,15 +584,21 @@ export default function Map() {
   // page when the user has already granted geolocation permission.
   // If there are coords in the URL the visitor is returning from a detail page
   // (back button) or reloading the map — don't auto-navigate in that case.
+  // A sessionStorage flag ensures this fires at most once per browser session,
+  // so pressing the logo (which re-mounts the Map without coords) does not
+  // trigger another auto-navigate.
   // Never attach a permission-change listener; we don't want to trigger anything
   // when the browser prompt appears from the "My Location" button.
+  const AUTO_LOCATE_SESSION_KEY = 'nofish-auto-located';
   useEffect(() => {
     if (hasRestore) { return; }
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(AUTO_LOCATE_SESSION_KEY)) { return; }
     if (typeof navigator === 'undefined' || !navigator.permissions) { return; }
     navigator.permissions
       .query({ name: 'geolocation' })
       .then((status) => {
         if (status.state === 'granted') {
+          sessionStorage.setItem(AUTO_LOCATE_SESSION_KEY, '1');
           handleMyLocationRef.current();
         }
       })
