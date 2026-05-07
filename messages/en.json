@@ -45,6 +45,11 @@
     "locateAriaLabel": "Go to my location",
     "searchPlaceholder": "Search for a place...",
     "seaChartLabel": "Nautical chart",
+    "seaChartHide": "Hide nautical chart",
+    "seaChartTooltip": "Nautical chart – depth & bottom topography (Kartverket)",
+    "seaChartUnavailable": "Nautical chart unavailable on land",
+    "locationNotSupported": "Geolocation is not supported by your browser.",
+    "locationPermissionDenied": "Location permission denied.",
     "locationUnavailable": "Unable to get your location. Check browser permissions."
   },
   "error": {

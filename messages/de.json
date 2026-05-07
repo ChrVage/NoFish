@@ -45,6 +45,11 @@
     "locateAriaLabel": "Zu meinem Standort gehen",
     "searchPlaceholder": "Ort suchen...",
     "seaChartLabel": "Seekarte",
+    "seaChartHide": "Seekarte ausblenden",
+    "seaChartTooltip": "Seekarte – Tiefe & Meeresgrund (Kartverket)",
+    "seaChartUnavailable": "Seekarte auf Land nicht verfügbar",
+    "locationNotSupported": "Standortdienste werden von Ihrem Browser nicht unterstützt.",
+    "locationPermissionDenied": "Standortberechtigung verweigert.",
     "locationUnavailable": "Standort konnte nicht ermittelt werden. Browserberechtigungen prüfen."
   },
   "error": {

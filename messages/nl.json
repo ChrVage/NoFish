@@ -45,6 +45,11 @@
     "locateAriaLabel": "Naar mijn locatie gaan",
     "searchPlaceholder": "Zoek een locatie...",
     "seaChartLabel": "Zeekaart",
+    "seaChartHide": "Zeekaart verbergen",
+    "seaChartTooltip": "Zeekaart – diepte & bodemtopografie (Kartverket)",
+    "seaChartUnavailable": "Zeekaart niet beschikbaar op land",
+    "locationNotSupported": "Geolocatie wordt niet ondersteund door uw browser.",
+    "locationPermissionDenied": "Locatiemachtiging geweigerd.",
     "locationUnavailable": "Locatie niet beschikbaar. Controleer browsermachtigingen."
   },
   "error": {

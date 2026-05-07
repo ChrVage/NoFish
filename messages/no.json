@@ -45,6 +45,11 @@
     "locateAriaLabel": "Gå til min posisjon",
     "searchPlaceholder": "Søk etter et sted...",
     "seaChartLabel": "Sjøkart",
+    "seaChartHide": "Skjul sjøkart",
+    "seaChartTooltip": "Sjøkart – dybde og bunnforhold (Kartverket)",
+    "seaChartUnavailable": "Sjøkart ikke tilgjengelig på land",
+    "locationNotSupported": "Posisjonstjeneste støttes ikke av nettleseren din.",
+    "locationPermissionDenied": "Posisjonstillatelse ble avvist.",
     "locationUnavailable": "Kan ikke hente din posisjon. Sjekk nettlesertillatelser."
   },
   "error": {

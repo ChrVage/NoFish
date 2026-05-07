@@ -43,6 +43,11 @@
     "locateAriaLabel": "Przejdź do mojej lokalizacji",
     "searchPlaceholder": "Szukaj lokalizacji...",
     "seaChartLabel": "Mapa morska",
+    "seaChartHide": "Ukryj mapę morską",
+    "seaChartTooltip": "Mapa morska – głębokość i topografia dna (Kartverket)",
+    "seaChartUnavailable": "Mapa morska niedostępna na lądzie",
+    "locationNotSupported": "Geolokalizacja nie jest obsługiwana przez Twoją przeglądarkę.",
+    "locationPermissionDenied": "Odmówiono dostępu do lokalizacji.",
     "locationUnavailable": "Nie można uzyskać lokalizacji. Sprawdź uprawnienia przeglądarki."
   },
   "error": {

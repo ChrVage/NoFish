@@ -700,7 +700,7 @@ export default function Map() {
     const GEOLOCATION_TIMEOUT_MS = 10000;
 
     if (!navigator.geolocation) {
-      setLocationError('Geolocation is not supported by your browser.');
+      setLocationError(t('locationNotSupported'));
       return;
     }
     setLocating(true);
@@ -749,9 +749,9 @@ export default function Map() {
         setLocating(false);
         if (isAutoLocate && autoLocateCancelledRef.current) { return; }
         if (err.code === err.PERMISSION_DENIED) {
-          setLocationError('Location permission denied.');
+          setLocationError(t('locationPermissionDenied'));
         } else {
-          setLocationError('Unable to retrieve your location.');
+          setLocationError(t('locationUnavailable'));
         }
       },
       { timeout: GEOLOCATION_TIMEOUT_MS }
@@ -782,7 +782,7 @@ export default function Map() {
               onChange={(e) => handleSearchInput(e.target.value)}
               onKeyDown={handleSearchKeyDown}
               onFocus={() => { if (searchResults.length > 0) {setSearchOpen(true);} }}
-              placeholder="Search place or coordinates…"
+              placeholder={t('searchPlaceholder')}
               aria-label="Search for a place or enter coordinates"
               aria-expanded={searchOpen}
               aria-controls="search-suggestions"
@@ -855,8 +855,8 @@ export default function Map() {
             setShowSeaChart(v => !v);
           }}
           disabled={centerIsLand === true}
-          aria-label={showSeaChart ? 'Hide sea chart' : 'Show sea chart (Kartverket)'}
-          title={centerIsLand === true ? 'Sea chart unavailable on land' : (showSeaChart ? 'Hide sea chart' : 'Sea chart – depth & bottom topography (Kartverket)')}
+          aria-label={showSeaChart ? t('seaChartHide') : t('seaChartLabel')}
+          title={centerIsLand === true ? t('seaChartUnavailable') : (showSeaChart ? t('seaChartHide') : t('seaChartTooltip'))}
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
             background: showSeaChart ? '#0284c7' : '#fff',
@@ -875,7 +875,7 @@ export default function Map() {
           <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 17c2-2 4-3 6-1s4 3 6 1 4-2 6 0M3 12c2-2 4-3 6-1s4 3 6 1 4-2 6 0M3 7c2-2 4-3 6-1s4 3 6 1 4-2 6 0" />
           </svg>
-          Sea chart
+          {t('seaChartLabel')}
         </button>
       </div>
 
@@ -890,8 +890,8 @@ export default function Map() {
           type="button"
           onClick={() => handleMyLocation()}
           disabled={locating}
-          aria-label="Use my current location"
-          title="My Location"
+          aria-label={t('locateAriaLabel')}
+          title={t('locateAriaLabel')}
           style={{ width: '40px', height: '40px', background: '#fff', borderRadius: '50%', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4b5563', cursor: locating ? 'wait' : 'pointer', opacity: locating ? 0.6 : 1, boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
         >
           {locating ? (
