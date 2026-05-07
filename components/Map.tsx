@@ -888,7 +888,7 @@ export default function Map() {
         )}
         <button
           type="button"
-          onClick={handleMyLocation}
+          onClick={() => handleMyLocation()}
           disabled={locating}
           aria-label="Use my current location"
           title="My Location"

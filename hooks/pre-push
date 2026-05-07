@@ -1,18 +1,62 @@
 #!/bin/sh
-set -e
 
-echo "Running pre-push checks..."
+echo ""
+echo "╔════════════════════════════════════════╗"
+echo "║     Running pre-push quality checks    ║"
+echo "╚════════════════════════════════════════╝"
+echo ""
 
-echo "→ Type check"
-npx tsc --noEmit
+# Track failures
+FAILED=0
 
-echo "→ Lint"
-npm run lint
+# Type check
+echo "→ Type checking..."
+if ! npx tsc --noEmit; then
+  echo ""
+  echo "❌ TypeScript type check failed."
+  echo "   Fix: Review the errors above and update your TypeScript code."
+  echo "   Run: npm run typecheck"
+  echo ""
+  FAILED=1
+fi
 
-echo "→ Tests"
-npm test
+# Lint
+echo ""
+echo "→ Linting..."
+if ! npm run lint; then
+  echo ""
+  echo "❌ ESLint found issues."
+  echo "   Fix: Review the lint errors above."
+  echo "   Run: npm run lint -- --fix  (to auto-fix simple issues)"
+  echo ""
+  FAILED=1
+fi
 
-echo "All checks passed."
+# Tests
+echo ""
+echo "→ Running tests..."
+if ! npm test; then
+  echo ""
+  echo "❌ Tests failed."
+  echo "   Fix: Review the test failures above."
+  echo "   Run: npm run test:watch  (to debug interactively)"
+  echo ""
+  FAILED=1
+fi
+
+if [ $FAILED -eq 1 ]; then
+  echo ""
+  echo "╔════════════════════════════════════════╗"
+  echo "║    Pre-push checks FAILED             ║"
+  echo "║  Fix the errors above and try again.  ║"
+  echo "╚════════════════════════════════════════╝"
+  echo ""
+  exit 1
+fi
+
+echo ""
+echo "✅ All checks passed!"
+echo ""
 
 # Bump minor version and reset patch to 0 (runs only after checks pass)
 export SKIP_VERSION_BUMP=1
