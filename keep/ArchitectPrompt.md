@@ -36,8 +36,11 @@ Registration, not authentication: Callers must register a contact email once via
 Rate limiting: Apply per-key limits (e.g. 100 req/day, 10 req/min) in addition to the existing per-IP limits. Return 429 with a Retry-After header when exceeded.
 Do not implement CORS restrictions — the API is intended for server-to-server use and browser CORS headers would not protect it anyway.
 Response format: JSON only. Include a generated_at ISO timestamp and a source_credit field citing MET Norway / Barentswatch / Kartverket.
+
 - API should support input for other scores than fishing score, such as wind strength and direction, high and low tide values, wave height [and direction]. 
-- Explore how we could collaborate with other enthusiasts, such as Fishbuddy. Norway vs global presence.
+
+- Explore how we could collaborate with other enthusiasts, like Fishbuddy. Norway vs global presence.
+
 - Functionality for subscribing to calendar appointments with good fishing times or other score models.
 
 - Add possibility for fish logging, and add weather to the logged fish, so that you can know in which conditions you fish the fish. Send mail after fishing appointment to collect the data via link.

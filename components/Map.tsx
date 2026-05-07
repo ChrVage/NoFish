@@ -212,7 +212,8 @@ export default function Map() {
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchAbortRef = useRef<AbortController | null>(null);
   const searchBoxRef = useRef<HTMLDivElement>(null);
-  const handleMyLocationRef = useRef<() => void>(() => {});
+  const handleMyLocationRef = useRef<(isAutoLocate?: boolean) => void>(() => {});
+  const autoLocateCancelledRef = useRef(false);
 
   // Extract search params before the effect so they appear in the dependency array
   const restoreLat = parseFloat(searchParams.get('lat') ?? '');
@@ -501,6 +502,7 @@ export default function Map() {
     let singleClickTimer: ReturnType<typeof setTimeout> | null = null;
 
     map.on('click', (e: L.LeafletMouseEvent) => {
+      autoLocateCancelledRef.current = true;
       if (singleClickTimer !== null) {clearTimeout(singleClickTimer);}
       singleClickTimer = setTimeout(() => {
         singleClickTimer = null;
@@ -594,12 +596,13 @@ export default function Map() {
     if (hasRestore) { return; }
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(AUTO_LOCATE_SESSION_KEY)) { return; }
     if (typeof navigator === 'undefined' || !navigator.permissions) { return; }
+    autoLocateCancelledRef.current = false;
     navigator.permissions
       .query({ name: 'geolocation' })
       .then((status) => {
-        if (status.state === 'granted') {
+        if (status.state === 'granted' && !autoLocateCancelledRef.current) {
           sessionStorage.setItem(AUTO_LOCATE_SESSION_KEY, '1');
-          handleMyLocationRef.current();
+          handleMyLocationRef.current(true);
         }
       })
       .catch(() => { /* Permissions API unavailable — ignore */ });
@@ -692,7 +695,7 @@ export default function Map() {
     }
   };
 
-  const handleMyLocation = () => {
+  const handleMyLocation = (isAutoLocate = false) => {
     const MIN_LOCATION_ZOOM = 10;
     const GEOLOCATION_TIMEOUT_MS = 10000;
 
@@ -704,6 +707,10 @@ export default function Map() {
     setLocationError(null);
     navigator.geolocation.getCurrentPosition(
       async (position) => {
+        if (isAutoLocate && autoLocateCancelledRef.current) {
+          setLocating(false);
+          return;
+        }
         const { latitude, longitude } = position.coords;
         const lat4 = latitude.toFixed(4);
         const lng4 = longitude.toFixed(4);
@@ -718,6 +725,7 @@ export default function Map() {
           }
         } catch { /* navigate without sea hint */ }
         setLocating(false);
+        if (isAutoLocate && autoLocateCancelledRef.current) { return; }
         // Update current history entry so browser-back restores map position
         window.history.replaceState(window.history.state, '', buildLocationUrl('', {
           lat: lat4,
@@ -739,6 +747,7 @@ export default function Map() {
       },
       (err) => {
         setLocating(false);
+        if (isAutoLocate && autoLocateCancelledRef.current) { return; }
         if (err.code === err.PERMISSION_DENIED) {
           setLocationError('Location permission denied.');
         } else {
