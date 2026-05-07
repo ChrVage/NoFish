@@ -692,9 +692,6 @@ export default function Map() {
     }
   };
 
-  // Keep ref in sync so the permissions effect below can call the latest version
-  useEffect(() => { handleMyLocationRef.current = handleMyLocation; });
-
   const handleMyLocation = () => {
     const MIN_LOCATION_ZOOM = 10;
     const GEOLOCATION_TIMEOUT_MS = 10000;
@@ -751,6 +748,9 @@ export default function Map() {
       { timeout: GEOLOCATION_TIMEOUT_MS }
     );
   };
+
+  // Keep ref in sync so the permissions effect below can call the latest version
+  useEffect(() => { handleMyLocationRef.current = handleMyLocation; });
 
   return (
     <div className="relative w-full h-full">
