@@ -4,10 +4,16 @@ import Header from '@/components/Header';
 import Logo from '@/components/Logo';
 import Link from 'next/link';
 
-export const metadata: Metadata = {
-  title: 'NoFish — Data Column Reference',
-  description: 'Every column on the NoFish forecast and tide pages explained, with source ratings and data quality notes.',
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'data' });
+  const canonical = locale === 'no' ? 'https://nofish.no/data' : `https://nofish.no/${locale}/data`;
+  return {
+    title: t('metaTitle'),
+    description: t('metaDescription'),
+    alternates: { canonical },
+  };
+}
 
 interface PageProps {
   params: Promise<{ locale: string }>;

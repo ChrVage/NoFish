@@ -26,6 +26,8 @@
     "statistics": "Statistics"
   },
   "home": {
+    "metaTitle": "NoFish.no | Fishing Forecast Map for Small Boats",
+    "metaDescription": "Real-time wind, wave, and tide forecasts for any point on the Norwegian coast. Built for small boat fishers. Click the map to get started.",
     "loadingMap": "Loading map...",
     "resetAriaLabel": "Reset map and clear selected location",
     "resetTitle": "Reset map"

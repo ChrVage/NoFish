@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import { getMessages, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { hasLocale } from 'next-intl';
 import { Suspense } from 'react';
@@ -33,18 +33,23 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'home' });
 
-  const alternates: Record<string, string> = {};
+  const title = t('metaTitle');
+  const description = t('metaDescription');
+  const canonicalUrl = locale === routing.defaultLocale ? 'https://nofish.no' : `https://nofish.no/${locale}`;
+
+  const hreflangAlternates: Record<string, string> = {};
   for (const l of routing.locales) {
-    alternates[localeNames[l] ?? l] = l === routing.defaultLocale
+    hreflangAlternates[localeNames[l] ?? l] = l === routing.defaultLocale
       ? 'https://nofish.no'
       : `https://nofish.no/${l}`;
   }
 
   return {
-    title: 'NoFish.no | Fishing Forecast Map for Small Boats',
-    description:
-      'Because fishing in bad weather is worse than no fishing at all. Get precise wind, wave, and tide maps curated for small boat safety.',
+    metadataBase: new URL('https://nofish.no'),
+    title,
+    description,
     referrer: 'no-referrer-when-downgrade',
     icons: {
       icon: [
@@ -57,10 +62,9 @@ export async function generateMetadata({
     },
     manifest: '/site.webmanifest?v=20260424',
     openGraph: {
-      title: 'NoFish.no | Fishing Forecast Map for Small Boats',
-      description:
-        'Because fishing in bad weather is worse than no fishing at all. Get precise wind, wave, and tide maps curated for small boat safety.',
-      url: locale === routing.defaultLocale ? 'https://nofish.no' : `https://nofish.no/${locale}`,
+      title,
+      description,
+      url: canonicalUrl,
       siteName: 'NoFish.no',
       images: [
         {
@@ -75,28 +79,49 @@ export async function generateMetadata({
     },
     twitter: {
       card: 'summary_large_image',
-      title: 'NoFish.no | Fishing Forecast Map for Small Boats',
-      description:
-        'Because fishing in bad weather is worse than no fishing at all. Get precise wind, wave, and tide maps curated for small boat safety.',
+      title,
+      description,
       images: ['https://nofish.no/marine-weather-security-forecast-og.jpg'],
     },
     alternates: {
-      languages: alternates,
+      canonical: canonicalUrl,
+      languages: hreflangAlternates,
     },
   };
 }
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'WebApplication',
-  name: 'NoFish.no',
-  url: 'https://nofish.no',
-  applicationCategory: 'WeatherApplication',
-  operatingSystem: 'Web',
-  description:
-    'Because fishing in bad weather is worse than no fishing at all. Get precise wind, wave, and tide maps curated for small boat safety.',
-  genre: 'Fishing',
-};
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'NoFish.no',
+    url: 'https://nofish.no',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: 'https://nofish.no/?q={search_term_string}',
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'NoFish.no',
+    url: 'https://nofish.no',
+    applicationCategory: 'WeatherApplication',
+    operatingSystem: 'Web',
+    description:
+      'Because fishing in bad weather is worse than no fishing at all. Get precise wind, wave, and tide maps curated for small boat safety.',
+    genre: 'Fishing',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'NOK',
+    },
+  },
+];
 
 export default async function LocaleLayout({
   children,

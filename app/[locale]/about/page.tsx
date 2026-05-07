@@ -4,10 +4,16 @@ import Header from '@/components/Header';
 import Logo from '@/components/Logo';
 import Link from 'next/link';
 
-export const metadata: Metadata = {
-  title: 'About NoFish — Fishing Forecast for Small Boats',
-  description: 'What NoFish does, how to use it, and why it exists. Wind, wave, and tide forecasts for any point on the Norwegian coast.',
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'about' });
+  const canonical = locale === 'no' ? 'https://nofish.no/about' : `https://nofish.no/${locale}/about`;
+  return {
+    title: t('metaTitle'),
+    description: t('metaDescription'),
+    alternates: { canonical },
+  };
+}
 
 interface PageProps {
   params: Promise<{ locale: string }>;

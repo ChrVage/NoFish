@@ -28,7 +28,7 @@ Make sure all functionality is updated in the documentation. Also read all docum
 Found in the [README.md](README.md) file.
 
 ## First prio changes
-- Do great SEO to make sure people find the site.
+
 
 ### Second prio changes
 - Implement a public API with two endpoints: GET /api/v1/score?lat=&lon= (returns best fishing windows + hourly scores) and GET /api/v1/tide?lat=&lon= (returns high/low tide events). Both accept optional boat=, fish=, and method= params; use defaults if omitted.

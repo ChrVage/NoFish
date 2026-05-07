@@ -26,6 +26,8 @@
     "statistics": "Statistiken"
   },
   "home": {
+    "metaTitle": "NoFish.no | Angelwetter-Karte für Kleinboote",
+    "metaDescription": "Wind-, Wellen- und Gezeitenvorhersagen für jeden Punkt der norwegischen Küste. Für Kleinboot-Angler. Auf die Karte klicken und loslegen.",
     "loadingMap": "Karte wird geladen...",
     "resetAriaLabel": "Karte zurücksetzen und Standortauswahl aufheben",
     "resetTitle": "Karte zurücksetzen"

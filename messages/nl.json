@@ -26,6 +26,8 @@
     "statistics": "Statistieken"
   },
   "home": {
+    "metaTitle": "NoFish.no | Visserijweerkaart voor kleine boten",
+    "metaDescription": "Wind-, golf- en getijvoorspellingen voor elk punt aan de Noorse kust. Gebouwd voor vissers op kleine boten. Klik op de kaart om te beginnen.",
     "loadingMap": "Kaart laden...",
     "resetAriaLabel": "Kaart resetten en locatieselectie opheffen",
     "resetTitle": "Kaart resetten"

@@ -5,6 +5,7 @@ import { headers } from 'next/headers';
 import { getCombinedForecast, solarPosition } from '@/lib/api/weather';
 import { reverseGeocode } from '@/lib/api/geocoding';
 import { insertLookup, ensureTable } from '@/lib/db/lookups';
+import type { Metadata } from 'next';
 
 import { haversineDistance, formatDistance } from '@/lib/utils/distance';
 import { parseZoomParam, buildLocationUrl } from '@/lib/utils/params';
@@ -19,6 +20,15 @@ import { Footer } from '@/components/Footer';
 import FeedbackBanner from '@/components/FeedbackBanner';
 import HashScroller from '@/components/HashScroller';
 import SafetyContacts from '@/components/SafetyContacts';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'details' });
+  return {
+    title: t('metaTitle'),
+    robots: { index: false, follow: true },
+  };
+}
 
 interface PageProps {
   params: Promise<{ locale: string }>;

@@ -26,6 +26,8 @@
     "statistics": "Statistikk"
   },
   "home": {
+    "metaTitle": "NoFish.no | Fiskeprognose­kart for småbåter",
+    "metaDescription": "Vind-, bølge- og tidevanns­prognoser for ethvert punkt på norskekysten. Laget for småbåtfiskere. Klikk på kartet for å starte.",
     "loadingMap": "Laster kart...",
     "resetAriaLabel": "Tilbakestill kart og fjern valgt sted",
     "resetTitle": "Tilbakestill kart"

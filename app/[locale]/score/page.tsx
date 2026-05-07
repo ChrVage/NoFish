@@ -18,6 +18,7 @@ import BookingButton, { type BookingEntry } from '@/components/BookingButton';
 import TuningControls from '@/components/TuningControls';
 import { BOAT_SIZE_OPTIONS, FISH_TARGET_OPTIONS, FISHING_METHOD_OPTIONS, parseTuningFromSearchParams, resolveTuningSelection } from '@/lib/utils/tuning';
 import { formatForecastTime } from '@/lib/utils/formatTime';
+import type { Metadata } from 'next';
 
 /** True when ≥50 % of the hour is in the "day" sun phase. */
 function isDaylight(segments: { phase: string; fraction: number }[] | undefined): boolean {
@@ -28,6 +29,15 @@ function isDaylight(segments: { phase: string; fraction: number }[] | undefined)
 import BookingBanner from '@/components/BookingBanner';
 import HashScroller from '@/components/HashScroller';
 import SafetyContacts from '@/components/SafetyContacts';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'score' });
+  return {
+    title: t('metaTitle'),
+    robots: { index: false, follow: true },
+  };
+}
 
 interface PageProps {
   params: Promise<{ locale: string }>;

@@ -25,8 +25,8 @@
     "feedback": "Opinia",
     "statistics": "Statystyki"
   },
-  "home": {
-    "loadingMap": "Ładowanie mapy...",
+  "home": {    "metaTitle": "NoFish.no | Mapa Prognoz dla Małych Łodzi",
+    "metaDescription": "Prognozy wiatru, fal i pływów dla dowolnego punktu norweskiego wybrzeża. Dla wędkarzy na małych łodziach. Kliknij mapę, aby zacząć.",    "loadingMap": "Ładowanie mapy...",
     "resetAriaLabel": "Zresetuj mapę i usuń zaznaczoną lokalizację",
     "resetTitle": "Zresetuj mapę"
   },

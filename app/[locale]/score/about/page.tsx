@@ -4,10 +4,16 @@ import Header from '@/components/Header';
 import Logo from '@/components/Logo';
 import Link from 'next/link';
 
-export const metadata: Metadata = {
-  title: 'NoFish — Fishing Score Algorithm',
-  description: 'How the NoFish fishing score is calculated: safety and fishing factors, weights, best windows, and score colour coding.',
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'scoreAbout' });
+  const canonical = locale === 'no' ? 'https://nofish.no/score/about' : `https://nofish.no/${locale}/score/about`;
+  return {
+    title: t('metaTitle'),
+    description: t('metaDescription'),
+    alternates: { canonical },
+  };
+}
 
 interface PageProps {
   params: Promise<{ locale: string }>;

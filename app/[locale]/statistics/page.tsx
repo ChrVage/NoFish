@@ -7,10 +7,16 @@ import type { Metadata } from 'next';
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: 'NoFish — Usage Statistics',
-  description: 'Aggregate usage statistics for NoFish.no',
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'statistics' });
+  const canonical = locale === 'no' ? 'https://nofish.no/statistics' : `https://nofish.no/${locale}/statistics`;
+  return {
+    title: t('metaTitle'),
+    description: t('metaDescription'),
+    alternates: { canonical },
+  };
+}
 
 interface WeeklyRow { week_start: string; count: number }
 interface CityCount { city: string; count: number }

@@ -13,6 +13,16 @@ import { Footer } from '@/components/Footer';
 import FeedbackButton from '@/components/FeedbackButton';
 import FeedbackBanner from '@/components/FeedbackBanner';
 import type { TidePrediction } from '@/types/weather';
+import type { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'tide' });
+  return {
+    title: t('metaTitle'),
+    robots: { index: false, follow: true },
+  };
+}
 
 interface PageProps {
   params: Promise<{ locale: string }>;
