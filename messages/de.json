@@ -222,7 +222,7 @@
     "howToUse": {
       "heading": "Verwendung",
       "waveGridDot": "Wenn die Vorhersage antwortet, erscheinen ein hellblauer Punkt und eine gestrichelte Linie auf der Karte, die den Wellenvorhersage-Rasterpunkt (Barentswatch) nahe Ihrem Klick anzeigen.",
-      "locateButton": "Eine <strong>Standortschaltfläche</strong> (Fadenkreuz-Symbol) befindet sich unterhalb der Zoom-Steuerelemente. Tippen Sie darauf, um die Geolokalisierungs-API des Browsers zu nutzen und direkt zur Details-Seite Ihrer aktuellen Position zu navigieren.",
+      "locateButton": "Eine <strong>Standortschaltfläche</strong> (Fadenkreuz-Symbol) befindet sich unterhalb der Zoom-Steuerelemente. Tippen Sie darauf, um die Geolokalisierungs-API des Browsers zu nutzen und direkt zur Details-Seite Ihrer aktuellen Position zu navigieren. Haben Sie dem Standortzugriff bereits zugestimmt, navigiert NoFish beim ersten Öffnen der Karte automatisch zu Ihrer Position — ohne dass Sie die Schaltfläche drücken müssen.",
       "logoBack": "Das <strong>🎣 NoFish</strong>-Logo oben links auf jeder Seite ist auch eine Zurück-Schaltfläche — tippen Sie darauf, um zur Karte mit Ihrer letzten Position und Zoomstufe zurückzukehren.",
       "footerBar": "Jede Unterseite hat eine Fußzeile mit den Schaltflächen <strong>Über NoFish</strong>, <strong>Datenreferenz</strong> und <strong>Feedback</strong>. Die Score-Seite fügt eine Schaltfläche <strong>Über den Score</strong> hinzu.",
       "backRestores": "Das Zurücknavigieren stellt den vorherigen Zoomgrad, die Kartenposition wieder her und öffnet das Popup am ursprünglichen Klickpunkt erneut."

@@ -222,7 +222,7 @@
     "howToUse": {
       "heading": "Gebruik",
       "waveGridDot": "Wanneer de voorspelling reageert, verschijnt een lichtblauwe stip en stippellijn op de kaart die het golfvoorspellingsroosterpunt (Barentswatch) aanduidt.",
-      "locateButton": "Een <strong>locatieknop</strong> (dradenkruis-pictogram) bevindt zich onder de zoomknoppen. Tik erop om de geolocatie-API van de browser te gebruiken en direct naar de detailpagina van uw huidige positie te navigeren.",
+      "locateButton": "Een <strong>locatieknop</strong> (dradenkruis-pictogram) bevindt zich onder de zoomknoppen. Tik erop om de geolocatie-API van de browser te gebruiken en direct naar de detailpagina van uw huidige positie te navigeren. Als u al locatietoestemming hebt verleend, navigeert NoFish automatisch naar uw locatie bij het eerste openen van de kaart — zonder dat u op de knop hoeft te drukken.",
       "logoBack": "Het <strong>🎣 NoFish</strong>-logo linksboven op elke pagina is ook een terugknop — tik erop om terug te keren naar de kaart met uw vorige positie en zoomniveau.",
       "footerBar": "Elke subpagina heeft een voettekstbalk met de knoppen <strong>Over NoFish</strong>, <strong>Datareferentie</strong> en <strong>Feedback</strong>. De scorepagina voegt een knop <strong>Over de score</strong> toe.",
       "backRestores": "Terugnavigeren herstelt het vorige zoomniveau en de kaartpositie, en opent de popup opnieuw op het oorspronkelijke klikpunt."

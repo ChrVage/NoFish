@@ -222,7 +222,7 @@
     "howToUse": {
       "heading": "Slik bruker du det",
       "waveGridDot": "Når prognosen svarer, vises en lyseblå prikk og stiplet linje på kartet som indikerer bølgeprognosens rutepunkt (Barentswatch) nærmest klikket ditt.",
-      "locateButton": "En <strong>posisjonsknapp</strong> (kryssikone) sitter under zoomkontrollene. Trykk på den for å bruke nettleserens posisjons-API og navigere direkte til Detaljer-siden for din nåværende posisjon.",
+      "locateButton": "En <strong>posisjonsknapp</strong> (kryssikone) sitter under zoomkontrollene. Trykk på den for å bruke nettleserens posisjons-API og navigere direkte til Detaljer-siden for din nåværende posisjon. Har du allerede gitt tillatelse til posisjon, vil NoFish automatisk navigere til din posisjon første gang du åpner kartet — uten at du trenger å trykke på knappen.",
       "logoBack": "<strong>🎣 NoFish</strong>-logoen øverst til venstre på hver side er også en tilbakeknapp — trykk på den for å gå tilbake til kartet med forrige posisjon og zoomnivå.",
       "footerBar": "Hver underside har en bunntekstlinje med knappene <strong>Om NoFish</strong>, <strong>Datareferanse</strong> og <strong>Tilbakemelding</strong>. Score-siden legger til en <strong>Om fiskescore</strong>-knapp.",
       "backRestores": "Å navigere tilbake gjenoppretter forrige zoomnivå, kartposisjon og åpner boblen på nytt ved det opprinnelige klikkunkte."

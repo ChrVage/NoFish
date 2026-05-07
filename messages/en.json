@@ -222,7 +222,7 @@
     "howToUse": {
       "heading": "How to use it",
       "waveGridDot": "When the forecast responds, a sky-blue dot and dashed line appear on the map showing the wave forecast grid point (Barentswatch) closest to your click.",
-      "locateButton": "A <strong>location button</strong> (crosshair icon) sits below the zoom controls. Tapping it uses the browser's geolocation API and navigates directly to the Details page for your current position.",
+      "locateButton": "A <strong>location button</strong> (crosshair icon) sits below the zoom controls. Tapping it uses the browser's geolocation API and navigates directly to the Details page for your current position. If you have already granted location permission, NoFish will navigate to your location automatically when you open the map for the first time — without pressing the button.",
       "logoBack": "The <strong>🎣 NoFish</strong> logo in the top-left of every page is also a back button — tap it to return to the map at your last position and zoom.",
       "footerBar": "Every sub-page has a footer bar with <strong>About NoFish</strong>, <strong>Data Reference</strong>, and <strong>Feedback</strong> buttons. The Score page adds an <strong>About Fishing Score</strong> button.",
       "backRestores": "Navigating back restores the previous zoom level, map position, and reopens the popup at the original click point."

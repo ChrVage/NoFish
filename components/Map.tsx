@@ -212,6 +212,7 @@ export default function Map() {
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchAbortRef = useRef<AbortController | null>(null);
   const searchBoxRef = useRef<HTMLDivElement>(null);
+  const handleMyLocationRef = useRef<() => void>(() => {});
 
   // Extract search params before the effect so they appear in the dependency array
   const restoreLat = parseFloat(searchParams.get('lat') ?? '');
@@ -579,6 +580,25 @@ export default function Map() {
     }
   }, [showSeaChart]);
 
+  // On a fresh open of the site (no lat/lng in the URL) auto-fly to the details
+  // page when the user has already granted geolocation permission.
+  // If there are coords in the URL the visitor is returning from a detail page
+  // (back button) or reloading the map — don't auto-navigate in that case.
+  // Never attach a permission-change listener; we don't want to trigger anything
+  // when the browser prompt appears from the "My Location" button.
+  useEffect(() => {
+    if (hasRestore) { return; }
+    if (typeof navigator === 'undefined' || !navigator.permissions) { return; }
+    navigator.permissions
+      .query({ name: 'geolocation' })
+      .then((status) => {
+        if (status.state === 'granted') {
+          handleMyLocationRef.current();
+        }
+      })
+      .catch(() => { /* Permissions API unavailable — ignore */ });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Close search suggestions on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -665,6 +685,9 @@ export default function Map() {
       setSearchOpen(false);
     }
   };
+
+  // Keep ref in sync so the permissions effect below can call the latest version
+  useEffect(() => { handleMyLocationRef.current = handleMyLocation; });
 
   const handleMyLocation = () => {
     const MIN_LOCATION_ZOOM = 10;

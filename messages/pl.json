@@ -222,7 +222,7 @@
     "howToUse": {
       "heading": "Jak używać",
       "waveGridDot": "Gdy prognoza odpowie, na mapie pojawia się jasnoniebieska kropka i linia przerywana wskazująca punkt siatki prognozy falowej (Barentswatch) najbliższy kliknięciu.",
-      "locateButton": "Pod kontrolkami zoomu znajduje się <strong>przycisk lokalizacji</strong> (ikona celownika). Dotknij go, aby użyć interfejsu API geolokalizacji przeglądarki i przejść bezpośrednio do strony szczegółów bieżącej pozycji.",
+      "locateButton": "Pod kontrolkami zoomu znajduje się <strong>przycisk lokalizacji</strong> (ikona celownika). Dotknij go, aby użyć interfejsu API geolokalizacji przeglądarki i przejść bezpośrednio do strony szczegółów bieżącej pozycji. Jeśli już udzielono zgody na lokalizację, NoFish automatycznie przejdzie do Twojej lokalizacji przy pierwszym otwarciu mapy — bez konieczności naciskania przycisku.",
       "logoBack": "Logo <strong>🎣 NoFish</strong> w lewym górnym rogu każdej strony to również przycisk Wstecz — dotknij go, aby wrócić do mapy z poprzednią pozycją i poziomem powiększenia.",
       "footerBar": "Każda podstrona ma pasek stopki z przyciskami <strong>O NoFish</strong>, <strong>Informacje o danych</strong> i <strong>Opinia</strong>. Strona oceny dodaje przycisk <strong>O ocenie</strong>.",
       "backRestores": "Nawigacja wstecz przywraca poprzedni poziom powiększenia i pozycję mapy oraz ponownie otwiera wyskakujące okienko w oryginalnym punkcie kliknięcia."
