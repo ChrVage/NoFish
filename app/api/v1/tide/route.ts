@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
       return keyError;
     }
 
-    const apiKey = request.headers.get('X-Api-Key')?.trim() || '';
+    const apiKey = request.headers.get('X-Api-Key')?.trim() ?? '';
 
     // Parse and validate query parameters
     const searchParams = request.nextUrl.searchParams;

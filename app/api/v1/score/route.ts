@@ -19,7 +19,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getCombinedForecast } from '@/lib/api/weather';
-import { computeFishingScore, findBestWindows, recommendFishingMethods, type ComputeScoreOptions } from '@/lib/scoring/fishingScore';
+import { computeFishingScore, findBestWindows, type ComputeScoreOptions } from '@/lib/scoring/fishingScore';
 import { validateCoordinates } from '@/lib/utils/validation';
 import { validateApiKeyHeader, recordApiRequest } from '@/lib/api/apiKeyValidator';
 import { enrichForecasts } from '@/lib/utils/enrichForecasts';
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       return keyError;
     }
 
-    const apiKey = request.headers.get('X-Api-Key')?.trim() || '';
+    const apiKey = request.headers.get('X-Api-Key')?.trim() ?? '';
 
     // Parse and validate query parameters
     const searchParams = request.nextUrl.searchParams;
@@ -72,9 +72,8 @@ export async function GET(request: NextRequest) {
     const boat = (searchParams.get('boat') ?? 'undefined') as BoatSizePreset | 'undefined';
     const fish = (searchParams.get('fish') ?? 'undefined') as FishTarget | 'undefined';
     const method = (searchParams.get('method') ?? 'undefined') as FishingMethod | 'undefined';
-    const depth = searchParams.get('depth')
-      ? parseInt(searchParams.get('depth')!, 10)
-      : undefined;
+    const depthParam = searchParams.get('depth');
+    const depth = depthParam ? parseInt(depthParam, 10) : undefined;
 
     // Validate depth if provided
     if (depth !== undefined && (isNaN(depth) || depth < 0 || depth > 1000)) {
@@ -103,11 +102,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Enrich forecasts with calculated fields (sun phase, moon phase, etc.)
-    const enriched = await enrichForecasts(
-      combined.forecasts,
-      combined.timezone,
-      combined.tideStationName
-    );
+    const enriched = enrichForecasts(combined.forecasts);
 
     // Build options object for scoring
     const scoreOptions: ComputeScoreOptions = {

@@ -147,7 +147,7 @@ export function checkApiKeyRateLimit(
   }
 
   const minuteKey = `${storeName}:minute`;
-  let minuteEntry = store.minuteCounts.get(minuteKey);
+  const minuteEntry = store.minuteCounts.get(minuteKey);
 
   if (!minuteEntry || now > minuteEntry.resetAt) {
     store.minuteCounts.set(minuteKey, { count: 1, resetAt: now + 60 * 1000 });
