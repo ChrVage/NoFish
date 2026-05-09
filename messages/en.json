@@ -171,7 +171,7 @@
     },
     "depth": "Seabed depth: approx. {depth} m",
     "elevation": "Elevation: approx. {elevation} m",
-    "noOceanData": "No ocean forecast available — only land weather shown."
+    "noOceanData": "Wave and current data unavailable — this location may be outside the Barentswatch wave model coverage. Score is based on wind and weather only."
   },
   "details": {
     "metaTitle": "NoFish — Forecast Details",
@@ -187,6 +187,7 @@
     "sourceLabel": "Source:",
     "coordDepth": "Depth: {depth} m",
     "coordElevation": "Elevation: {elevation} m",
+    "noOceanData": "Wave and current data unavailable — this location may be outside the Barentswatch wave model coverage.",
     "confidence": {
       "high": "High confidence (0–24 h)",
       "medium": "Medium confidence (24–48 h)"

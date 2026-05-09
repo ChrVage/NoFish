@@ -87,3 +87,90 @@ export function checkRateLimit(request: NextRequest, config: RateLimitConfig): N
 
   return null;
 }
+
+/**
+ * Per-API-key rate limiting with daily and per-minute windows.
+ * Returns null if allowed, or a 429 NextResponse if rate-limited.
+ *
+ * @param apiKey The API key to rate limit
+ * @param dailyLimit Maximum requests per calendar day
+ * @param minuteLimit Maximum requests per minute
+ * @param requestsToday Current count of requests used today (from database)
+ */
+export interface PerKeyRateLimitConfig {
+  dailyLimit: number;
+  minuteLimit: number;
+}
+
+interface PerKeyStore {
+  minuteCounts: Map<string, WindowEntry>;
+}
+
+const perKeyStores = new Map<string, PerKeyStore>();
+
+/**
+ * Rate limit a request by API key with daily + per-minute windows.
+ * Daily limit is checked against database count; minute limit is in-memory.
+ */
+export function checkApiKeyRateLimit(
+  apiKey: string,
+  config: PerKeyRateLimitConfig,
+  requestsToday: number
+): NextResponse | null {
+  const now = Date.now();
+  const storeName = `api:${apiKey}`;
+
+  ensureCleanup();
+
+  // Check daily limit (tracked in database)
+  if (requestsToday > config.dailyLimit) {
+    const retryAfter = 86400; // Retry tomorrow
+    return NextResponse.json(
+      { success: false, error: 'Daily API request limit exceeded' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(retryAfter),
+          'X-RateLimit-Limit-Day': String(config.dailyLimit),
+          'X-RateLimit-Used-Day': String(requestsToday),
+          'X-RateLimit-Reset-Day': new Date(Date.now() + retryAfter * 1000).toISOString(),
+        },
+      }
+    );
+  }
+
+  // Check per-minute limit (in-memory)
+  let store = perKeyStores.get(storeName);
+  if (!store) {
+    store = { minuteCounts: new Map() };
+    perKeyStores.set(storeName, store);
+  }
+
+  const minuteKey = `${storeName}:minute`;
+  let minuteEntry = store.minuteCounts.get(minuteKey);
+
+  if (!minuteEntry || now > minuteEntry.resetAt) {
+    store.minuteCounts.set(minuteKey, { count: 1, resetAt: now + 60 * 1000 });
+    return null;
+  }
+
+  minuteEntry.count++;
+
+  if (minuteEntry.count > config.minuteLimit) {
+    const retryAfter = Math.ceil((minuteEntry.resetAt - now) / 1000);
+    return NextResponse.json(
+      { success: false, error: 'Per-minute API request limit exceeded' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(retryAfter),
+          'X-RateLimit-Limit-Minute': String(config.minuteLimit),
+          'X-RateLimit-Used-Minute': String(minuteEntry.count),
+          'X-RateLimit-Reset-Minute': new Date(minuteEntry.resetAt).toISOString(),
+        },
+      }
+    );
+  }
+
+  return null;
+}

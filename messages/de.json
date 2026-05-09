@@ -171,7 +171,7 @@
     },
     "depth": "Meerestiefe: ca. {depth} m",
     "elevation": "Höhe: ca. {elevation} m",
-    "noOceanData": "Keine Meeresvorhersage verfügbar — nur Landwetter wird angezeigt."
+    "noOceanData": "Wellen- und Strömungsdaten nicht verfügbar — Standort möglicherweise außerhalb des Barentswatch-Wellenmodells. Score basiert nur auf Wind und Wetter."
   },
   "details": {
     "metaTitle": "NoFish — Wetterdetails",
@@ -187,6 +187,7 @@
     "sourceLabel": "Quelle:",
     "coordDepth": "Tiefe: {depth} m",
     "coordElevation": "Höhe: {elevation} m",
+    "noOceanData": "Wellen- und Strömungsdaten nicht verfügbar — Standort möglicherweise außerhalb des Barentswatch-Wellenmodells.",
     "confidence": {
       "high": "Hohe Zuverlässigkeit (0–24 h)",
       "medium": "Mittlere Zuverlässigkeit (24–48 h)"

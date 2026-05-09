@@ -171,7 +171,7 @@
     },
     "depth": "Zeebodemdiepte: ca. {depth} m",
     "elevation": "Hoogte: ca. {elevation} m",
-    "noOceanData": "Geen zeesvoorspelling beschikbaar — alleen landweer wordt getoond."
+    "noOceanData": "Golf- en stroomdata niet beschikbaar — locatie mogelijk buiten het Barentswatch golfmodel. Score gebaseerd op wind en weer."
   },
   "details": {
     "metaTitle": "NoFish — Voorspellingsdetails",
@@ -187,6 +187,7 @@
     "sourceLabel": "Bron:",
     "coordDepth": "Diepte: {depth} m",
     "coordElevation": "Hoogte: {elevation} m",
+    "noOceanData": "Golf- en stroomdata niet beschikbaar — locatie mogelijk buiten het Barentswatch golfmodel.",
     "confidence": {
       "high": "Hoge betrouwbaarheid (0–24 u)",
       "medium": "Gemiddelde betrouwbaarheid (24–48 u)"

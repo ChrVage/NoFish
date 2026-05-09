@@ -31,13 +31,11 @@ Found in the [README.md](README.md) file.
 
 
 ### Second prio changes
-- Implement a public API with two endpoints: GET /api/v1/score?lat=&lon= (returns best fishing windows + hourly scores) and GET /api/v1/tide?lat=&lon= (returns high/low tide events). Both accept optional boat=, fish=, and method= params; use defaults if omitted.
-Registration, not authentication: Callers must register a contact email once via POST /api/v1/register to receive an API key. The key is required on all requests as X-Api-Key: <key>. Keys are stored in the Neon DB. No login flow — the key is purely for contact and abuse tracing, not access control.
-Rate limiting: Apply per-key limits (e.g. 100 req/day, 10 req/min) in addition to the existing per-IP limits. Return 429 with a Retry-After header when exceeded.
-Do not implement CORS restrictions — the API is intended for server-to-server use and browser CORS headers would not protect it anyway.
-Response format: JSON only. Include a generated_at ISO timestamp and a source_credit field citing MET Norway / Barentswatch / Kartverket.
+
 
 - API should support input for other scores than fishing score, such as wind strength and direction, high and low tide values, wave height [and direction]. 
+
+- Create API documentation on nofish.no - link to it from an appropriate page
 
 - Explore how we could collaborate with other enthusiasts, like Fishbuddy. Norway vs global presence.
 

@@ -231,11 +231,16 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
             </p>
             {!isLand && (
               <div className="mt-2 space-y-0.5">
-                {oceanForecastDistance !== null && oceanForecastLat !== undefined && oceanForecastLng !== undefined && (
+                {oceanForecastDistance !== null && oceanForecastDistance > 0.05 && oceanForecastLat !== undefined && oceanForecastLng !== undefined && (
                   <p className="text-xs text-gray-400">
                     <span className="font-medium text-maritime-teal-600">{waveForecastSource === 'barentswatch' ? 'Barentswatch Waves' : 'MET Ocean'}</span>
                     {t('distanceAway', { distance: formatDistance(oceanForecastDistance) })}
                     {' '}({oceanForecastLat.toFixed(4)}°N, {oceanForecastLng.toFixed(4)}°E)
+                  </p>
+                )}
+                {!hasOceanData && (
+                  <p className="text-xs text-amber-600">
+                    {t('noOceanData')}
                   </p>
                 )}
                 {tideStationDistance !== null && tideStationLat !== undefined && tideStationLng !== undefined && (

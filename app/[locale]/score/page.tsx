@@ -84,9 +84,10 @@ export default async function ScorePage({ params, searchParams }: PageProps) {
     queryProtectionZones(lat, lng),
   ]);
 
-  const { forecasts: rawForecasts, currentForecastLat, currentForecastLng: _currentForecastLng, currentForecastDistanceKm: _currentForecastDistanceKm } = weatherResult;
+  const { forecasts: rawForecasts, oceanForecastLat, currentForecastLat, currentForecastLng: _currentForecastLng, currentForecastDistanceKm: _currentForecastDistanceKm } = weatherResult;
   const forecasts = enrichForecasts(rawForecasts);
   const { timezone } = weatherResult;
+  const hasWaveData = oceanForecastLat !== undefined;
   const hasCurrentData = currentForecastLat !== undefined;
 
   // Pre-compute scores for all forecasts (depth-adaptive)
@@ -171,9 +172,14 @@ export default async function ScorePage({ params, searchParams }: PageProps) {
                 </span>
               )}
             </p>
-            {!hasCurrentData && locationData?.isSea !== false && (
+            {!hasWaveData && locationData?.isSea !== false && (
               <p className="text-xs text-amber-600 mt-1">
                 {t('noOceanData')}
+              </p>
+            )}
+            {hasWaveData && !hasCurrentData && (
+              <p className="text-xs text-amber-600 mt-1">
+                {t('noCurrentWarning')}
               </p>
             )}
             {protectionZones.length > 0 && (

@@ -169,7 +169,7 @@
     },
     "depth": "Głębokość dna morskiego: ok. {depth} m",
     "elevation": "Wysokość: ok. {elevation} m",
-    "noOceanData": "Brak prognozy morskiej — wyświetlana jest tylko pogoda lądowa."
+    "noOceanData": "Dane o falach i prądach niedostępne — lokalizacja może być poza zasięgiem modelu Barentswatch. Wynik oparty wyłącznie na wietrze i pogodzie."
   },
   "details": {
     "metaTitle": "NoFish — Szczegóły prognozy",
@@ -185,6 +185,7 @@
     "sourceLabel": "Ródło:",
     "coordDepth": "Głębokość: {depth} m",
     "coordElevation": "Wysokość: {elevation} m",
+    "noOceanData": "Dane o falach i prądach niedostępne dla tej lokalizacji — może być poza zasięgiem modelu Barentswatch.",
     "confidence": {
       "high": "Wysoka wiarygodność (0–24 h)",
       "medium": "Średnia wiarygodność (24–48 h)"
