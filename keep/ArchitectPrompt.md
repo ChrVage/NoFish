@@ -32,7 +32,6 @@ Found in the [README.md](README.md) file.
 
 ### Second prio changes
 
-
 - API should support input for other scores than fishing score, such as wind strength and direction, high and low tide values, wave height [and direction]. 
 
 - Create API documentation on nofish.no - link to it from an appropriate page
@@ -51,3 +50,17 @@ Provide a brief summary of the overall code quality in the context of the NoFish
 Identify and explain the **single most important** change in detail. Why is it critical for performance, security, or UX?
 
 **Run vitest and eslint and fix errors** before answering.
+
+# Prompt for designing a logo
+
+Act as an expert Scandinavian graphic designer specializing in minimalist and modern aesthetics. Your task is to design a simple, stylish, and circular logo for the "NoFish" web application. This application is a marine weather forecasting tool for fishers, providing safety and fishing condition data along the Norwegian coast.
+
+## Design requirements:
+1. **Style**: The logo should embody Scandinavian design principles—minimalist, clean, and functional. Use rounded and easy curves to create a friendly and approachable aesthetic.
+2. **Shape**: The logo must be circular to symbolize unity and inclusiveness.
+3. **Inspiration**: Take inspiration from the "yr.no" logo, focusing on simplicity and clarity.
+4. **Colors**: Use the following NoFish brand colors to ensure consistency with the application's design:
+   - Maritime Teal: #00796b, #00695c, #004d40
+   - Coastal Red: #e53935, #d32f2f, #c62828
+5. **Typography**: If text is included, use a modern, sans-serif font that complements the Scandinavian aesthetic.
+6. **Versatility**: Ensure the logo is versatile and works well in various sizes and contexts, including app icons, website headers, and print materials.
