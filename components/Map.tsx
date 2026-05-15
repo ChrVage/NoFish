@@ -591,21 +591,55 @@ export default function Map() {
   // trigger another auto-navigate.
   // Never attach a permission-change listener; we don't want to trigger anything
   // when the browser prompt appears from the "My Location" button.
+  // ANY user interaction (map click, menu click, key press, scroll, touch …)
+  // cancels the pending auto-navigate so the user keeps control.
   const AUTO_LOCATE_SESSION_KEY = 'nofish-auto-located';
   useEffect(() => {
     if (hasRestore) { return; }
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(AUTO_LOCATE_SESSION_KEY)) { return; }
     if (typeof navigator === 'undefined' || !navigator.permissions) { return; }
     autoLocateCancelledRef.current = false;
+
+    // Cancel auto-locate on the first user interaction anywhere in the app.
+    // Listeners are attached in the capture phase so they fire before any
+    // child component can swallow the event, and they are passive so they
+    // never block scrolling. They self-remove after firing once.
+    const cancelOnInteraction = () => {
+      autoLocateCancelledRef.current = true;
+      removeInteractionListeners();
+    };
+    const removeInteractionListeners = () => {
+      window.removeEventListener('pointerdown', cancelOnInteraction, true);
+      window.removeEventListener('keydown', cancelOnInteraction, true);
+      window.removeEventListener('wheel', cancelOnInteraction, true);
+      window.removeEventListener('touchstart', cancelOnInteraction, true);
+    };
+    window.addEventListener('pointerdown', cancelOnInteraction, { capture: true, passive: true });
+    window.addEventListener('keydown', cancelOnInteraction, { capture: true });
+    window.addEventListener('wheel', cancelOnInteraction, { capture: true, passive: true });
+    window.addEventListener('touchstart', cancelOnInteraction, { capture: true, passive: true });
+
     navigator.permissions
       .query({ name: 'geolocation' })
       .then((status) => {
         if (status.state === 'granted' && !autoLocateCancelledRef.current) {
           sessionStorage.setItem(AUTO_LOCATE_SESSION_KEY, '1');
           handleMyLocationRef.current(true);
+        } else {
+          // Not granted (or already cancelled) — stop listening; nothing to cancel.
+          removeInteractionListeners();
         }
       })
-      .catch(() => { /* Permissions API unavailable — ignore */ });
+      .catch(() => {
+        /* Permissions API unavailable — ignore */
+        removeInteractionListeners();
+      });
+
+    // Listeners remain attached during the async geolocation + navigation
+    // flow inside handleMyLocation, so interactions during that window also
+    // cancel the auto-jump. They self-remove on first interaction or on
+    // unmount.
+    return removeInteractionListeners;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Close search suggestions on outside click
