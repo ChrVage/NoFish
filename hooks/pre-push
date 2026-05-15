@@ -57,17 +57,3 @@ fi
 echo ""
 echo "✅ All checks passed!"
 echo ""
-
-# Bump minor version and reset patch to 0 (runs only after checks pass)
-export SKIP_VERSION_BUMP=1
-node -e "
-const fs = require('fs');
-const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-const [major, minor] = pkg.version.split('.').map(Number);
-pkg.version = \`\${major}.\${minor + 1}.0\`;
-fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-console.log('Version bumped to', pkg.version);
-"
-NEW_VERSION=$(node -p "require('./package.json').version")
-git add package.json
-git commit -m "chore: bump version to $NEW_VERSION"

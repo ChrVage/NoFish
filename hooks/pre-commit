@@ -1,13 +1,15 @@
 #!/bin/sh
-# Skip if called from within pre-push (to avoid double-bump)
-[ "$SKIP_VERSION_BUMP" = "1" ] && exit 0
 
+# Refresh lib/version.json so the in-progress commit's count is recorded in
+# the same commit. The commit count is the single source of truth for the
+# version shown in dev and prod (read by next.config.ts).
 node -e "
 const fs = require('fs');
-const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-const [major, minor, patch] = pkg.version.split('.').map(Number);
-pkg.version = \`\${major}.\${minor}.\${patch + 1}\`;
-fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-console.log('Version bumped to', pkg.version);
+const { execSync } = require('child_process');
+const current = parseInt(execSync('git rev-list --count HEAD', { encoding: 'utf8' }).trim(), 10) || 0;
+// +1 accounts for the commit currently being created.
+const commits = current + 1;
+fs.writeFileSync('lib/version.json', JSON.stringify({ commits }, null, 2) + '\n');
+console.log('Recorded build', commits, 'in lib/version.json');
 "
-git add package.json
+git add lib/version.json

@@ -1,22 +1,16 @@
 import type { NextConfig } from "next";
-import { execSync } from 'child_process';
-import { version } from './package.json';
+import versionInfo from './lib/version.json';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
 function getBuildVersion(): string {
-  let sha = '';
-
-  try {
-    sha = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
-  } catch { /* git not available or failed */ }
-
-  // Fallback: Vercel exposes the commit SHA at build time
-  if (!sha) {sha = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? '';}
-
-  if (sha) {return `${version} (${sha})`;}
-  return version;
+  // lib/version.json is committed to the repo and updated by the pre-commit
+  // hook. The commit count is used as the version, guaranteeing the same
+  // value in dev and prod without depending on git history being available
+  // at build time (e.g. on Vercel's shallow clones).
+  const { commits } = versionInfo as { commits: number };
+  return String(commits);
 }
 
 const CSP = [
