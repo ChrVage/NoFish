@@ -32,6 +32,20 @@
 import type { HourlyForecast } from '@/types/weather';
 import type { BoatSizePreset, FishTarget, FishingMethod } from '@/lib/utils/tuning';
 
+// ── Constants ────────────────────────────────────────────────────────────────
+
+/**
+ * Hard ceiling for the safety score (0–100).
+ *
+ * The open Norwegian coast is never 100 % safe — even in perfect forecasted
+ * conditions you still depend on factors no API can know about: boat
+ * seaworthiness, life-jackets, VHF/EPIRB, fuel reserves, crew experience,
+ * local knowledge, communicated weather window, etc. We therefore cap the
+ * safety score below 100 to make clear that the remaining percentage must be
+ * earned through measures outside the forecast.
+ */
+export const MAX_SAFETY_SCORE = 90;
+
 // ── Public types ────────────────────────────────────────────────────────────
 
 export type Reason = { text: string; tone: 'good' | 'bad' | 'danger'; category: 'safety' | 'fishing' };
@@ -926,11 +940,17 @@ export function computeFishingScore(f: HourlyForecast, depthOrOptions?: number |
   }
 
   // ═══ COMBINE — multiply factors, scale to 0–100 ══════════════════════
+  // The exposed ocean can never be 100 % safe. Forecast data alone cannot
+  // capture boat condition, life-jackets, communication equipment, crew
+  // experience, local knowledge, or chosen weather window. We therefore cap
+  // the safety score at MAX_SAFETY_SCORE — the remaining headroom must be
+  // earned through measures outside the API data.
   const safetyRaw = windFactor * waveFactor * lightFactor * wavePeriodFactor;
+  const safetyRawCapped = Math.min(safetyRaw, MAX_SAFETY_SCORE / 100);
   const fishingRaw = currentFactor * tideFactor * moonFactor * precipFactor * tempFactor * speciesColumnFactor * speciesSeasonFactor * pressureFactor * lightFishingFactor * methodFactor;
-  const raw = safetyRaw * fishingRaw;
+  const raw = safetyRawCapped * fishingRaw;
   const score = Math.round(Math.max(0, Math.min(100, raw * 100)));
-  const safetyScore = Math.round(Math.max(0, Math.min(100, safetyRaw * 100)));
+  const safetyScore = Math.round(Math.max(0, Math.min(MAX_SAFETY_SCORE, safetyRawCapped * 100)));
   const fishingScore = Math.round(Math.max(0, Math.min(100, fishingRaw * 100)));
 
   return { score, safetyScore, fishingScore, reasons };
