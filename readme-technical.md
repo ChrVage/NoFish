@@ -280,6 +280,40 @@ types/
 
 ---
 
+## Logos and Icons
+
+All branding assets live in [public/](public/) so Next.js serves them from the site root. URLs are cache-busted with a `?v=YYYYMMDD` query string in [app/\[locale\]/layout.tsx](app/[locale]/layout.tsx) — bump that value whenever any of these files change.
+
+### Required image files
+
+| File | Purpose | Dimensions | Format | Background | Notes |
+|---|---|---|---|---|---|
+| [public/NoFish-logo.png](public/NoFish-logo.png) | In-app logo (header, loading screens). Rendered at 32×32 inside `rounded-full`. | 512×512 (square, ≥ 2× display size for retina) | PNG | Transparent | Master logo. Used by `next/image`, so larger source is fine — Next.js will downscale. |
+| [public/favicon.ico](public/favicon.ico) | Legacy browser tab/bookmark icon. | Multi-resolution: 16×16, 32×32, 48×48 | ICO | Transparent | Bundled into a single `.ico` file. |
+| [public/favicon.svg](public/favicon.svg) | Modern scalable browser tab icon. | Any (vector); designed at 32×32 | SVG | Transparent | Preferred by modern browsers; should look crisp at small sizes. |
+| [public/favicon-96x96.png](public/favicon-96x96.png) | PNG fallback favicon for older browsers / Android Chrome tab. | 96×96 | PNG | Transparent | Square. |
+| [public/apple-touch-icon.png](public/apple-touch-icon.png) | iOS / iPadOS home-screen icon. | 180×180 | PNG | Opaque (iOS masks corners) | No transparency — iOS adds rounded mask. |
+| [public/web-app-manifest-192x192.png](public/web-app-manifest-192x192.png) | PWA / Android home-screen icon (standard density). | 192×192 | PNG | Opaque | Referenced from `site.webmanifest`. |
+| [public/web-app-manifest-512x512.png](public/web-app-manifest-512x512.png) | PWA splash / high-density Android icon. | 512×512 | PNG | Opaque | Referenced from `site.webmanifest`. |
+| `public/site.webmanifest` | PWA manifest pointing to the two `web-app-manifest-*.png` files. | — | JSON | — | Not an image, but required by the `manifest` metadata field. |
+| `public/marine-weather-security-forecast-og.jpg` | Open Graph / Twitter card preview image. | 1200×630 | JPG | Opaque | Used when the site is shared on social media. |
+
+### Where each file is referenced
+
+| File | Referenced from |
+|---|---|
+| [public/NoFish-logo.png](public/NoFish-logo.png) | [components/Logo.tsx](components/Logo.tsx), [app/\[locale\]/page.tsx](app/[locale]/page.tsx), [app/\[locale\]/score/loading.tsx](app/[locale]/score/loading.tsx), [app/\[locale\]/details/loading.tsx](app/[locale]/details/loading.tsx), [app/\[locale\]/tide/loading.tsx](app/[locale]/tide/loading.tsx) |
+| [public/favicon.ico](public/favicon.ico) | [app/\[locale\]/layout.tsx](app/[locale]/layout.tsx) — `metadata.icons.icon` and `metadata.icons.shortcut` |
+| [public/favicon.svg](public/favicon.svg) | [app/\[locale\]/layout.tsx](app/[locale]/layout.tsx) — `metadata.icons.icon` |
+| [public/favicon-96x96.png](public/favicon-96x96.png) | [app/\[locale\]/layout.tsx](app/[locale]/layout.tsx) — `metadata.icons.icon` |
+| [public/apple-touch-icon.png](public/apple-touch-icon.png) | [app/\[locale\]/layout.tsx](app/[locale]/layout.tsx) — `metadata.icons.apple` |
+| [public/web-app-manifest-192x192.png](public/web-app-manifest-192x192.png) | `public/site.webmanifest` (via `metadata.manifest` in [app/\[locale\]/layout.tsx](app/[locale]/layout.tsx)) |
+| [public/web-app-manifest-512x512.png](public/web-app-manifest-512x512.png) | `public/site.webmanifest` (via `metadata.manifest` in [app/\[locale\]/layout.tsx](app/[locale]/layout.tsx)) |
+| `public/site.webmanifest` | [app/\[locale\]/layout.tsx](app/[locale]/layout.tsx) — `metadata.manifest` |
+| `public/marine-weather-security-forecast-og.jpg` | [app/\[locale\]/layout.tsx](app/[locale]/layout.tsx) — `metadata.openGraph.images` and `metadata.twitter.images` |
+
+---
+
 ## Navigation Model
 
 All coordinate state lives in URL search params (`?lat=…&lng=…`). No global state, no context.
