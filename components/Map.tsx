@@ -279,8 +279,8 @@ export default function Map() {
     const setLandState = (isLand: boolean | null) => {
       centerIsLandRef.current = isLand;
       setCenterIsLand(isLand);
-      if (isLand === true) {
-        seaChartManualRef.current = false;
+      // Only auto-hide if user hasn't toggled manually yet
+      if (isLand === true && !seaChartManualRef.current) {
         setShowSeaChart(false);
       }
     };
@@ -529,10 +529,7 @@ export default function Map() {
     let prevZoom = initialZoom;
     const updateSeaChartForZoom = () => {
       const zoom = map.getZoom();
-      const crossedThreshold = (prevZoom >= SEA_CHART_AUTO_ZOOM) !== (zoom >= SEA_CHART_AUTO_ZOOM);
-      if (crossedThreshold) {
-        seaChartManualRef.current = false;
-      }
+      // Only allow auto-toggling if user has NOT toggled manually
       if (!seaChartManualRef.current) {
         setShowSeaChart(centerIsLandRef.current === true ? false : zoom >= SEA_CHART_AUTO_ZOOM);
       }
@@ -884,13 +881,11 @@ export default function Map() {
         <button
           type="button"
           onClick={() => {
-            if (centerIsLand === true) {return;}
             seaChartManualRef.current = true;
             setShowSeaChart(v => !v);
           }}
-          disabled={centerIsLand === true}
           aria-label={showSeaChart ? t('seaChartHide') : t('seaChartLabel')}
-          title={centerIsLand === true ? t('seaChartUnavailable') : (showSeaChart ? t('seaChartHide') : t('seaChartTooltip'))}
+          title={showSeaChart ? t('seaChartHide') : t('seaChartTooltip')}
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
             background: showSeaChart ? '#0284c7' : '#fff',
@@ -900,8 +895,7 @@ export default function Map() {
             padding: '6px 12px',
             fontSize: '13px',
             fontWeight: 500,
-            cursor: centerIsLand === true ? 'not-allowed' : 'pointer',
-            opacity: centerIsLand === true ? 0.55 : 1,
+            cursor: 'pointer',
             boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
             flexShrink: 0,
           }}
