@@ -200,7 +200,6 @@ export default function Map() {
     const z = parseInt(searchParams.get('zoom') ?? '', 10);
     return !isNaN(z) && z >= 13;
   });
-  const [centerIsLand, setCenterIsLand] = useState<boolean | null>(null);
   const seaChartManualRef = useRef(false);
   const centerIsLandRef = useRef<boolean | null>(null);
   const landCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -278,7 +277,6 @@ export default function Map() {
 
     const setLandState = (isLand: boolean | null) => {
       centerIsLandRef.current = isLand;
-      setCenterIsLand(isLand);
       // Only auto-hide if user hasn't toggled manually yet
       if (isLand === true && !seaChartManualRef.current) {
         setShowSeaChart(false);
@@ -526,14 +524,12 @@ export default function Map() {
 
     // Auto-toggle sea chart based on zoom level
     const SEA_CHART_AUTO_ZOOM = 13;
-    let prevZoom = initialZoom;
     const updateSeaChartForZoom = () => {
       const zoom = map.getZoom();
       // Only allow auto-toggling if user has NOT toggled manually
       if (!seaChartManualRef.current) {
         setShowSeaChart(centerIsLandRef.current === true ? false : zoom >= SEA_CHART_AUTO_ZOOM);
       }
-      prevZoom = zoom;
     };
     map.on('zoomend', updateSeaChartForZoom);
 
