@@ -792,6 +792,24 @@ export default function Map() {
   // Keep ref in sync so the permissions effect below can call the latest version
   useEffect(() => { handleMyLocationRef.current = handleMyLocation; });
 
+  // Inject shake keyframes once so the location button can signal retry on errors.
+  useEffect(() => {
+    const styleId = 'nofish-shake-keyframes';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = `@keyframes shake {
+        0% { transform: translateX(0); }
+        20% { transform: translateX(-6px); }
+        40% { transform: translateX(6px); }
+        60% { transform: translateX(-4px); }
+        80% { transform: translateX(4px); }
+        100% { transform: translateX(0); }
+      }`;
+      document.head.appendChild(style);
+    }
+  }, []);
+
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainerRef} className="map-container w-full h-full" />
@@ -920,7 +938,21 @@ export default function Map() {
           disabled={locating}
           aria-label={t('locateAriaLabel')}
           title={t('locateAriaLabel')}
-          style={{ width: '40px', height: '40px', background: '#fff', borderRadius: '50%', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4b5563', cursor: locating ? 'wait' : 'pointer', opacity: locating ? 0.6 : 1, boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
+          style={{
+            width: '40px',
+            height: '40px',
+            background: '#fff',
+            borderRadius: '50%',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#4b5563',
+            cursor: locating ? 'wait' : 'pointer',
+            opacity: locating ? 0.6 : 1,
+            boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+            animation: locationError ? 'shake 0.4s' : undefined,
+          }}
         >
           {locating ? (
             <svg style={{ width: '20px', height: '20px', color: '#0ea5e9' }} fill="none" viewBox="0 0 24 24">
