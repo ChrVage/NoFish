@@ -4,7 +4,7 @@
 
 The NoFish Public API provides access to fishing conditions data combining weather forecasts, wave data, sea currents, and tide information for Norwegian coastal waters.
 
-**API Base URL**: `https://nofish.app/api/v1`
+**API Base URL**: `https://nofish.no/api/v1`
 
 ## Authentication
 
@@ -43,7 +43,7 @@ Before making API requests, you must register a contact email to obtain an API k
 
 **cURL Example**:
 ```bash
-curl -X POST https://nofish.app/api/v1/register \
+curl -X POST https://nofish.no/api/v1/register \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com"}'
 ```
@@ -65,9 +65,12 @@ All API keys have the following rate limits:
 
 Rate limit responses return a `429 Too Many Requests` status with headers:
 - `Retry-After`: Seconds until the next request is allowed
-- `X-RateLimit-Limit-Minute`: Minute limit
-- `X-RateLimit-Used-Minute`: Minute usage
+- `X-RateLimit-Limit-Minute`: Per-minute limit
+- `X-RateLimit-Used-Minute`: Requests used in the current minute window
 - `X-RateLimit-Reset-Minute`: ISO timestamp when the minute window resets
+- `X-RateLimit-Limit-Day`: Per-day limit (when the daily quota is exhausted)
+- `X-RateLimit-Used-Day`: Requests used today
+- `X-RateLimit-Reset-Day`: ISO timestamp when the daily window resets
 
 ## Endpoints
 
@@ -80,10 +83,10 @@ Returns fishing score data including best fishing windows and hourly scores.
 - `lon`: Longitude (decimal degrees, e.g., 10.75)
 
 **Optional Query Parameters**:
-- `boat`: Boat size preset (`15-19`, `20-24`, `25-30`, `31-40`; defaults to `20-24`)
-- `fish`: Fish target species (`cod`, `saithe`, `haddock`, `ling`, `tusk`, etc.; defaults to `cod`)
-- `method`: Fishing method (`rod`, `net`, `jig`, etc.; defaults to `rod`)
-- `depth`: Water depth in meters (0-1000; defaults to deep-water profile)
+- `boat`: Boat size preset (`15-19`, `20-24`, `25-30`, `31-40`; omit for no preference)
+- `fish`: Fish target species (`general`, `mackerel`, `saithe`, `cod`, `plaice`, `pollock`, `haddock`, `wolffish`, `monkfish`, `halibut`, `hake`, `ling`, `tusk`, `redfish`; omit for no preference)
+- `method`: Fishing method (`trolling`, `same-spot`, `net`, `pot`; omit for no preference)
+- `depth`: Water depth in meters (0–1000; when omitted the score uses the species ‘preferred depth’ profile, otherwise a general depth-adaptive profile)
 
 **Response** (Success - 200):
 ```json
@@ -133,13 +136,13 @@ Returns fishing score data including best fishing windows and hourly scores.
 
 Basic request with just coordinates:
 ```bash
-curl "https://nofish.app/api/v1/score?lat=59.91&lon=10.75" \
+curl "https://nofish.no/api/v1/score?lat=59.91&lon=10.75" \
   -H "X-Api-Key: your-api-key"
 ```
 
 Request with optional parameters:
 ```bash
-curl "https://nofish.app/api/v1/score?lat=59.91&lon=10.75&boat=25-30&fish=cod&method=rod&depth=80" \
+curl "https://nofish.no/api/v1/score?lat=59.91&lon=10.75&boat=25-30&fish=cod&method=same-spot&depth=80" \
   -H "X-Api-Key: your-api-key"
 ```
 
@@ -196,7 +199,7 @@ Returns high and low tide events for the specified location.
 
 **cURL Example**:
 ```bash
-curl "https://nofish.app/api/v1/tide?lat=59.91&lon=10.75" \
+curl "https://nofish.no/api/v1/tide?lat=59.91&lon=10.75" \
   -H "X-Api-Key: your-api-key"
 ```
 
@@ -206,11 +209,10 @@ All API responses are JSON with the following guarantees:
 
 - **Success responses** (2xx): Include `success: true` and `generated_at` ISO timestamp
 - **Error responses** (4xx, 5xx): Include `success: false`, `error` message, and `generated_at` ISO timestamp
-- **Source credit**: Both endpoints include a `source_credit` field acknowledging data sources:
-  - MET Norway Locationforecast 2.0 (weather)
-  - Barentswatch Waveforecast (wave height, period, direction)
-  - Barentswatch Sea Current (current speed, direction)
-  - Kartverket Tideforecast (tide events)
+- **Source credit**: Both endpoints include a `source_credit` field acknowledging data sources. The exact wording depends on the endpoint:
+  - `/api/v1/register`: `"API powered by MET Norway, Barentswatch, Kartverket"`
+  - `/api/v1/score`: `"Data from MET Norway (weather), Barentswatch (waves, currents), Kartverket (tide)"`
+  - `/api/v1/tide`: `"Tide data from Kartverket, weather context from MET Norway & Barentswatch"`
 
 ## Error Handling
 
@@ -254,7 +256,7 @@ The API integrates data from:
 1. **MET Norway Locationforecast 2.0**: Weather data including temperature, wind, precipitation, pressure
 2. **Barentswatch Waveforecast**: Sea state including wave height, period, direction
 3. **Barentswatch Sea Current**: Water current speed and direction
-4. **Kartverket Tide Forecast**: High and low tide events
+4. **Kartverket Tide API** (sehavniva): High and low tide events
 
 All responses include `source_credit` field with proper attribution.
 
@@ -288,7 +290,7 @@ The algorithm is depth-adaptive, tuning expectations for deep-water Norwegian co
 
 ## Support & Issues
 
-For API issues, contact: support@nofish.app
+For API issues, open a GitHub issue at <https://github.com/ChrVage/NoFish/issues> or contact the maintainer at hi@nofish.no.
 
 ## Changelog
 

@@ -7,7 +7,7 @@
 Register with a test email:
 
 ```bash
-curl -X POST https://localhost:3000/api/v1/register \
+curl -X POST http://localhost:3000/api/v1/register \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com"}'
 ```
@@ -29,14 +29,14 @@ Save the `key` value for use in subsequent requests.
 Use the API key from Step 1 in the `X-Api-Key` header:
 
 ```bash
-curl "https://localhost:3000/api/v1/score?lat=59.91&lon=10.75" \
+curl "http://localhost:3000/api/v1/score?lat=59.91&lon=10.75" \
   -H "X-Api-Key: YOUR_API_KEY_FROM_STEP_1"
 ```
 
 ### Step 3: Query Tide Information
 
 ```bash
-curl "https://localhost:3000/api/v1/tide?lat=59.91&lon=10.75" \
+curl "http://localhost:3000/api/v1/tide?lat=59.91&lon=10.75" \
   -H "X-Api-Key: YOUR_API_KEY_FROM_STEP_1"
 ```
 
@@ -46,7 +46,7 @@ curl "https://localhost:3000/api/v1/tide?lat=59.91&lon=10.75" \
 
 ```bash
 # Request with all optional parameters
-curl "https://localhost:3000/api/v1/score?lat=59.91&lon=10.75&boat=25-30&fish=cod&method=rod&depth=80" \
+curl "http://localhost:3000/api/v1/score?lat=59.91&lon=10.75&boat=25-30&fish=cod&method=same-spot&depth=80" \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 
@@ -55,7 +55,7 @@ Expected: 200 OK with best_windows and hourly_scores
 ### Test 2: Missing API Key
 
 ```bash
-curl "https://localhost:3000/api/v1/score?lat=59.91&lon=10.75"
+curl "http://localhost:3000/api/v1/score?lat=59.91&lon=10.75"
 ```
 
 Expected: 401 Unauthorized
@@ -70,7 +70,7 @@ Expected: 401 Unauthorized
 ### Test 3: Invalid API Key
 
 ```bash
-curl "https://localhost:3000/api/v1/score?lat=59.91&lon=10.75" \
+curl "http://localhost:3000/api/v1/score?lat=59.91&lon=10.75" \
   -H "X-Api-Key: invalid-key-format"
 ```
 
@@ -86,7 +86,7 @@ Expected: 401 Unauthorized
 ### Test 4: Invalid Coordinates
 
 ```bash
-curl "https://localhost:3000/api/v1/score?lat=invalid&lon=10.75" \
+curl "http://localhost:3000/api/v1/score?lat=invalid&lon=10.75" \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 
@@ -95,7 +95,7 @@ Expected: 400 Bad Request
 ### Test 5: Missing Coordinates
 
 ```bash
-curl "https://localhost:3000/api/v1/score" \
+curl "http://localhost:3000/api/v1/score" \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 
@@ -103,10 +103,10 @@ Expected: 400 Bad Request
 
 ### Test 6: Inland Location (No Wave Data)
 
-Oslo is inland, so it may not have tide/wave data:
+Lillehammer (clearly inland, far from any tide station):
 
 ```bash
-curl "https://localhost:3000/api/v1/tide?lat=59.9139&lon=10.7522" \
+curl "http://localhost:3000/api/v1/tide?lat=61.1153&lon=10.4662" \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 
@@ -117,14 +117,14 @@ Expected: 404 Not Found (or empty events array)
 Bergen (Norwegian west coast):
 
 ```bash
-curl "https://localhost:3000/api/v1/score?lat=60.3887&lon=5.3271" \
+curl "http://localhost:3000/api/v1/score?lat=60.3887&lon=5.3271" \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 
 Expected: 200 OK with comprehensive data
 
 ```bash
-curl "https://localhost:3000/api/v1/tide?lat=60.3887&lon=5.3271" \
+curl "http://localhost:3000/api/v1/tide?lat=60.3887&lon=5.3271" \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 
@@ -136,7 +136,7 @@ Make 11 requests within 60 seconds (limit is 10/min):
 
 ```bash
 for i in {1..11}; do
-  curl "https://localhost:3000/api/v1/score?lat=59.91&lon=10.75" \
+  curl "http://localhost:3000/api/v1/score?lat=59.91&lon=10.75" \
     -H "X-Api-Key: YOUR_API_KEY"
   echo "Request $i"
 done
@@ -148,12 +148,12 @@ Expected: 11th request returns 429 Too Many Requests with Retry-After header
 
 ```bash
 # First registration succeeds
-curl -X POST https://localhost:3000/api/v1/register \
+curl -X POST http://localhost:3000/api/v1/register \
   -H "Content-Type: application/json" \
   -d '{"email":"duplicate@example.com"}'
 
 # Second registration with same email fails
-curl -X POST https://localhost:3000/api/v1/register \
+curl -X POST http://localhost:3000/api/v1/register \
   -H "Content-Type: application/json" \
   -d '{"email":"duplicate@example.com"}'
 ```
@@ -170,7 +170,7 @@ Second request expected: 409 Conflict
 ### Test 10: Invalid Email Format
 
 ```bash
-curl -X POST https://localhost:3000/api/v1/register \
+curl -X POST http://localhost:3000/api/v1/register \
   -H "Content-Type: application/json" \
   -d '{"email":"not-an-email"}'
 ```
@@ -209,7 +209,7 @@ LON=11.2500
 
 ```javascript
 const API_KEY = 'your-api-key-here';
-const BASE_URL = 'https://nofish.app/api/v1';
+const BASE_URL = 'https://nofish.no/api/v1';
 
 // Get fishing score
 async function getScore(lat, lon, options = {}) {
@@ -251,7 +251,7 @@ async function getTide(lat, lon) {
 
 // Usage
 (async () => {
-  const score = await getScore(59.91, 10.75, { boat: '25-30', fish: 'cod' });
+  const score = await getScore(59.91, 10.75, { boat: '25-30', fish: 'cod', method: 'same-spot' });
   console.log('Best windows:', score.best_windows);
   
   const tide = await getTide(59.91, 10.75);
@@ -266,7 +266,7 @@ import requests
 import json
 
 API_KEY = 'your-api-key-here'
-BASE_URL = 'https://nofish.app/api/v1'
+BASE_URL = 'https://nofish.no/api/v1'
 
 def get_score(lat, lon, boat=None, fish=None, method=None, depth=None):
     params = {'lat': lat, 'lon': lon}
@@ -293,7 +293,7 @@ def get_tide(lat, lon):
     return response.json()
 
 # Usage
-score = get_score(59.91, 10.75, boat='25-30', fish='cod')
+score = get_score(59.91, 10.75, boat='25-30', fish='cod', method='same-spot')
 print('Best windows:', score['best_windows'])
 
 tide = get_tide(59.91, 10.75)
@@ -305,7 +305,7 @@ print('Tide events:', tide['events'])
 ### Check API Key is Valid
 
 ```bash
-curl "https://localhost:3000/api/v1/score?lat=59.91&lon=10.75" \
+curl "http://localhost:3000/api/v1/score?lat=59.91&lon=10.75" \
   -H "X-Api-Key: YOUR_API_KEY" \
   -v
 ```
@@ -315,7 +315,7 @@ Look for `X-Api-Key` in request headers and 200/401 status code.
 ### Check Rate Limit Headers
 
 ```bash
-curl "https://localhost:3000/api/v1/score?lat=59.91&lon=10.75" \
+curl "http://localhost:3000/api/v1/score?lat=59.91&lon=10.75" \
   -H "X-Api-Key: YOUR_API_KEY" \
   -i | grep X-RateLimit
 ```
@@ -323,7 +323,7 @@ curl "https://localhost:3000/api/v1/score?lat=59.91&lon=10.75" \
 ### Check Cache Status
 
 ```bash
-curl "https://localhost:3000/api/v1/score?lat=59.91&lon=10.75" \
+curl "http://localhost:3000/api/v1/score?lat=59.91&lon=10.75" \
   -H "X-Api-Key: YOUR_API_KEY" \
   -i | grep Cache-Control
 ```
@@ -345,7 +345,7 @@ Import this into Postman for easy testing:
       "name": "Register API Key",
       "request": {
         "method": "POST",
-        "url": "https://localhost:3000/api/v1/register",
+        "url": "http://localhost:3000/api/v1/register",
         "header": [{"key": "Content-Type", "value": "application/json"}],
         "body": {
           "mode": "raw",
@@ -357,7 +357,7 @@ Import this into Postman for easy testing:
       "name": "Get Score",
       "request": {
         "method": "GET",
-        "url": "https://localhost:3000/api/v1/score?lat=59.91&lon=10.75",
+        "url": "http://localhost:3000/api/v1/score?lat=59.91&lon=10.75",
         "header": [{"key": "X-Api-Key", "value": "YOUR_API_KEY"}]
       }
     },
@@ -365,7 +365,7 @@ Import this into Postman for easy testing:
       "name": "Get Tide",
       "request": {
         "method": "GET",
-        "url": "https://localhost:3000/api/v1/tide?lat=59.91&lon=10.75",
+        "url": "http://localhost:3000/api/v1/tide?lat=59.91&lon=10.75",
         "header": [{"key": "X-Api-Key", "value": "YOUR_API_KEY"}]
       }
     }

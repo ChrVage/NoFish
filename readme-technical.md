@@ -9,11 +9,13 @@
 | Framework | Next.js 16.1.6 (App Router, server components, `after()`) |
 | Language | TypeScript 5 |
 | Runtime | React 19.2.3 |
+| Internationalisation | `next-intl` 4 — locale-prefixed routing for `no` (default), `en`, `de`, `nl`, `pl` via `middleware.ts` + `i18n/routing.ts` |
 | Styling | Tailwind CSS v4 (light-mode only — dark-mode OS preference intentionally ignored) |
 | Map | Leaflet.js 1.9.4 (loaded client-side via `useEffect`; SSR-disabled with `next/dynamic`) with OpenStreetMap tiles |
 | XML parsing | `fast-xml-parser` — used to parse Kartverket's tide API XML response server-side |
 | Database | Neon serverless Postgres via `@neondatabase/serverless` |
 | Timezone | `tz-lookup` 6.1.25 — pure-JS IANA timezone from coordinates; no file I/O; works on Vercel Edge |
+| Testing | Vitest 4 (`npm test` / `npm run test:watch`) |
 | Deployment | Vercel (auto-deploy on push to `main`) |
 
 ---
@@ -37,12 +39,15 @@ All external calls are made **server-side** to avoid CORS issues and comply with
 
 | Route | Purpose |
 |---|---|
-| `GET /api/geocoding?lat=&lon=` | Reverse geocodes coordinates using "Maritime First" strategy (v9): parallel elevation + Kartverket SSR nearby-places fetch, maritime features prioritised for coastal locations, municipality from Kartverket `/sted` endpoint. Nominatim used only as fallback for non-Norwegian locations. Returns place name, elevation, terrain type, sea/land classification, and kommune number. 30-day cache. |
-| `GET /api/weather?lat=&lon=` | Returns the full 10-day merged `HourlyForecast[]` array plus ocean grid coordinates. Used by the Details, Score, and Tide pages via server-side direct lib calls; this route is exposed for external consumers. |
+| `GET /api/geocoding?lat=&lon=` | Reverse geocodes coordinates using "Maritime First" strategy (v9): parallel elevation + Kartverket SSR nearby-places fetch, maritime features prioritised for coastal locations, municipality from Kartverket `/sted` endpoint. Nominatim used only as fallback when Kartverket cannot supply a municipality (typically non-Norwegian locations). Returns place name, elevation, terrain type, sea/land classification, and kommune number. 30-day cache. Rate-limited (60 req/min/IP). |
+| `GET /api/weather?lat=&lon=` | Returns the full 10-day merged `HourlyForecast[]` array plus ocean grid coordinates. Used by the Details, Score, and Tide pages via server-side direct lib calls; this route is exposed for external consumers. Rate-limited (30 req/min/IP). |
 | `GET /api/weather-point?lat=&lon=` | Returns only `{ weatherForecastLat, weatherForecastLng }`. Used by the map to determine the MET Norway grid point snapped to the request. Rate-limited (60 req/min/IP). |
-| `GET /api/ocean-point?lat=&lon=` | Returns only `{ oceanForecastLat, oceanForecastLng }`. Used by the map to place the blue dot and determine whether Score/Tide buttons should be shown. Returns `undefined` coordinates when the grid point is more than 1 km away. Cache-backed — usually a hit when the Details page has already been visited. |
+| `GET /api/ocean-point?lat=&lon=` | Returns only `{ oceanForecastLat, oceanForecastLng }`. Used by the map to place the blue dot and determine whether Score/Tide buttons should be shown. Returns `undefined` coordinates when the grid point is more than 1 km away. Rate-limited (60 req/min/IP). Cache-backed — usually a hit when the Details page has already been visited. |
 | `GET /api/search?q=` | Place name search via Kartverket Stedsnavn API. Returns up to 6 results with name, type, municipality, and coordinates. Fuzzy wildcard matching. Rate-limited (30 req/min/IP); cached 24 h. |
 | `GET /api/statistics` | Aggregate usage counts from the `lookups` table — total lookups, weekly series, today/7-day KPIs, top cities. Powers `/statistics` page. Rate-limited (10 req/min/IP); 5-minute ISR cache. |
+| `POST /api/v1/register` | Public-API key registration. Generates a 64-hex-char API key bound to an email. Per-IP rate limit (10 req/min). Returns 409 if the email is already registered. |
+| `GET /api/v1/score?lat=&lon=` | Authenticated public-API endpoint (`X-Api-Key` header). Returns `best_windows` and `hourly_scores`. Per-key rate limit (10 req/min, 100 req/day). 30 min `s-maxage`, 1 h stale-while-revalidate. |
+| `GET /api/v1/tide?lat=&lon=` | Authenticated public-API endpoint (`X-Api-Key` header). Returns high/low tide events for the nearest Kartverket station. Same per-key rate limits and cache headers as `/api/v1/score`. |
 
 
 ---
@@ -115,7 +120,7 @@ Logged **in production only** (`NODE_ENV === 'production'`), after the response 
 
 | Column | Description |
 |---|---|
-| `cache_key` | Text primary key — e.g. `geo3:59.91:10.75`, `weather:59.91:10.75`, `tide:60:11`, `tideall:60:11` |
+| `cache_key` | Text primary key — e.g. `geo9:59.9133:10.7522`, `weather:59.91:10.75`, `tide:60:11`, `tideall:60:11` |
 | `data` | JSONB — full serialised API response |
 | `cached_at` | Write timestamp |
 | `expires_at` | Expiry timestamp; stale rows are overwritten on next miss |
@@ -199,38 +204,69 @@ Vercel automatically provisions and renews a Let's Encrypt TLS certificate for e
 
 ```
 app/
-  layout.tsx            # Root layout — metadata, JSON-LD structured data
-  page.tsx              # Home page — full-screen interactive map
+  layout.tsx            # Root layout — passes children through to the locale layout
   globals.css           # Global styles (Tailwind base + custom scrollbar); light-mode only
-  about/
-    page.tsx            # About NoFish — purpose and usage
-  data/
-    page.tsx            # Data column reference and source quality
-  score/
+  robots.ts             # /robots.txt — points crawlers at the sitemap
+  sitemap.ts            # /sitemap.xml — generated from the static route list
+  [locale]/
+    layout.tsx          # Per-locale layout — metadata (icons, OG, manifest), JSON-LD structured data, NextIntlClientProvider
+    page.tsx            # Home page — full-screen interactive map
+    error.tsx           # Locale-scoped client error boundary
     about/
-      page.tsx          # Fishing score algorithm documentation
-  details/
-    page.tsx            # Server component — 10-day hourly forecast table
-    loading.tsx         # Streaming skeleton shown while server fetches data
-  score/
-    page.tsx            # Server component — fishing score table (0–100%) with per-hour ratings
-  tide/
-    page.tsx            # Server component — high/low tide event table (10 days)
+      page.tsx          # About NoFish — purpose and usage
+    data/
+      page.tsx          # Data column reference and source quality
+    details/
+      page.tsx          # Server component — 10-day hourly forecast table
+      loading.tsx       # Streaming skeleton shown while server fetches data
+      error.tsx         # Error boundary for the Details page
+    score/
+      page.tsx          # Server component — fishing score table (0–100%) with per-hour ratings
+      loading.tsx       # Streaming skeleton
+      error.tsx         # Error boundary for the Score page
+      about/
+        page.tsx        # Fishing score algorithm documentation
+    tide/
+      page.tsx          # Server component — high/low tide event table (10 days)
+      loading.tsx       # Streaming skeleton
+      error.tsx         # Error boundary for the Tide page
+    statistics/
+      page.tsx          # Server component — aggregate usage charts (ISR, 5-minute revalidation)
+      loading.tsx       # Streaming skeleton
+      error.tsx         # Error boundary
+    feedback/
+      page.tsx          # Client component — collect flagged data points and open GitHub issue
   api/
     geocoding/
       route.ts          # GET /api/geocoding?lat=&lon= — thin proxy to lib/api/geocoding.ts
+      route.test.ts
     weather/
       route.ts          # GET /api/weather?lat=&lon= — returns full HourlyForecast[] + ocean grid coordinates
+    weather-point/
+      route.ts          # GET /api/weather-point?lat=&lon= — returns only weatherForecastLat/Lng (used by map)
     ocean-point/
       route.ts          # GET /api/ocean-point?lat=&lon= — returns only oceanForecastLat/Lng (used by map)
+      route.test.ts
     search/
       route.ts          # GET /api/search?q= — place name search via Kartverket Stedsnavn
     statistics/
       route.ts          # GET /api/statistics — aggregate usage stats (rate-limited)
-  feedback/
-    page.tsx            # Client component — collect flagged data points and open GitHub issue
-  statistics/
-    page.tsx            # Server component — aggregate usage charts (ISR, 5-minute revalidation)
+    v1/
+      register/
+        route.ts        # POST /api/v1/register — public-API key registration
+      score/
+        route.ts        # GET /api/v1/score — authenticated public-API fishing score endpoint
+      tide/
+        route.ts        # GET /api/v1/tide — authenticated public-API tide endpoint
+
+middleware.ts           # next-intl middleware — handles locale prefix on every non-API route
+next.config.ts          # Next config, security headers (CSP, HSTS, …), next-intl plugin wiring
+i18n/
+  routing.ts            # next-intl locale list (no/en/de/nl/pl) and default-locale config
+  navigation.ts         # next-intl typed Link / useRouter / redirect helpers
+  request.ts            # Server-side locale message loader
+
+messages/               # Translated UI strings — de.json, en.json, nl.json, no.json, pl.json
 
 components/
   BackButton.tsx        # Client component — reads lat/lng/zoom from search params, navigates back to /?lat=&lng=&zoom=
@@ -243,37 +279,45 @@ components/
   ForecastTable.tsx     # Hourly forecast table; columns grouped by API source; wind direction shown as met. wind barb
   HashScroller.tsx      # Client component — scrolls to the URL hash anchor on page load
   Header.tsx            # Top bar shared across all pages
+  LocaleSwitcher.tsx    # Client component — language picker rendered in the header
   Logo.tsx              # 🎣 NoFish logo — also serves as back-to-map button
   Map.tsx               # Leaflet map; click → marker + popup
   PageNav.tsx           # Header nav buttons (Score / Details / Tides)
   SafetyContacts.tsx    # Emergency contacts list (HRS, VHF channel 16) shown on Score page
   TuningControls.tsx    # Client component — boat size, target species (grouped by depth), and fishing method selects
 
+hooks/
+  pre-commit            # Updates lib/version.json with the current commit count
+  pre-push              # Runs typecheck, lint and tests; blocks the push on failure
+
 lib/
+  version.json          # `{ "commits": N }` — committed build version, refreshed by the pre-commit hook
   api/
+    apiKeyValidator.ts  # validateApiKeyHeader() + recordApiRequest() — used by /api/v1/* routes
     barentswatch.ts     # OAuth2 token management + getWaveForecast() + getSeaCurrentForecast()
-    weather.ts          # getCombinedForecast() — fetches and merges all API sources
-    geocoding.ts        # reverseGeocode() — "Maritime First" v9: Kartverket SSR + elevation, maritime features prioritised, Nominatim fallback
     fiskeridirektoratet.ts # queryProtectionZones() — fishing protection zones from Fiskeridirektoratet
+    geocoding.ts        # reverseGeocode() — "Maritime First" v9: Kartverket SSR + elevation, maritime features prioritised, Nominatim fallback
+    weather.ts          # getCombinedForecast() — fetches and merges all API sources
   db/
     index.ts            # Neon SQL client (reads DATABASE_URL)
-    lookups.ts          # insertLookup() + ensureTable()
     cache.ts            # forecast_cache table — getCached() / setCached() / withInflight()
-  geo/                  # Geospatial helpers (coordinate utilities)
+    lookups.ts          # insertLookup() + ensureTable() for the usage log
+    apiKeys.ts          # registerApiKey() / validateApiKey() / getKeyRequestCount() / incrementKeyRequestCount()
   scoring/
     fishingScore.ts     # computeFishingScore(), findBestWindows(), findNetFishingWindows(), recommendFishingMethods()
     fishingScore.test.ts
   utils/
     distance.ts         # haversineDistance / formatDistance
     enrichForecasts.ts  # Trims at last hourly MET row; interpolates Barentswatch 3-h wave data
+    formatTime.ts       # Locale-aware date/time formatting helpers
     params.ts           # buildLocationUrl() — typed URL builder for all sub-pages
-    rateLimit.ts        # checkRateLimit() — in-memory sliding-window rate limiter
+    rateLimit.ts        # checkRateLimit() + checkApiKeyRateLimit() — in-memory sliding-window rate limiter
     sunPhaseStyle.ts    # getSunPhaseStyle() — CSS gradient for sun phase column
     timezone.ts         # getTimezone / getTimezoneLabel via tz-lookup
     tuning.ts           # FISH_TARGET_GROUPS, FISH_TARGET_OPTIONS, FISHING_METHOD_OPTIONS, BOAT_SIZE_OPTIONS, TuningSelection type
     validation.ts       # validateCoordinates() — parses and clamps lat/lng at API boundary
 
-public/                 # Static assets (OG image, favicons)
+public/                 # Static assets (logo, favicons, OG image, web manifest)
 types/
   weather.ts            # TypeScript interfaces for API responses, HourlyForecast, etc.
 ```
@@ -374,10 +418,10 @@ User clicks map
 
 | Data | Key pattern | Precision | TTL |
 |---|---|---|---|
-| Geocoding | `geo3:{lat.2dp}:{lng.2dp}` | ≈1 km | 30 days |
+| Geocoding | `geo9:{lat.4dp}:{lng.4dp}` | ≈11 m | 30 days |
 | Weather + ocean | `weather:{lat.2dp}:{lng.2dp}` | ≈1 km | 1 hour |
-| Tides (events) | `tide:{lat.0dp}:{lng.0dp}` | Integer | 6 hours |
-| Tides (page data) | `tideall:{lat.0dp}:{lng.0dp}` | Integer | 6 hours |
+| Tides (events) | `tide:{lat.0dp}:{lng.0dp}` | Integer degree | 6 hours |
+| Tides (page data) | `tideall:{lat.0dp}:{lng.0dp}` | Integer degree | 6 hours |
 
 ---
 

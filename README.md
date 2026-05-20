@@ -37,14 +37,14 @@ Website documentation (on nofish.no):
 ```bash
 git clone https://github.com/ChrVage/NoFish.git
 cd NoFish
-npm install        # also activates the pre-push git hook via the prepare script
+npm install        # also activates the pre-commit and pre-push git hooks via the prepare script
 npm run dev        # http://localhost:3000
 npm run build      # production build
 npm test           # run all tests (vitest)
 npm run lint
 ```
 
-`npm install` runs a `prepare` script that sets `core.hooksPath` to the committed `hooks/` directory. The pre-push hook runs type check, lint, and tests automatically before every push, blocking the push if any check fails.
+`npm install` runs a `prepare` script that sets `core.hooksPath` to the committed `hooks/` directory. The pre-commit hook refreshes `lib/version.json` with the current commit count (exposed at runtime as `NEXT_PUBLIC_BUILD_VERSION`). The pre-push hook runs type check, lint, and tests automatically before every push, blocking the push if any check fails.
 
 See [readme-technical.md](readme-technical.md) for prerequisites, database setup, and deployment.
 
