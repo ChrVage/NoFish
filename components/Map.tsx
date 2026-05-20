@@ -197,7 +197,9 @@ export default function Map() {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [showMapHint, setShowMapHint] = useState(() => {
-    if (hasRestore) { return false; }
+    // Show the welcome hint on first mount unless we are returning to coords
+    // (URL has lat/lng) or auto-locate has already fired in this session.
+    if (searchParams.get('lat') && searchParams.get('lng')) { return false; }
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('nofish-auto-located')) { return false; }
     if (typeof navigator === 'undefined' || !navigator.permissions) { return false; }
     return true;
