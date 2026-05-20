@@ -20,12 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 interface WeeklyRow { week_start: string; count: number }
 interface CityCount { city: string; count: number }
+interface MunicipalityCount { municipality: string; count: number }
 
 async function getStatistics() {
   const sql = getSql();
   await ensureTable();
 
-  const [totalRow, weeklyRows, kpiRow, cityRows] = await Promise.all([
+  const [totalRow, weeklyRows, kpiRow, cityRows, muni1wRows, muni4wRows, muni13wRows] = await Promise.all([
     sql`SELECT COUNT(*)::int AS total FROM lookups`,
 
     sql`
@@ -55,6 +56,36 @@ async function getStatistics() {
       ORDER BY count DESC
       LIMIT 10
     `,
+
+    sql`
+      SELECT municipality, COUNT(*)::int AS count
+      FROM lookups
+      WHERE municipality IS NOT NULL AND municipality != '' AND municipality != 'Unknown municipality'
+        AND created_at >= NOW() - INTERVAL '7 days'
+      GROUP BY municipality
+      ORDER BY count DESC, municipality ASC
+      LIMIT 10
+    `,
+
+    sql`
+      SELECT municipality, COUNT(*)::int AS count
+      FROM lookups
+      WHERE municipality IS NOT NULL AND municipality != '' AND municipality != 'Unknown municipality'
+        AND created_at >= NOW() - INTERVAL '28 days'
+      GROUP BY municipality
+      ORDER BY count DESC, municipality ASC
+      LIMIT 10
+    `,
+
+    sql`
+      SELECT municipality, COUNT(*)::int AS count
+      FROM lookups
+      WHERE municipality IS NOT NULL AND municipality != '' AND municipality != 'Unknown municipality'
+        AND created_at >= NOW() - INTERVAL '91 days'
+      GROUP BY municipality
+      ORDER BY count DESC, municipality ASC
+      LIMIT 10
+    `,
   ]);
 
   const kpi = kpiRow[0] ?? { today: 0, last7: 0, prev7: 0 };
@@ -65,6 +96,9 @@ async function getStatistics() {
     last7: (kpi.last7 as number) ?? 0,
     prev7: (kpi.prev7 as number) ?? 0,
     topCities: cityRows as unknown as CityCount[],
+    topMunicipalities1w: muni1wRows as unknown as MunicipalityCount[],
+    topMunicipalities4w: muni4wRows as unknown as MunicipalityCount[],
+    topMunicipalities13w: muni13wRows as unknown as MunicipalityCount[],
   };
 }
 
@@ -186,6 +220,72 @@ export default async function StatisticsPage({ params }: StatisticsPageProps) {
                   );
                 })}
               </div>
+          </section>
+        )}
+
+        {/* ─── Top municipalities by period ─── */}
+        {(stats.topMunicipalities1w.length > 0 ||
+          stats.topMunicipalities4w.length > 0 ||
+          stats.topMunicipalities13w.length > 0) && (
+          <section
+            className="rounded-2xl p-5 sm:p-7"
+            style={{
+              background: '#ffffff',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
+            }}
+          >
+            <h2 className="text-sm font-bold text-gray-700 tracking-tight mb-5">
+              {t('topMunicipalities')}
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              {[
+                { label: t('lastWeek'), rows: stats.topMunicipalities1w },
+                { label: t('last4Weeks'), rows: stats.topMunicipalities4w },
+                { label: t('last13Weeks'), rows: stats.topMunicipalities13w },
+              ].map((col) => {
+                const max = Math.max(...col.rows.map((r) => r.count), 1);
+                return (
+                  <div key={col.label}>
+                    <h3 className="text-[11px] uppercase tracking-widest font-semibold text-gray-400 mb-3">
+                      {col.label}
+                    </h3>
+                    {col.rows.length === 0 ? (
+                      <p className="text-xs text-gray-400">{t('noData')}</p>
+                    ) : (
+                      <ol className="space-y-1.5">
+                        {col.rows.map((r, i) => {
+                          const pct = Math.max((r.count / max) * 100, 4);
+                          return (
+                            <li
+                              key={r.municipality}
+                              className="relative flex items-center justify-between gap-2 text-xs px-2 py-1.5 rounded-md overflow-hidden"
+                              style={{ background: '#f1f5f9' }}
+                            >
+                              <div
+                                aria-hidden
+                                style={{
+                                  position: 'absolute',
+                                  inset: 0,
+                                  width: `${pct}%`,
+                                  background: 'linear-gradient(90deg, rgba(0,121,107,0.16) 0%, rgba(0,121,107,0.08) 100%)',
+                                }}
+                              />
+                              <span className="relative truncate text-gray-700">
+                                <span className="text-gray-400 tabular-nums mr-1.5">{i + 1}.</span>
+                                {r.municipality}
+                              </span>
+                              <span className="relative tabular-nums font-semibold text-[#00695c]">
+                                {r.count}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </section>
         )}
 

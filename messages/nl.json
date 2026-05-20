@@ -43,6 +43,7 @@
     "elevation": "Hoogte: {elevation} m",
     "loading": "Laden...",
     "locateAriaLabel": "Naar mijn locatie gaan",
+    "welcomeHint": "Klik op de kaart voor visscores, weersvoorspellingen of getijdenstanden langs de Noorse kust, of klik op ‘Mijn locatie’ voor details over uw huidige locatie.",
     "searchPlaceholder": "Zoek een locatie...",
     "seaChartLabel": "Zeekaart",
     "seaChartHide": "Zeekaart verbergen",
@@ -437,6 +438,10 @@
     "vsWeekBefore": "vs. vorige week",
     "weeklyActivity": "Wekelijkse activiteit (laatste 13 weken)",
     "topCities": "Topsteden",
+    "topMunicipalities": "Meest gezochte gemeenten",
+    "lastWeek": "Afgelopen week",
+    "last4Weeks": "Afgelopen 4 weken",
+    "last13Weeks": "Afgelopen 13 weken",
     "lookups": "opzoekingen",
     "noData": "Nog geen gegevens"
   }

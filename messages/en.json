@@ -43,6 +43,7 @@
     "elevation": "Elevation: {elevation} m",
     "loading": "Loading...",
     "locateAriaLabel": "Go to my location",
+    "welcomeHint": "Click on the map to get fishing scores, forecasts or tide levels on the Norwegian coast, or click 'My location' to get the details for your location.",
     "searchPlaceholder": "Search for a place...",
     "seaChartLabel": "Nautical chart",
     "seaChartHide": "Hide nautical chart",
@@ -437,6 +438,10 @@
     "vsWeekBefore": "vs week before",
     "weeklyActivity": "Weekly activity (last 13 weeks)",
     "topCities": "Top cities",
+    "topMunicipalities": "Top municipalities searched",
+    "lastWeek": "Last week",
+    "last4Weeks": "Last 4 weeks",
+    "last13Weeks": "Last 13 weeks",
     "lookups": "lookups",
     "noData": "No data yet"
   }

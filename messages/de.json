@@ -43,6 +43,7 @@
     "elevation": "Höhe: {elevation} m",
     "loading": "Lädt...",
     "locateAriaLabel": "Zu meinem Standort gehen",
+    "welcomeHint": "Klicken Sie auf die Karte, um Angel-Scores, Wettervorhersagen oder Gezeitenstände an der norwegischen Küste zu erhalten, oder klicken Sie auf „Mein Standort“, um Details für Ihren aktuellen Standort zu sehen.",
     "searchPlaceholder": "Ort suchen...",
     "seaChartLabel": "Seekarte",
     "seaChartHide": "Seekarte ausblenden",
@@ -437,6 +438,10 @@
     "vsWeekBefore": "ggü. Vorwoche",
     "weeklyActivity": "Wöchentliche Aktivität (letzte 13 Wochen)",
     "topCities": "Top-Städte",
+    "topMunicipalities": "Meistgesuchte Gemeinden",
+    "lastWeek": "Letzte Woche",
+    "last4Weeks": "Letzte 4 Wochen",
+    "last13Weeks": "Letzte 13 Wochen",
     "lookups": "Abfragen",
     "noData": "Noch keine Daten"
   }

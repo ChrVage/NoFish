@@ -41,6 +41,7 @@
     "elevation": "Wysokość: {elevation} m",
     "loading": "Ładowanie...",
     "locateAriaLabel": "Przejdź do mojej lokalizacji",
+    "welcomeHint": "Kliknij na mapę, aby uzyskać oceny połowu, prognozy pogody lub poziomy pływów na norweskim wybrzeżu, lub kliknij „Moja lokalizacja”, aby zobaczyć szczegóły dla swojego położenia.",
     "searchPlaceholder": "Szukaj lokalizacji...",
     "seaChartLabel": "Mapa morska",
     "seaChartHide": "Ukryj mapę morską",
@@ -435,6 +436,10 @@
     "vsWeekBefore": "vs. poprzedni tydzień",
     "weeklyActivity": "Aktywność tygodniowa (ostatnie 13 tygodni)",
     "topCities": "Najważniejsze miasta",
+    "topMunicipalities": "Najczęściej wyszukiwane gminy",
+    "lastWeek": "Ostatni tydzień",
+    "last4Weeks": "Ostatnie 4 tygodnie",
+    "last13Weeks": "Ostatnie 13 tygodni",
     "lookups": "wyszukiwania",
     "noData": "Brak danych"
   }

@@ -43,6 +43,7 @@
     "elevation": "Høyde: {elevation} m",
     "loading": "Laster...",
     "locateAriaLabel": "Gå til min posisjon",
+    "welcomeHint": "Klikk på kartet for å få fiskescore, værvarsel eller tidevannsnivåer langs norskekysten, eller klikk «Min posisjon» for å se detaljer for stedet du befinner deg.",
     "searchPlaceholder": "Søk etter et sted...",
     "seaChartLabel": "Sjøkart",
     "seaChartHide": "Skjul sjøkart",
@@ -437,6 +438,10 @@
     "vsWeekBefore": "vs. forrige uke",
     "weeklyActivity": "Ukentlig aktivitet (siste 13 uker)",
     "topCities": "Topp byer",
+    "topMunicipalities": "Mest søkte kommuner",
+    "lastWeek": "Siste uke",
+    "last4Weeks": "Siste 4 uker",
+    "last13Weeks": "Siste 13 uker",
     "lookups": "oppslag",
     "noData": "Ingen data ennå"
   }

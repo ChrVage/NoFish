@@ -196,6 +196,7 @@ export default function Map() {
   useEffect(() => { popupStringsRef.current = popupStrings; }, [popupStrings]);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
+  const [showMapHint, setShowMapHint] = useState(false);
   const [showSeaChart, setShowSeaChart] = useState(() => {
     const z = parseInt(searchParams.get('zoom') ?? '', 10);
     return !isNaN(z) && z >= 13;
@@ -592,6 +593,8 @@ export default function Map() {
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(AUTO_LOCATE_SESSION_KEY)) { return; }
     if (typeof navigator === 'undefined' || !navigator.permissions) { return; }
     autoLocateCancelledRef.current = false;
+    // Show welcome hint until the user starts interacting or auto-locate fires
+    setShowMapHint(true);
 
     // Cancel auto-locate on the first user interaction anywhere in the app.
     // Listeners are attached in the capture phase so they fire before any
@@ -599,6 +602,7 @@ export default function Map() {
     // never block scrolling. They self-remove after firing once.
     const cancelOnInteraction = () => {
       autoLocateCancelledRef.current = true;
+      setShowMapHint(false);
       removeInteractionListeners();
     };
     const removeInteractionListeners = () => {
@@ -616,6 +620,7 @@ export default function Map() {
       .query({ name: 'geolocation' })
       .then((status) => {
         if (status.state === 'granted' && !autoLocateCancelledRef.current) {
+          setShowMapHint(false);
           sessionStorage.setItem(AUTO_LOCATE_SESSION_KEY, '1');
           handleMyLocationRef.current(true);
         } else {
@@ -809,6 +814,34 @@ export default function Map() {
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainerRef} className="map-container w-full h-full" />
+
+      {/* Welcome hint — shown on first visit until the user interacts */}
+      {showMapHint && (
+        <div
+          aria-live="polite"
+          style={{
+            position: 'absolute',
+            top: '64px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1050,
+            maxWidth: 'min(420px, calc(100% - 24px))',
+            background: 'rgba(255,255,255,0.96)',
+            color: '#1f2937',
+            border: '1px solid #d1d5db',
+            borderLeft: '4px solid #00796b',
+            borderRadius: '12px',
+            padding: '12px 16px',
+            fontSize: '13px',
+            lineHeight: 1.4,
+            boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+            pointerEvents: 'none',
+            textAlign: 'center',
+          }}
+        >
+          {t('welcomeHint')}
+        </div>
+      )}
       
       {/* Top bar — search + sea chart toggle in one row */}
       <div style={{ position: 'absolute', top: '12px', left: '52px', right: '12px', zIndex: 1100, display: 'flex', alignItems: 'center', gap: '8px' }}>
