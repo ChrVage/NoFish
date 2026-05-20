@@ -196,7 +196,12 @@ export default function Map() {
   useEffect(() => { popupStringsRef.current = popupStrings; }, [popupStrings]);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
-  const [showMapHint, setShowMapHint] = useState(false);
+  const [showMapHint, setShowMapHint] = useState(() => {
+    if (hasRestore) { return false; }
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('nofish-auto-located')) { return false; }
+    if (typeof navigator === 'undefined' || !navigator.permissions) { return false; }
+    return true;
+  });
   const [showSeaChart, setShowSeaChart] = useState(() => {
     const z = parseInt(searchParams.get('zoom') ?? '', 10);
     return !isNaN(z) && z >= 13;
@@ -593,8 +598,6 @@ export default function Map() {
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(AUTO_LOCATE_SESSION_KEY)) { return; }
     if (typeof navigator === 'undefined' || !navigator.permissions) { return; }
     autoLocateCancelledRef.current = false;
-    // Show welcome hint until the user starts interacting or auto-locate fires
-    setShowMapHint(true);
 
     // Cancel auto-locate on the first user interaction anywhere in the app.
     // Listeners are attached in the capture phase so they fire before any
