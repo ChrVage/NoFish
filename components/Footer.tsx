@@ -83,7 +83,7 @@ export default function HeaderMenu() {
           <div
             style={{ color: '#9ca3af', fontSize: '12px', padding: '8px 24px 4px', borderTop: '1px solid #e5e7eb', marginTop: '4px' }}
           >
-            v{process.env.NEXT_PUBLIC_BUILD_VERSION}
+            build {process.env.NEXT_PUBLIC_BUILD_VERSION}
           </div>
         </div>
       )}

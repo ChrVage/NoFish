@@ -1,14 +1,24 @@
 import type { NextConfig } from "next";
+import { execSync } from 'node:child_process';
 import versionInfo from './lib/version.json';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
 function getBuildVersion(): string {
-  // lib/version.json is committed to the repo and updated by the pre-commit
-  // hook. The commit count is used as the version, guaranteeing the same
-  // value in dev and prod without depending on git history being available
-  // at build time (e.g. on Vercel's shallow clones).
+  // Prefer the live commit count at build time so the displayed build always
+  // matches HEAD even when the pre-commit hook was skipped (e.g. commits made
+  // through the GitHub web UI). Fall back to the committed lib/version.json
+  // when git history isn't available (e.g. Vercel shallow clones).
+  try {
+    const live = parseInt(
+      execSync('git rev-list --count HEAD', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(),
+      10,
+    );
+    if (Number.isFinite(live) && live > 0) {return String(live);}
+  } catch {
+    // ignore — fall through to the committed file
+  }
   const { commits } = versionInfo as { commits: number };
   return String(commits);
 }
