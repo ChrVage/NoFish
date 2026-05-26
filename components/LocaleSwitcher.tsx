@@ -9,9 +9,6 @@ import { routing } from '@/i18n/routing';
 const LOCALE_META: Record<string, { flag: string; label: string }> = {
   no: { flag: '🇳🇴', label: 'Norsk' },
   en: { flag: '🇬🇧', label: 'English' },
-  de: { flag: '🇩🇪', label: 'Deutsch' },
-  nl: { flag: '🇳🇱', label: 'Nederlands' },
-  pl: { flag: '🇵🇱', label: 'Polski' },
 };
 
 export default function LocaleSwitcher() {

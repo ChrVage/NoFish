@@ -266,7 +266,7 @@ i18n/
   navigation.ts         # next-intl typed Link / useRouter / redirect helpers
   request.ts            # Server-side locale message loader
 
-messages/               # Translated UI strings — de.json, en.json, nl.json, no.json, pl.json
+messages/               # Translated UI strings — en.json, no.json
 
 components/
   BackButton.tsx        # Client component — reads lat/lng/zoom from search params, navigates back to /?lat=&lng=&zoom=

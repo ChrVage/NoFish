@@ -22,9 +22,6 @@ const geistMono = Geist_Mono({
 const localeNames: Record<string, string> = {
   no: 'nb_NO',
   en: 'en_US',
-  de: 'de_DE',
-  nl: 'nl_NL',
-  pl: 'pl_PL',
 };
 
 export async function generateMetadata({

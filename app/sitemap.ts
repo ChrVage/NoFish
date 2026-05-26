@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 const BASE_URL = 'https://nofish.no';
-const LOCALES = ['no', 'en', 'de', 'nl', 'pl'] as const;
+const LOCALES = ['no', 'en'] as const;
 const DEFAULT_LOCALE = 'no';
 
 function localeUrl(locale: string, path: string): string {
