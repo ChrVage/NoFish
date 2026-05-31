@@ -24,7 +24,7 @@ import FeedbackButton from '@/components/FeedbackButton';
 import FeedbackBanner from '@/components/FeedbackBanner';
 import BookingButton, { type BookingEntry } from '@/components/BookingButton';
 import TuningControls from '@/components/TuningControls';
-import { BOAT_SIZE_OPTIONS, FISH_TARGET_OPTIONS, FISHING_METHOD_OPTIONS, parseTuningFromSearchParams, resolveTuningSelection } from '@/lib/utils/tuning';
+import { BOAT_SIZE_OPTIONS, parseTuningFromSearchParams, resolveTuningSelection } from '@/lib/utils/tuning';
 import { formatForecastTime } from '@/lib/utils/formatTime';
 import type { Metadata } from 'next';
 
