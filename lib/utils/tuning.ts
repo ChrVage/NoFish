@@ -20,6 +20,7 @@ export const FISH_TARGET_GROUPS = [
     label: 'Shallow (< 100 m)',
     items: [
       { value: 'mackerel', label: 'Mackerel (Makrell)' },
+      { value: 'salmon', label: 'Salmon (Laks)' },
       { value: 'saithe', label: 'Saithe/Coalfish (Sei)' },
       { value: 'cod', label: 'Cod (Torsk)' },
       { value: 'plaice', label: 'Plaice (Rødspette)' },
@@ -55,7 +56,7 @@ export const FISH_TARGET_OPTIONS: ReadonlyArray<{ readonly value: FishTarget; re
 
 export const FISHING_METHOD_OPTIONS = [
   { value: 'trolling', label: 'Trolling' },
-  { value: 'same-spot', label: 'Fishing on same spot' },
+  { value: 'same-spot', label: 'Fishing' },
   { value: 'net', label: 'Fishing with net' },
   { value: 'pot', label: 'Fish pot on bottom' },
 ] as const;

@@ -10,7 +10,7 @@ import type { Metadata } from 'next';
 import { haversineDistance, formatDistance } from '@/lib/utils/distance';
 import { parseZoomParam, buildLocationUrl } from '@/lib/utils/params';
 import { enrichForecasts } from '@/lib/utils/enrichForecasts';
-import { computeFishingScore } from '@/lib/scoring/fishingScore';
+import { classifyFishingLocationContext, computeFishingScore } from '@/lib/scoring/fishingScore';
 import { parseTuningFromSearchParams, resolveTuningSelection } from '@/lib/utils/tuning';
 import ForecastTable from '@/components/ForecastTable';
 import Header from '@/components/Header';
@@ -64,7 +64,20 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
   const depth = locationData?.isSea && locationData.elevation !== undefined
     ? Math.abs(locationData.elevation)
     : undefined;
-  const scores = forecasts.map((f) => computeFishingScore(f, { depth, boat: tuning.boat, fish: tuning.fish, timezone }).score);
+  const locationContext = classifyFishingLocationContext({
+    isSea: locationData?.isSea,
+    terrain: locationData?.terrain,
+    objectType: locationData?.objectType,
+    name: locationData?.name,
+    municipality: locationData?.municipality,
+  });
+  const scores = forecasts.map((f) => computeFishingScore(f, {
+    depth,
+    boat: tuning.boat,
+    fish: tuning.fish,
+    timezone,
+    locationContext,
+  }).score);
   const scoreBaseUrl = buildLocationUrl('score', {
     lat,
     lng,
@@ -125,7 +138,13 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
       for (const f of forecasts) {
         const fMs = new Date(f.time).getTime();
         if (fMs >= cutoffMs) {break;}
-        const { reasons } = computeFishingScore(f, { depth, boat: tuning.boat, fish: tuning.fish, timezone });
+        const { reasons } = computeFishingScore(f, {
+          depth,
+          boat: tuning.boat,
+          fish: tuning.fish,
+          timezone,
+          locationContext,
+        });
         const dangerReasons = reasons.filter(r => r.tone === 'danger').map(r => r.text);
         if (dangerReasons.length > 0) {
           allDangers.push({ time: f.time, reasons: dangerReasons, count: dangerReasons.length });

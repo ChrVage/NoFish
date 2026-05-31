@@ -77,6 +77,21 @@ export interface ComputeScoreOptions {
   fish?: FishTarget;
   method?: FishingMethod;
   timezone?: string;
+  locationContext?: FishingLocationContext;
+}
+
+export type FishingLocationContext = 'open-sea' | 'fjord' | 'salmon-path' | 'unknown';
+
+export interface SpeciesTargetGuidance {
+  fish: FishTarget;
+  targetDepthMinM: number;
+  targetDepthMaxM: number;
+  targetCurrentMinMs: number;
+  targetCurrentMaxMs: number;
+  targetTrollingMinKnots: number;
+  targetTrollingMaxKnots: number;
+  locationContext: FishingLocationContext;
+  restrictionNote: string;
 }
 
 // ── Continuous helper functions ──────────────────────────────────────────────
@@ -223,6 +238,12 @@ const SPECIES_BEHAVIOR: Partial<Record<FishTarget, SpeciesBehaviorProfile>> = {
     season: { prime: [6, 7, 8, 9], shoulder: [5, 10] },
     column: { habitatMinDepth: 10, habitatMaxDepth: 9999, targetZoneLabel: 'upper water column (surface-40 m)' },
   },
+  salmon: {
+    displayName: 'Salmon',
+    preferredDepths: [20, 45],
+    season: { prime: [6, 7, 8, 9], shoulder: [5, 10] },
+    column: { habitatMinDepth: 2, habitatMaxDepth: 120, targetZoneLabel: 'upper to mid-water along current seams (2-25 m)' },
+  },
   pollock: {
     displayName: 'Pollock',
     preferredDepths: [30, 130],
@@ -346,6 +367,60 @@ function combineDepthProfiles(profiles: DepthProfile[]): DepthProfile {
     tideSpread: sum.tideSpread / n,
     moonSpread: sum.moonSpread / n,
     dawnDuskBonus: sum.dawnDuskBonus / n,
+  };
+}
+
+function containsAnyToken(text: string, tokens: string[]): boolean {
+  return tokens.some((token) => text.includes(token));
+}
+
+export function classifyFishingLocationContext(input: {
+  isSea?: boolean;
+  terrain?: string;
+  objectType?: string;
+  name?: string;
+  municipality?: string;
+}): FishingLocationContext {
+  const haystack = [input.terrain, input.objectType, input.name, input.municipality]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  const fjordTokens = ['fjord', 'sund', 'straum', 'strom', 'vik', 'vag', 'bukt', 'munning'];
+  const migrationPathTokens = ['elv', 'river', 'munning', 'os', 'straum', 'strom', 'narrows', 'sund'];
+
+  const isFjordLike = containsAnyToken(haystack, fjordTokens);
+  const isMigrationPathLike = containsAnyToken(haystack, migrationPathTokens);
+
+  if (isMigrationPathLike) {return 'salmon-path';}
+  if (input.isSea === true && isFjordLike) {return 'fjord';}
+  if (input.isSea === true) {return 'open-sea';}
+  return 'unknown';
+}
+
+export function getSpeciesTargetGuidance(options: {
+  fish?: FishTarget;
+  depth?: number;
+  locationContext?: FishingLocationContext;
+}): SpeciesTargetGuidance | null {
+  if (options.fish !== 'salmon') {return null;}
+
+  const seabedDepth = options.depth !== undefined ? Math.abs(options.depth) : undefined;
+  const targetDepthMinM = seabedDepth !== undefined ? Math.max(2, Math.min(8, Math.round(seabedDepth * 0.08))) : 3;
+  const targetDepthMaxM = seabedDepth !== undefined
+    ? Math.max(targetDepthMinM + 8, Math.min(35, Math.round(seabedDepth * 0.35)))
+    : 18;
+
+  return {
+    fish: 'salmon',
+    targetDepthMinM,
+    targetDepthMaxM,
+    targetCurrentMinMs: 0.30,
+    targetCurrentMaxMs: 0.70,
+    targetTrollingMinKnots: 1.5,
+    targetTrollingMaxKnots: 2.5,
+    locationContext: options.locationContext ?? 'unknown',
+    restrictionNote: 'Salmon rules vary by season and area. Always check local closed periods, river-mouth distance rules, quota, and gear limits before fishing.',
   };
 }
 
@@ -804,6 +879,86 @@ export function computeFishingScore(f: HourlyForecast, depthOrOptions?: number |
     }
   }
 
+  // ═══ 8d. SALMON-SPECIFIC MOVEMENT CUES ════════════════════════════════
+  //
+  //   Salmon activity near the coast depends strongly on migration windows,
+  //   current seams, and tidal exchange around fjords/straits/river mouths.
+  //   We model this as a species-only multiplier so safety logic remains
+  //   unchanged.
+  //
+  let salmonFactor = 1.0;
+  if (options.fish === 'salmon') {
+    const ctx = options.locationContext ?? 'unknown';
+
+    if (ctx === 'salmon-path') {
+      salmonFactor *= 1.08;
+      good('Salmon path context (river mouth/strait) improves migration odds', 'fishing');
+    } else if (ctx === 'fjord') {
+      salmonFactor *= 1.04;
+      good('Fjord funnel effect can concentrate salmon movement', 'fishing');
+    } else if (ctx === 'open-sea') {
+      salmonFactor *= 0.92;
+      bad('Open sea is less reliable for salmon than path/fjord choke points', 'fishing');
+    }
+
+    if (f.seaTemperature !== undefined) {
+      const st = f.seaTemperature;
+      const tempFit = gaussian(st, 10.0, 3.5);
+      salmonFactor *= 0.60 + 0.40 * tempFit;
+
+      if (st >= 7 && st <= 13) {
+        good(`Salmon: sea temperature ${st.toFixed(1)}C in migration window`, 'fishing');
+      } else if (st < 5 || st > 15) {
+        bad(`Salmon: sea temperature ${st.toFixed(1)}C outside peak migration`, 'fishing');
+      }
+    }
+
+    if (f.tidePhase) {
+      const tp = f.tidePhase.toLowerCase();
+      if (tp.includes('rising')) {
+        salmonFactor *= 1.08;
+        good('Salmon: rising tide often improves shoreline movement', 'fishing');
+      } else if (tp.includes('falling')) {
+        salmonFactor *= 1.03;
+      } else if (tp.match(/[+-]1h/)) {
+        salmonFactor *= 0.95;
+      } else if (tp.match(/^(hi|lo)\b/i) || tp.includes('(')) {
+        salmonFactor *= 0.82;
+        bad('Salmon: slack tide usually weakens migration movement', 'fishing');
+      }
+    }
+
+    if (f.moonPhase) {
+      if (f.moonPhase.includes('New Moon') || f.moonPhase.includes('Full Moon')) {
+        salmonFactor *= 1.04;
+        good('Salmon: spring-tide moon phase can strengthen movement', 'fishing');
+      } else if (f.moonPhase.includes('Quarter')) {
+        salmonFactor *= 0.96;
+      }
+    }
+
+    if (f.currentSpeed !== undefined) {
+      const cs = f.currentSpeed;
+      if (cs >= 0.30 && cs <= 0.70) {
+        good(`Salmon: current ${cs.toFixed(2)} m/s is in target seam window`, 'fishing');
+      } else if (cs < 0.22) {
+        salmonFactor *= 0.88;
+        bad(`Salmon: current ${cs.toFixed(2)} m/s is too slow for active movement`, 'fishing');
+      } else if (cs > 0.90) {
+        salmonFactor *= 0.82;
+        bad(`Salmon: current ${cs.toFixed(2)} m/s is too strong for lure control`, 'fishing');
+      }
+
+      const tideRunning = f.tidePhase
+        ? /rising|falling|[+-]1h/i.test(f.tidePhase)
+        : false;
+      if (tideRunning && cs >= 0.30 && cs <= 0.80 && (ctx === 'fjord' || ctx === 'salmon-path')) {
+        salmonFactor *= 1.07;
+        good('Likely current seam (running tide + moderate current)', 'fishing');
+      }
+    }
+  }
+
   // ═══ 9. BAROMETRIC PRESSURE — fish activity modifier (fishing) ════════
   //
   //   Stable / slowly falling pressure is best for fishing.
@@ -947,7 +1102,7 @@ export function computeFishingScore(f: HourlyForecast, depthOrOptions?: number |
   // earned through measures outside the API data.
   const safetyRaw = windFactor * waveFactor * lightFactor * wavePeriodFactor;
   const safetyRawCapped = Math.min(safetyRaw, MAX_SAFETY_SCORE / 100);
-  const fishingRaw = currentFactor * tideFactor * moonFactor * precipFactor * tempFactor * speciesColumnFactor * speciesSeasonFactor * pressureFactor * lightFishingFactor * methodFactor;
+  const fishingRaw = currentFactor * tideFactor * moonFactor * precipFactor * tempFactor * speciesColumnFactor * speciesSeasonFactor * salmonFactor * pressureFactor * lightFishingFactor * methodFactor;
   const raw = safetyRawCapped * fishingRaw;
   const score = Math.round(Math.max(0, Math.min(100, raw * 100)));
   const safetyScore = Math.round(Math.max(0, Math.min(MAX_SAFETY_SCORE, safetyRawCapped * 100)));
@@ -979,6 +1134,7 @@ const SPECIES_METHOD_PREFS: Record<FishTarget, FishingMethod[]> = {
   saithe: ['trolling', 'same-spot', 'net', 'pot'],
   haddock: ['same-spot', 'net', 'pot', 'trolling'],
   mackerel: ['trolling', 'same-spot', 'net', 'pot'],
+  salmon: ['trolling', 'same-spot', 'net', 'pot'],
   pollock: ['trolling', 'same-spot', 'pot', 'net'],
   halibut: ['same-spot', 'trolling', 'pot', 'net'],
   ling: ['same-spot', 'pot', 'net', 'trolling'],

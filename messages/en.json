@@ -106,6 +106,7 @@
     "fish": {
       "general": "General recommendation",
       "mackerel": "Mackerel",
+      "salmon": "Salmon",
       "saithe": "Saithe / Coalfish",
       "cod": "Cod",
       "plaice": "Plaice",
@@ -126,7 +127,7 @@
     },
     "method": {
       "trolling": "Trolling",
-      "same-spot": "Fishing on same spot",
+      "same-spot": "Fishing",
       "net": "Fishing with net",
       "pot": "Fish pot on bottom"
     }
@@ -169,6 +170,18 @@
     "dark": {
       "currentlyDark": "It is currently dark (civil twilight ended at {time}).",
       "darkBy": "⚠ It will be dark by {time}."
+    },
+    "salmonGuidance": {
+      "heading": "Salmon targeting guidance",
+      "depthRange": "Aim for lure depth around {min}-{max} m (upper to mid-water).",
+      "currentRange": "Aim for current speed around {min}-{max} m/s; prioritize seams where flows meet.",
+      "trollingRange": "If trolling, keep boat speed around {min}-{max} knots.",
+      "locationContextPrefix": "Location context:",
+      "locationContextPath": "Likely migration path (river mouth/strait)",
+      "locationContextFjord": "Fjord funnel",
+      "locationContextOpenSea": "Open sea (focus on edges and seams)",
+      "locationContextUnknown": "Unknown",
+      "restrictionNote": "Salmon rules vary by season and area. Always check local closed periods, river-mouth distance rules, quota, and gear limits before fishing."
     },
     "depth": "Seabed depth: approx. {depth} m",
     "elevation": "Elevation: approx. {elevation} m",

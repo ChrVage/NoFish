@@ -16,7 +16,7 @@ describe('tuning param parsing', () => {
   });
 
   it('drops invalid URL values', () => {
-    expect(parseTuningFromSearchParams({ boat: '21', fish: 'salmon', method: 'trawl' })).toEqual({
+    expect(parseTuningFromSearchParams({ boat: '21', fish: 'swordfish', method: 'trawl' })).toEqual({
       boat: undefined,
       fish: undefined,
       method: undefined,

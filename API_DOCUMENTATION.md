@@ -84,7 +84,7 @@ Returns fishing score data including best fishing windows and hourly scores.
 
 **Optional Query Parameters**:
 - `boat`: Boat size preset (`15-19`, `20-24`, `25-30`, `31-40`; omit for no preference)
-- `fish`: Fish target species (`general`, `mackerel`, `saithe`, `cod`, `plaice`, `pollock`, `haddock`, `wolffish`, `monkfish`, `halibut`, `hake`, `ling`, `tusk`, `redfish`; omit for no preference)
+- `fish`: Fish target species (`general`, `mackerel`, `salmon`, `saithe`, `cod`, `plaice`, `pollock`, `haddock`, `wolffish`, `monkfish`, `halibut`, `hake`, `ling`, `tusk`, `redfish`; omit for no preference)
 - `method`: Fishing method (`trolling`, `same-spot`, `net`, `pot`; omit for no preference)
 - `depth`: Water depth in meters (0–1000; when omitted the score uses the species ‘preferred depth’ profile, otherwise a general depth-adaptive profile)
 

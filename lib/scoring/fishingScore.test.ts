@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
+  classifyFishingLocationContext,
   computeFishingScore,
   findBestWindows,
   findNetFishingWindows,
   getScoreColor,
   getScoreBg,
+  getSpeciesTargetGuidance,
   getDepthProfile,
   recommendFishingMethods,
   type ScoredForecast,
@@ -311,6 +313,55 @@ describe('computeFishingScore', () => {
       // UTC is still April (prime for cod), while Oslo is May (shoulder for cod).
       expect(utc.reasons.some((r) => r.text.includes('Cod: in-season'))).toBe(true);
       expect(oslo.reasons.some((r) => r.text.includes('Cod: shoulder season'))).toBe(true);
+    });
+
+    it('salmon gets better score in migration temperatures than warm water', () => {
+      const migrationTemp = computeFishingScore(
+        mkForecast({
+          time: '2025-08-15T12:00:00Z',
+          currentSpeed: 0.45,
+          tidePhase: 'Rising',
+          seaTemperature: 10,
+          moonPhase: '🌑 New Moon',
+        }),
+        { fish: 'salmon', depth: 30, locationContext: 'salmon-path' },
+      );
+      const warmTemp = computeFishingScore(
+        mkForecast({
+          time: '2025-08-15T12:00:00Z',
+          currentSpeed: 0.45,
+          tidePhase: 'Rising',
+          seaTemperature: 17,
+          moonPhase: '🌑 New Moon',
+        }),
+        { fish: 'salmon', depth: 30, locationContext: 'salmon-path' },
+      );
+
+      expect(migrationTemp.fishingScore).toBeGreaterThan(warmTemp.fishingScore);
+      expect(migrationTemp.reasons.some((r) => r.text.includes('migration window'))).toBe(true);
+    });
+
+    it('salmon performs better in fjord/path context than open sea', () => {
+      const fjord = computeFishingScore(
+        mkForecast({
+          time: '2025-08-15T12:00:00Z',
+          currentSpeed: 0.45,
+          tidePhase: 'Rising',
+          seaTemperature: 10,
+        }),
+        { fish: 'salmon', depth: 30, locationContext: 'fjord' },
+      );
+      const openSea = computeFishingScore(
+        mkForecast({
+          time: '2025-08-15T12:00:00Z',
+          currentSpeed: 0.45,
+          tidePhase: 'Rising',
+          seaTemperature: 10,
+        }),
+        { fish: 'salmon', depth: 30, locationContext: 'open-sea' },
+      );
+
+      expect(fjord.fishingScore).toBeGreaterThan(openSea.fishingScore);
     });
   });
 
@@ -798,5 +849,27 @@ describe('recommendFishingMethods', () => {
     const net = methods.find((m) => m.method === 'net');
     expect(net).toBeDefined();
     expect(net?.score).toBeLessThan(60);
+  });
+});
+
+describe('location context and species guidance helpers', () => {
+  it('classifies fjord and migration path contexts from location metadata', () => {
+    const fjord = classifyFishingLocationContext({ isSea: true, objectType: 'Fjord' });
+    const path = classifyFishingLocationContext({ isSea: true, name: 'Namsen elv munning' });
+    const open = classifyFishingLocationContext({ isSea: true, objectType: 'Havomrade' });
+
+    expect(fjord).toBe('fjord');
+    expect(path).toBe('salmon-path');
+    expect(open).toBe('open-sea');
+  });
+
+  it('returns explicit salmon guidance with target depth and speed ranges', () => {
+    const guidance = getSpeciesTargetGuidance({ fish: 'salmon', depth: 40, locationContext: 'fjord' });
+
+    expect(guidance).not.toBeNull();
+    expect(guidance?.targetDepthMinM).toBeGreaterThanOrEqual(2);
+    expect(guidance?.targetDepthMaxM).toBeGreaterThan(guidance?.targetDepthMinM ?? 0);
+    expect(guidance?.targetCurrentMinMs).toBe(0.30);
+    expect(guidance?.targetCurrentMaxMs).toBe(0.70);
   });
 });

@@ -106,6 +106,7 @@
     "fish": {
       "general": "Generell anbefaling",
       "mackerel": "Makrell",
+      "salmon": "Laks",
       "saithe": "Sei",
       "cod": "Torsk",
       "plaice": "Rødspette",
@@ -125,8 +126,8 @@
       "deep": "Dypt (> 200 m)"
     },
     "method": {
-      "trolling": "Trolling",
-      "same-spot": "Stansing",
+      "trolling": "Dorging",
+      "same-spot": "Fisking",
       "net": "Garnfiske",
       "pot": "Teiner"
     }
@@ -169,6 +170,18 @@
     "dark": {
       "currentlyDark": "Det er mørkt nå (borgerlig tussmørke sluttet kl. {time}).",
       "darkBy": "⚠ Det blir mørkt kl. {time}."
+    },
+    "salmonGuidance": {
+      "heading": "Veiledning for laksefiske",
+      "depthRange": "Sikt på agndybde rundt {min}-{max} m (øvre til midtre vannlag).",
+      "currentRange": "Sikt på strømhastighet rundt {min}-{max} m/s; prioriter strømkanter der strømmer møtes.",
+      "trollingRange": "Ved dorging, hold båtfarten rundt {min}-{max} knop.",
+      "locationContextPrefix": "Stedskontekst:",
+      "locationContextPath": "Sannsynlig trekkvei (elvemunning/sund)",
+      "locationContextFjord": "Fjordtrakt",
+      "locationContextOpenSea": "Åpent hav (fokuser på kanter og strømkanter)",
+      "locationContextUnknown": "Ukjent",
+      "restrictionNote": "Regler for laks varierer med sesong og område. Sjekk alltid lokale fredningsperioder, avstandsregler ved elvemunning, kvoter og redskapsregler før fiske."
     },
     "depth": "Havbunnsdybde: ca. {depth} m",
     "elevation": "Høyde: ca. {elevation} m",

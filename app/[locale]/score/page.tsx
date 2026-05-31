@@ -10,7 +10,15 @@ import Header from '@/components/Header';
 import BackButton from '@/components/BackButton';
 import PageNav from '@/components/PageNav';
 import { enrichForecasts } from '@/lib/utils/enrichForecasts';
-import { computeFishingScore, findBestWindows, getScoreColor, getScoreBg, recommendFishingMethods } from '@/lib/scoring/fishingScore';
+import {
+  classifyFishingLocationContext,
+  computeFishingScore,
+  findBestWindows,
+  getScoreBg,
+  getScoreColor,
+  getSpeciesTargetGuidance,
+  recommendFishingMethods,
+} from '@/lib/scoring/fishingScore';
 import { getTimeColumnStyle } from '@/lib/utils/sunPhaseStyle';
 import FeedbackButton from '@/components/FeedbackButton';
 import FeedbackBanner from '@/components/FeedbackBanner';
@@ -47,6 +55,7 @@ interface PageProps {
 export default async function ScorePage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'score' });
+  const tTuning = await getTranslations({ locale, namespace: 'tuning' });
   const { lat: latStr, lng: lngStr, zoom: zoomStr, sea: seaStr, boat: boatStr, fish: fishStr, method: methodStr } = await searchParams;
   const lat = parseFloat(latStr ?? '');
   const lng = parseFloat(lngStr ?? '');
@@ -59,16 +68,19 @@ export default async function ScorePage({ params, searchParams }: PageProps) {
   const isSea = seaStr === '0' ? false : seaStr === '1' ? true : undefined;
   const parsedTuning = parseTuningFromSearchParams({ boat: boatStr, fish: fishStr, method: methodStr });
   const tuning = resolveTuningSelection(parsedTuning);
+  const headerFishingRulesUrl = tuning.fish === 'salmon'
+    ? 'https://www.fiskeridir.no/fritidsfiske/laksefiske-i-sjoen'
+    : 'https://www.fiskeridir.no/fritidsfiske';
   const hasTuningSelection = parsedTuning.boat !== undefined || parsedTuning.fish !== undefined || parsedTuning.method !== undefined;
   const bestWindowHeading = (() => {
     if (!hasTuningSelection) { return t('windows.heading'); }
     const parts: string[] = [];
     if (parsedTuning.method) {
-      const label = FISHING_METHOD_OPTIONS.find((o) => o.value === parsedTuning.method)?.label ?? parsedTuning.method;
+      const label = tTuning(`method.${parsedTuning.method}`);
       parts.push(t('windows.forMethod', { method: label.toLowerCase() }));
     }
     if (parsedTuning.fish && parsedTuning.fish !== 'general') {
-      const label = FISH_TARGET_OPTIONS.find((o) => o.value === parsedTuning.fish)?.label ?? parsedTuning.fish;
+      const label = tTuning(`fish.${parsedTuning.fish}`);
       parts.push(t('windows.forFish', { fish: label.toLowerCase() }));
     }
     if (parsedTuning.boat) {
@@ -94,9 +106,27 @@ export default async function ScorePage({ params, searchParams }: PageProps) {
   const depth = locationData?.isSea && locationData.elevation !== undefined
     ? Math.abs(locationData.elevation)
     : undefined;
+  const locationContext = classifyFishingLocationContext({
+    isSea: locationData?.isSea,
+    terrain: locationData?.terrain,
+    objectType: locationData?.objectType,
+    name: locationData?.name,
+    municipality: locationData?.municipality,
+  });
+  const speciesGuidance = getSpeciesTargetGuidance({
+    fish: tuning.fish,
+    depth,
+    locationContext,
+  });
   const scoredForecasts = forecasts.map((f) => ({
     forecast: f,
-    ...computeFishingScore(f, { depth, boat: tuning.boat, fish: tuning.fish, timezone }),
+    ...computeFishingScore(f, {
+      depth,
+      boat: tuning.boat,
+      fish: tuning.fish,
+      timezone,
+      locationContext,
+    }),
   }));
   const methodRecommendations = recommendFishingMethods(scoredForecasts, timezone, tuning.fish);
 
@@ -147,6 +177,26 @@ export default async function ScorePage({ params, searchParams }: PageProps) {
             current="score"
             availablePages={locationData?.isSea === false ? ['details'] : undefined}
           />
+          <a
+            href={headerFishingRulesUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              marginLeft: '0.5rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '0.5rem 0.75rem',
+              borderRadius: '0.5rem',
+              textDecoration: 'none',
+              backgroundColor: '#f3f4f6',
+              color: '#1f2937',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {t('fishingRules')}
+          </a>
         </div>
       </Header>
 
@@ -211,6 +261,41 @@ export default async function ScorePage({ params, searchParams }: PageProps) {
                       )}
                     </li>
                   ))}
+                </ul>
+              </div>
+            )}
+            {speciesGuidance && (
+              <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 p-3">
+                <p className="text-xs font-bold text-amber-900 mb-1">{t('salmonGuidance.heading')}</p>
+                <ul className="text-xs text-amber-800 space-y-0.5 list-disc pl-4">
+                  <li>
+                    {t('salmonGuidance.depthRange', {
+                      min: speciesGuidance.targetDepthMinM,
+                      max: speciesGuidance.targetDepthMaxM,
+                    })}
+                  </li>
+                  <li>
+                    {t('salmonGuidance.currentRange', {
+                      min: speciesGuidance.targetCurrentMinMs.toFixed(2),
+                      max: speciesGuidance.targetCurrentMaxMs.toFixed(2),
+                    })}
+                  </li>
+                  <li>
+                    {t('salmonGuidance.trollingRange', {
+                      min: speciesGuidance.targetTrollingMinKnots.toFixed(1),
+                      max: speciesGuidance.targetTrollingMaxKnots.toFixed(1),
+                    })}
+                  </li>
+                  <li>
+                    {t('salmonGuidance.locationContextPrefix')} {speciesGuidance.locationContext === 'salmon-path'
+                      ? t('salmonGuidance.locationContextPath')
+                      : speciesGuidance.locationContext === 'fjord'
+                        ? t('salmonGuidance.locationContextFjord')
+                        : speciesGuidance.locationContext === 'open-sea'
+                          ? t('salmonGuidance.locationContextOpenSea')
+                          : t('salmonGuidance.locationContextUnknown')}.
+                  </li>
+                  <li>{t('salmonGuidance.restrictionNote')}</li>
                 </ul>
               </div>
             )}
@@ -448,7 +533,7 @@ export default async function ScorePage({ params, searchParams }: PageProps) {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.5rem' }}>
                 {methodRecommendations.map((m) => {
-                  const label = FISHING_METHOD_OPTIONS.find((o) => o.value === m.method)?.label ?? m.method;
+                  const label = tTuning(`method.${m.method}`);
                   return (
                     <div
                       key={m.method}
